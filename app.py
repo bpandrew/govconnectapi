@@ -108,12 +108,14 @@ def opportunities_add():
     try:
         data = request.form.to_dict()
 
-        title = data['title']
+        opportunity_id = data['opportunity_id']
+
         # Check if the opportunity has already been added
-        obj=Opportunity.query.filter_by(title=title).first()
+        obj=Opportunity.query.filter_by(opportunity_id=opportunity_id).first()
         if obj==None:
             opportunity=Opportunity(
-                title=title
+                opportunity_id = opportunity_id,
+                title=data['title']
             )
             db.session.add(opportunity)
             db.session.commit()
