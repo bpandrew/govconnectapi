@@ -127,5 +127,16 @@ def opportunities_add():
 	    return(str(e))
 
 
+@app.route("/op/delete/<id_>")
+def opportunities_delete(id_):
+    try:
+        obj=Opportunity.query.filter_by(id=id_).one()
+        db.session.delete(obj)
+        db.session.commit()
+        return "Opportunity deleted. Opportunity id={}".format(id_)
+    except Exception as e:
+	    return(str(e))
+
+
 if __name__ == '__main__':
     app.run()
