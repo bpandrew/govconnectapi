@@ -97,8 +97,17 @@ def users_delete(id_):
 @app.route("/op")
 def opportunities():
     try:
-        opportunities=Opportunity.query.all()
-        return  jsonify([e.serialize() for e in opportunities])
+        try:
+            page = int(request.args.get('page'))
+        except:
+            page = 1
+        # paginate(Page_no, Results_Per_Page, False)
+        record_query = Opportunity.query.paginate(page, 5, False)
+        total = record_query.total
+        opportunities = record_query.items
+
+        #opportunities=Opportunity.query.all()
+        return jsonify([e.serialize() for e in opportunities])
     except Exception as e:
 	    return(str(e))
 
@@ -115,7 +124,7 @@ def opportunities_add():
         if obj==None:
             opportunity=Opportunity(
                 atm_id = atm_id,
-                title=data['title']
+                title = data['title']
             )
             db.session.add(opportunity)
             db.session.commit()
