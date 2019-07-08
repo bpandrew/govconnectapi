@@ -108,13 +108,13 @@ def opportunities_add():
     try:
         data = request.form.to_dict()
 
-        opportunity_id = data['opportunity_id']
+        atm_id = data['atm_id']
 
         # Check if the opportunity has already been added
-        obj=Opportunity.query.filter_by(opportunity_id=opportunity_id).first()
+        obj=Opportunity.query.filter_by(atm_id=atm_id).first()
         if obj==None:
             opportunity=Opportunity(
-                opportunity_id = opportunity_id,
+                atm_id = atm_id,
                 title=data['title']
             )
             db.session.add(opportunity)

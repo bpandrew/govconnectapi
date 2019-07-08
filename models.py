@@ -54,11 +54,11 @@ class Opportunity(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String())
-    opportunity_id = db.Column(db.String())
+    atm_id = db.Column(db.String())
 
-    def __init__(self, title, opportunity_id):
+    def __init__(self, title, atm_id):
         self.title = title
-        self.opportunity_id = opportunity_id
+        self.atm_id = atm_id
 
     def __repr__(self):
         return '<id {}>'.format(self.id)
@@ -67,5 +67,5 @@ class Opportunity(db.Model):
         return {
             'id': self.id, 
             'title': self.title,
-            'opportunity_id': self.opportunity_id
+            'atm_id': self.atm_id
         }
