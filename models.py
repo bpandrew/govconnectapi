@@ -47,3 +47,22 @@ class User(db.Model):
             'last_name': self.last_name,
             'email':self.email
         }
+
+
+class Opportunity(db.Model):
+    __tablename__ = 'opportunities'
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String())
+
+    def __init__(self, title):
+        self.title = title
+
+    def __repr__(self):
+        return '<id {}>'.format(self.id)
+    
+    def serialize(self):
+        return {
+            'id': self.id, 
+            'title': self.title
+        }

@@ -1,11 +1,20 @@
+source env/bin/activate
+export APP_SETTINGS="config.DevelopmentConfig"
+export DATABASE_URL="postgresql://localhost/governmentconnect"
+
 
 # Migrating databases
 python manage.py db migrate
 # Apply the migrations
 python manage.py db upgrade
 
-# Run the database migrations in Heroku via the CLI
-heroku run python manage.py db upgrade --app bootstrapapi
-
 # Run local test server
 python manage.py runserver
+
+
+
+
+
+# Run the database migrations in Heroku via the CLI
+heroku run python manage.py db upgrade --app governmentconnectapi
+

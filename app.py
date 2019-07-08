@@ -11,7 +11,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 print(db)
-from models import Book, User
+from models import Book, User, Opportunity
 
 @app.route("/")
 def hello():
@@ -85,6 +85,31 @@ def users_delete(id_):
         db.session.delete(obj)
         db.session.commit()
         return "User deleted. user id={}".format(id_)
+    except Exception as e:
+	    return(str(e))
+
+
+
+@app.route("/op")
+def opportunities():
+    try:
+        opportunities=Opportunity.query.all()
+        return  jsonify([e.serialize() for e in opportunities])
+    except Exception as e:
+	    return(str(e))
+
+
+@app.route("/op/add", methods=["POST"])
+def opportunities_add():
+    data = request.form.to_dict()
+
+    try:
+        opportunity=Opportunity(
+            title=data['title']
+        )
+        db.session.add(opportunity)
+        db.session.commit()
+        return "Opportunity added. Opportunity id={}".format(opportunity.id)
     except Exception as e:
 	    return(str(e))
 
