@@ -54,9 +54,11 @@ class Opportunity(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String())
+    opportunity_id = db.Column(db.String())
 
-    def __init__(self, title):
+    def __init__(self, title, opportunity_id):
         self.title = title
+        self.opportunity_id = opportunity_id
 
     def __repr__(self):
         return '<id {}>'.format(self.id)
@@ -64,5 +66,6 @@ class Opportunity(db.Model):
     def serialize(self):
         return {
             'id': self.id, 
-            'title': self.title
+            'title': self.title,
+            'opportunity_id': self.opportunity_id
         }

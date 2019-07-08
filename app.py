@@ -90,6 +90,10 @@ def users_delete(id_):
 
 
 
+
+
+# ------------  OPPORTUNITIES ---------------
+
 @app.route("/op")
 def opportunities():
     try:
@@ -101,15 +105,22 @@ def opportunities():
 
 @app.route("/op/add", methods=["POST"])
 def opportunities_add():
-    data = request.form.to_dict()
-
     try:
-        opportunity=Opportunity(
-            title=data['title']
-        )
-        db.session.add(opportunity)
-        db.session.commit()
-        return "Opportunity added. Opportunity id={}".format(opportunity.id)
+        data = request.form.to_dict()
+
+        title = data['title']
+        # Check if the opportunity has already been added
+        obj=Opportunity.query.filter_by(title=title).first()
+        if obj==None:
+            opportunity=Opportunity(
+                title=title
+            )
+            db.session.add(opportunity)
+            db.session.commit()
+            return "Opportunity added. Opportunity id={}".format(opportunity.id)
+        else:
+            return "Opportunity already exists."
+
     except Exception as e:
 	    return(str(e))
 
