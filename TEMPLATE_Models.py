@@ -1,22 +1,15 @@
 from app import db
 from app import ma
 
+#class Category(db.Model):
+#    id = db.Column(db.Integer, primary_key=True)
+#    op_id = db.Column(db.Integer, db.ForeignKey("op.id"))
+#    unspsc_id = db.Column(db.Integer, db.ForeignKey("unspsc.id"))
 
-unspsc_op = db.Table('unspsc_op',
-    db.Column('unspsc_id', db.Integer, db.ForeignKey('unspsc.id'), primary_key=True),
-    db.Column('op_id', db.Integer, db.ForeignKey('op.id'), primary_key=True)
-)
-
-
-class Op(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(), index=True)
-    atm_id = db.Column(db.String(), index=True)
-
-class OpSchema(ma.ModelSchema):
-    class Meta:
-       model = Op
-    categories = ma.Nested("UnspscSchema", many=True, only=("id", "unspsc"))
+#class CategorySchema(ma.ModelSchema):
+#    class Meta:
+#       model = Category
+#    #categories = ma.Nested("UnspscSchema", many=True, exclude=("parent_id",))
 
 
 
@@ -26,18 +19,34 @@ class Unspsc(db.Model):
     title = db.Column(db.String())
     level  = db.Column(db.String())
     parent_id = db.Column(db.Integer())
-    opportunities = db.relationship('Op', secondary=unspsc_op, lazy='subquery', backref=db.backref('categories', lazy=True))
+
 
 class UnspscSchema(ma.ModelSchema):
     class Meta:
        model = Unspsc
-    #opportunities = ma.Nested("OpSchema", many=True, only=("id", "title"))
+    ops = ma.Nested("OpSchema", many=True, only=("id",))
 
 
 class UnspscSchemaSimple(ma.ModelSchema):
     class Meta:
        model = Unspsc
-    #opportunities = ma.Nested("OpSchema", many=True, only=("id", "title"))
+    #ops = ma.Nested("OpSchema", many=True, only=("id",))
+
+
+
+class Op(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(), index=True)
+    atm_id = db.Column(db.String(), index=True)
+    unspsc_id = db.Column(db.Integer, db.ForeignKey("unspsc.id"))
+    unspsc = db.relationship("Unspsc", backref="ops")
+
+
+class OpSchema(ma.ModelSchema):
+    class Meta:
+       model = Op
+    unspsc = ma.Nested("UnspscSchema", only=("id", "unspsc", "title", "level", "parent_id"))
+
 
 
 
