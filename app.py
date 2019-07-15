@@ -176,16 +176,20 @@ def op():
         opportunities=Op.query.order_by(desc(Op.publish_date)).all()
         result = ops_schema.dump(opportunities).data
         
+        print(result)
+
         output = {}
         # Update all of the times to human readable
         for op in result:
-            #published = datetime.now() - datetime.strptime(op['publish_date'], '%Y-%m-%d')
-            published = datetime.strptime(op['publish_date'], '%Y-%m-%d')
-            print(humanize.naturalday(published))
-            op['published_date_human'] = humanize.naturalday(published)
-            close_date = datetime.now() - datetime.strptime(op['close_date'], '%Y-%m-%d')
-            op['close_date_human'] = humanize.naturaltime(close_date)
-            op['description']=None
+            try:
+                published = datetime.strptime(op['publish_date'], '%Y-%m-%d')
+                print(humanize.naturalday(published))
+                op['published_date_human'] = humanize.naturalday(published)
+                close_date = datetime.now() - datetime.strptime(op['close_date'], '%Y-%m-%d')
+                op['close_date_human'] = humanize.naturaltime(close_date)
+                op['description']=None
+            except:
+                pass
 
 
         #output['result'] = result

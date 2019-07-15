@@ -85,8 +85,7 @@ class OpSchema(ma.ModelSchema):
 class OpSimpleSchema(ma.ModelSchema):
     class Meta:
        model = Op
-       #fields = ("title",)
-       only=("id",)
+       fields = ("id", "title",)
     #categories = ma.Nested("UnspscSchema", many=True, only=("id", "unspsc", "title", "level_int"))
     #agency = ma.Nested(AgencySchema, only=("id", "title"))
 
