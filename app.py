@@ -181,13 +181,23 @@ def op():
         output = {}
         # Update all of the times to human readable
         for op in result:
+            
+            published = datetime.strptime(op['publish_date'], '%Y-%m-%d')
+            #print(humanize.naturalday(published))
+            op['published_date_human'] = humanize.naturalday(published)
+            close_date = datetime.now() - datetime.strptime(op['close_date'], '%Y-%m-%d')
+            op['close_date_human'] = humanize.naturaltime(close_date)
+            op['title'] = op['title'].capitalize()
+
+            for category in op['categories']:
+                highest_level = 0
+                if category['level_int']>highest_level:
+                    op['category_title'] = category['title'].capitalize()
+                    op['category_id'] = category['id']
+
+
             try:
-                published = datetime.strptime(op['publish_date'], '%Y-%m-%d')
-                print(humanize.naturalday(published))
-                op['published_date_human'] = humanize.naturalday(published)
-                close_date = datetime.now() - datetime.strptime(op['close_date'], '%Y-%m-%d')
-                op['close_date_human'] = humanize.naturaltime(close_date)
-                op['description']=None
+                print("yo")
             except:
                 pass
 
