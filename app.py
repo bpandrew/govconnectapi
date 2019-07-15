@@ -439,7 +439,7 @@ def unspsc_add(unspsc, title_):
                 }
 
             for key, value in output.items():
-                print key, value['parent'], value['level'], value['unspsc']
+
                 if value['level']!="segment": 
                     obj=Unspsc.query.filter_by(unspsc=value['parent']).first()
                     parent_id = obj.id
