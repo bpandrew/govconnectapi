@@ -157,12 +157,12 @@ def users_delete(id_):
 # ------------  OPPORTUNITIES ---------------
 
 def generate(releases, count):
-    print(count)
+    #print(count)
     yield '['
-    i=0
+    i=1
     for release in releases:
         print(release)
-        if (i==count):
+        if (i!=int(count)):
             yield json.dumps(release) + ', '
         else:
             yield json.dumps(release) + ''
