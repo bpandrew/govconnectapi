@@ -18,7 +18,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 print(db)
-from models import User, UserSchema, Comment, CommentSchema, Op, OpSchema, Unspsc, UnspscSchema, UnspscSchemaSimple, Agency, AgencySchema, Addenda, AddendaSchema, Contract, ContractSchema, Page, Tag
+from models import User, UserSchema, Comment, CommentSchema, Op, OpSchema, OpSimpleSchema, Unspsc, UnspscSchema, UnspscSchemaSimple, Agency, AgencySchema, Addenda, AddendaSchema, Contract, ContractSchema, Page, Tag
 
 
 # ---------------- LOAD SCHEMAS ---------------
@@ -30,7 +30,7 @@ comment_schema = CommentSchema()
 comments_schema = CommentSchema(many=True)
 
 op_schema = OpSchema()
-ops_schema = OpSchema(many=True)
+ops_schema = OpSimpleSchema(many=True)
 
 unspsc_schema = UnspscSchema()
 unspscs_schema = UnspscSchema(many=True)
@@ -166,21 +166,8 @@ def generate(releases, count):
             yield json.dumps(release) + ', '
         else:
             yield json.dumps(release) + ''
-
         i=i+1
     yield ']'
-
-    #releases = query.__iter__()
-    #prev_release = next(releases)  # get first result
-    #yield '{"releases": ['
-    # Iterate over the releases
-    #for release in releases:
-    #    yield json.dumps(prev_release.to_dict()) + ', '
-    #    prev_release = release
-    # Now yield the last iteration without comma but with the closing brackets
-    #yield json.dumps(prev_release.to_dict()) + ']}'
-
-
 
 
 @app.route("/op")
@@ -202,7 +189,6 @@ def op():
 
 
         #output['result'] = result
-
         return Response(generate(result, len(result)), content_type='application/json')
         
         #return jsonify(output)
