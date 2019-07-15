@@ -1,5 +1,8 @@
 cd /Users/benjaminandrew/Documents/govconnectapi 
 source env/bin/activate
+
+source /Users/benjaminandrew/Documents/govconnectapi/env3/bin/activate
+
 export APP_SETTINGS="config.DevelopmentConfig"
 export DATABASE_URL="postgresql://localhost/governmentconnect"
 
