@@ -165,8 +165,10 @@ def op():
         output = {}
         # Update all of the times to human readable
         for op in result:
-            published = datetime.now() - datetime.strptime(op['publish_date'], '%Y-%m-%d')
-            op['published_date_human'] = humanize.naturaltime(published)
+            #published = datetime.now() - datetime.strptime(op['publish_date'], '%Y-%m-%d')
+            published = datetime.strptime(op['publish_date'], '%Y-%m-%d')
+            print(humanize.naturalday(published))
+            op['published_date_human'] = humanize.naturalday(published)
             close_date = datetime.now() - datetime.strptime(op['close_date'], '%Y-%m-%d')
             op['close_date_human'] = humanize.naturaltime(close_date)
 
