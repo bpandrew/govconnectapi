@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import desc
 from flask_marshmallow import Marshmallow
@@ -156,6 +156,33 @@ def users_delete(id_):
 
 # ------------  OPPORTUNITIES ---------------
 
+def generate(releases, count):
+    print(count)
+    yield '['
+    i=0
+    for release in releases:
+        print(release)
+        if (i==count):
+            yield json.dumps(release) + ', '
+        else:
+            yield json.dumps(release) + ''
+
+        i=i+1
+    yield ']'
+
+    #releases = query.__iter__()
+    #prev_release = next(releases)  # get first result
+    #yield '{"releases": ['
+    # Iterate over the releases
+    #for release in releases:
+    #    yield json.dumps(prev_release.to_dict()) + ', '
+    #    prev_release = release
+    # Now yield the last iteration without comma but with the closing brackets
+    #yield json.dumps(prev_release.to_dict()) + ']}'
+
+
+
+
 @app.route("/op")
 def op():
     try:
@@ -172,9 +199,12 @@ def op():
             close_date = datetime.now() - datetime.strptime(op['close_date'], '%Y-%m-%d')
             op['close_date_human'] = humanize.naturaltime(close_date)
 
-        output['result'] = result
 
-        return jsonify(output)
+        #output['result'] = result
+
+        return Response(generate(result, len(result)), content_type='application/json')
+        
+        #return jsonify(output)
 
     except Exception as e:
 	    return(str(e))
