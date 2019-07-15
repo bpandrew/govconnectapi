@@ -162,6 +162,7 @@ def op():
         opportunities=Op.query.order_by(desc(Op.publish_date)).all()
         result = ops_schema.dump(opportunities).data
         
+        output = {}
         # Update all of the times to human readable
         for op in result:
             published = datetime.now() - datetime.strptime(op['publish_date'], '%Y-%m-%d')
@@ -169,7 +170,9 @@ def op():
             close_date = datetime.now() - datetime.strptime(op['close_date'], '%Y-%m-%d')
             op['close_date_human'] = humanize.naturaltime(close_date)
 
-        return jsonify(result)
+        output['result'] = result
+
+        return jsonify(output)
 
     except Exception as e:
 	    return(str(e))
