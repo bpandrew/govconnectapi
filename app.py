@@ -198,6 +198,7 @@ def op():
             op['published_date_human'] = humanize.naturalday(published)
             close_date = datetime.now() - datetime.strptime(op['close_date'], '%Y-%m-%d')
             op['close_date_human'] = humanize.naturaltime(close_date)
+            op['description']=None
 
 
         #output['result'] = result
