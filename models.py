@@ -35,8 +35,6 @@ class Addenda(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String)
     published = db.Column(db.Date())
-    #opportunity_id = db.Column(db.Integer, db.ForeignKey("op.id"))
-    #opportunity = db.relationship("Agency", backref="opportunities", cascade="save-update, merge, delete")
 
 
 class AddendaSchema(ma.ModelSchema):
