@@ -1,7 +1,10 @@
+cd /Users/benjaminandrew/Documents/govconnectapi 
 source env/bin/activate
 export APP_SETTINGS="config.DevelopmentConfig"
 export DATABASE_URL="postgresql://localhost/governmentconnect"
 
+
+python manage.py db stamp head
 
 # Migrating databases
 python manage.py db migrate
@@ -14,7 +17,9 @@ python manage.py runserver
 
 
 
-
 # Run the database migrations in Heroku via the CLI
 heroku run python manage.py db upgrade --app governmentconnectapi
 
+
+
+pip freeze > requirements.txt
