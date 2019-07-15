@@ -5,6 +5,7 @@ flask-marshmallow==0.10.1
 Flask-Migrate==2.5.2
 Flask-Script==2.0.6
 Flask-SQLAlchemy==2.4.0
+gunicorn==19.9.0
 humanize==0.5.1
 itsdangerous==1.1.0
 Jinja2==2.10.1
