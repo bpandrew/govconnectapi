@@ -87,7 +87,7 @@ class OpSimpleSchema(ma.ModelSchema):
     agency = ma.Nested(AgencySchema, only=("id", "title"))
     class Meta:
        model = Op
-       fields = ("id", "title", "publish_date", "close_date", "categories", "agency")
+       fields = ("id", "title", "publish_date", "close_date", "categories", "agency", "atm_type")
 
 
 
