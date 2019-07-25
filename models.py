@@ -14,6 +14,7 @@ class AgencySchema(ma.ModelSchema):
     class Meta:
        model = Agency
     opportunities = ma.Nested("OpSchema") #, only=("id", "title")
+    contracts = ma.Nested("ContractSchema") #, only=("id", "title")
 
 
 
@@ -116,6 +117,20 @@ class UnspscSchemaSimple(ma.ModelSchema):
 
 
 
+#----------  SUPPLIERS ----------
+
+class Supplier(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    abn = db.Column(db.String())
+    name = db.Column(db.String())
+    country = db.Column(db.String())
+
+class SupplierSchema(ma.ModelSchema):
+    class Meta:
+       model = Supplier
+
+
+
 #----------  CONTRACTS ----------
 
 #{"cn_id:": "cn3609370", "postcode:": "2000", "title": "Legal Services", "name:": "norton rose", "contract_period:": "10-may-2019 to 30-jun-2019", "category:": "legal services", "atm_id:": "", "town/city:": "sydney", "postal_address:": "", "confidentiality_-_contract:": "no", "agency_reference_id:": "75489", "confidentiality_-_outputs:": "no", "contract_value_(aud):": "$84,700.00", "consultancy:": "no", "country:": "australia", "abn:": "32 720 868 049", "agency:": "australian competition and consumer commission", "procurement_method:": "prequalified tender", "description:": "legal services", "state/territory:": "nsw", "publish_date:": "11-jul-2019"}
@@ -124,7 +139,6 @@ class Contract(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(), nullable=True)
     cn_id = db.Column(db.String(), nullable=True)
-    #contract_period = db.Column(db.String(), nullable=True)
     contract_start = db.Column(db.Date())
     contract_end = db.Column(db.Date())
     contract_duration = db.Column(db.Integer(), nullable=True)
@@ -134,14 +148,29 @@ class Contract(db.Model):
     agency_reference_id = db.Column(db.String(), nullable=True)
     confidentiality_outputs = db.Column(db.String(), nullable=True)
     contract_value = db.Column(db.String(), nullable=True)
-    #agency_id = db.Column(db.String())
     procurement_method = db.Column(db.String(), nullable=True)
     description = db.Column(db.String(), nullable=True)
     publish_date = db.Column(db.Date())
+    category_temp_title = db.Column(db.String(), nullable=True)
+
+    agency_id = db.Column(db.Integer, db.ForeignKey("agency.id"), nullable=True)
+    agency = db.relationship("Agency", backref="contracts")
+
+    supplier_id = db.Column(db.Integer, db.ForeignKey("supplier.id"), nullable=True)
+    supplier = db.relationship("Supplier", backref="suppliers")
+
+    unspsc_id = db.Column(db.Integer, db.ForeignKey("unspsc.id"), nullable=True)
+
+
 
 class ContractSchema(ma.ModelSchema):
     class Meta:
        model = Contract
+    agency = ma.Nested(AgencySchema, only=("id", "title"))
+    supplier = ma.Nested(SupplierSchema, only=("id", "name", "abn", "country"))
+
+
+
 
 
 #----------  USERS ----------
@@ -156,7 +185,6 @@ class UserSchema(ma.ModelSchema):
     class Meta:
        model = User
        #fields = ('id', 'full_name')
-
     comments = ma.Nested("CommentSchema", many=True, exclude=("email",))
 
 

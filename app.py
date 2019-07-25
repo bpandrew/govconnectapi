@@ -18,7 +18,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 print(db)
-from models import User, UserSchema, Comment, CommentSchema, Op, OpSchema, OpSimpleSchema, Unspsc, UnspscSchema, UnspscSchemaSimple, Agency, AgencySchema, Addenda, AddendaSchema, Contract, ContractSchema, Page, Tag
+from models import User, UserSchema, Comment, CommentSchema, Op, OpSchema, OpSimpleSchema, Unspsc, UnspscSchema, UnspscSchemaSimple, Agency, AgencySchema, Addenda, AddendaSchema, Contract, ContractSchema, Supplier, SupplierSchema, Page, Tag
 
 
 # ---------------- LOAD SCHEMAS ---------------
@@ -47,23 +47,53 @@ addendas_schema = AddendaSchema(many=True)
 contract_schema = ContractSchema()
 contracts_schema = ContractSchema(many=True)
 
+supplier_schema = SupplierSchema()
+suppliers_schema = SupplierSchema(many=True)
+
 
 # ---------------- ROUTES ---------------
 
 @app.route("/")
 def hello():
 
+    # check if the title is linked to any contracts where the unspsc_id==None
+    contract_unspsc = Contract.query.filter_by(unspsc_id=None).all()
+    result = contracts_schema.dump(contract_unspsc).data
+
+    for contract in result:
+        temp_title = contract['category_temp_title'].capitalize()
+        unspsc = Unspsc.query.filter_by(title=temp_title).all()
+        result_unspsc = unspscs_schema.dump(unspsc).data
+        for item in result_unspsc:
+            new_unspsc_id = item['id']
+            print(contract['id'])
+            print(new_unspsc_id)
+            print()  
+            db.session.query(Contract).filter(Contract.id == contract['id']).\
+                update({Contract.unspsc_id: new_unspsc_id}, synchronize_session=False)
+            db.session.commit()            
+
+            break
+
+
+        
+
+
+    #print(result[0])
+    #jsonify(result)
+
+    return jsonify(result)
 
     #db.session.query(Op).delete()
     #db.session.commit()
 
     #opportunity = Op.query.filter_by(id=240).first()
-    opportunity = Op.query.first()
-    opportunity.categories = []
+    #opportunity = Op.query.first()
+    #opportunity.categories = []
     #opportunity.categories.remove(somecategory)
-    db.session.commit()
-    db.session.delete(opportunity)
-    db.session.commit()
+    #db.session.commit()
+    #db.session.delete(opportunity)
+    #db.session.commit()
 
     #db.create_all()
 
@@ -365,7 +395,6 @@ def addenda_add():
 
 
 
-
 # ------------  CONTRACTS ---------------
 
 
@@ -388,23 +417,26 @@ def contract_add():
     print(data)
     title = data['title']
     cn_id = data['cn_id']
-    #contract_period = data['contract_period']
     contract_start =  data['contract_start']
     contract_end =  data['contract_end']
+    contract_duration =  data['contract_duration']
     #category_id = db.Column(db.String(), nullable=True)
     #atm_id = db.Column(db.String(), nullable=True)
     confidentiality_contract = data['confidentiality_contract']
     agency_reference_id = data['agency_reference_id']
     confidentiality_outputs = data['confidentiality_outputs']
-    contract_value = data['contract_value_(aud)']
+    contract_value = data['contract_value']
     #agency_id = db.Column(db.String())
     procurement_method = data['procurement_method']
     description = data['description']
     publish_date = data['publish_date']
+    category_temp_title = data['category']
+    agency_id = data['agency_id']
+    supplier_id = data['supplier_id']
 
 
     db.create_all()
-    contract = Contract(title=title, cn_id=cn_id, contract_start=contract_start, contract_end=contract_end, confidentiality_contract=confidentiality_contract, agency_reference_id=agency_reference_id, confidentiality_outputs=confidentiality_outputs, contract_value=contract_value, procurement_method=procurement_method, description=description, publish_date=publish_date)
+    contract = Contract(title=title, cn_id=cn_id, contract_start=contract_start, contract_end=contract_end, contract_duration=contract_duration, category_temp_title=category_temp_title, agency_id=agency_id, confidentiality_contract=confidentiality_contract, agency_reference_id=agency_reference_id, confidentiality_outputs=confidentiality_outputs, contract_value=contract_value, procurement_method=procurement_method, description=description, publish_date=publish_date, supplier_id=supplier_id)
     db.session.add(contract)
     db.session.commit()
 
@@ -413,6 +445,15 @@ def contract_add():
 
 
 
+@app.route("/contract/unspsc")
+def contract_unspsc():
+    try:    
+        contract_unspsc = Contract.query.filter_by(unspsc_id = None).all()
+        result = contracts_schema.dump(contract_unspsc).data  
+
+        return jsonify(result)
+    except Exception as e:
+	    return(str(e))
 
 
 
@@ -456,6 +497,29 @@ def unspsc_detail(unspsc_id):
 	#    return(str(e))
 
 
+
+def update_contract_unspsc():
+    # check if the title is linked to any contracts where the unspsc_id==None
+    contract_unspsc = Contract.query.filter_by(unspsc_id=None).all()
+    result = contracts_schema.dump(contract_unspsc).data
+
+    for contract in result:
+        temp_title = contract['category_temp_title'].capitalize()
+        unspsc = Unspsc.query.filter_by(title=temp_title).all()
+        result_unspsc = unspscs_schema.dump(unspsc).data
+        for item in result_unspsc:
+            new_unspsc_id = item['id']
+            print(contract['id'])
+            print(new_unspsc_id)
+            print()  
+            db.session.query(Contract).filter(Contract.id == contract['id']).\
+                update({Contract.unspsc_id: new_unspsc_id}, synchronize_session=False)
+            db.session.commit()            
+            break
+
+
+
+
 @app.route("/unspsc/add/<unspsc>/<title_>")
 def unspsc_add(unspsc, title_):
     try:
@@ -489,8 +553,10 @@ def unspsc_add(unspsc, title_):
                     db.session.add(unspsc)
                     db.session.commit()
 
+            update_contract_unspsc()
             return api_response('Success - All unspscs Added', None)
         else:
+            update_contract_unspsc()
             return api_response('Success - unspsc Already Exists', None)
 
 
@@ -589,6 +655,45 @@ def agency_add():
     else:
         response = agency_schema.dump(agency).data
         return api_response('Success - Agency Already Exists', response)
+
+
+
+# ------------  SUPPLIERS ---------------
+
+@app.route("/suppliers")
+def suppliers():
+    try:
+        suppliers=Supplier.query.all()
+        result = suppliers_schema.dump(suppliers).data
+        return jsonify(result)
+    except Exception as e:
+	    return(str(e))
+
+
+@app.route("/suppliers/add", methods=['GET'])
+def suppliers_add():
+
+    name=request.args.get('name').capitalize()
+    abn=request.args.get('abn')
+    country=request.args.get('country').capitalize()
+    
+    supplier = Supplier.query.filter_by(abn=abn).first()
+    if supplier==None:
+        db.create_all()
+        supplier = Supplier(name=name, abn=abn, country=country)
+        db.session.add(supplier)
+        db.session.commit()
+
+        response = supplier_schema.dump(supplier).data
+        return api_response('Success - Supplier Added', response)
+    else:
+        response = supplier_schema.dump(supplier).data
+        return api_response('Success - Supplier Already Exists', response)
+
+
+
+
+
 
 
 
