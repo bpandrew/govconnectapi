@@ -169,6 +169,7 @@ class ContractSchema(ma.ModelSchema):
        model = Contract
     agency = ma.Nested(AgencySchema, only=("id", "title"))
     supplier = ma.Nested(SupplierSchema, only=("id", "name", "abn", "country"))
+    unspsc = ma.Nested(SupplierSchema, only=("id", "title", "unspsc", "level", "level_int", "parent_id"))
 
 
 
