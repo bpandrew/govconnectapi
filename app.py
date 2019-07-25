@@ -60,20 +60,20 @@ def hello():
     contract_unspsc = Contract.query.filter_by(unspsc_id=None).all()
     result = contracts_schema.dump(contract_unspsc).data
 
-    for contract in result:
-        temp_title = contract['category_temp_title'].capitalize()
-        unspsc = Unspsc.query.filter_by(title=temp_title).all()
-        result_unspsc = unspscs_schema.dump(unspsc).data
-        for item in result_unspsc:
-            new_unspsc_id = item['id']
-            print(contract['id'])
-            print(new_unspsc_id)
-            print()  
-            db.session.query(Contract).filter(Contract.id == contract['id']).\
-                update({Contract.unspsc_id: new_unspsc_id}, synchronize_session=False)
-            db.session.commit()            
+    #for contract in result:
+    #    temp_title = contract['category_temp_title'].capitalize()
+    #    unspsc = Unspsc.query.filter_by(title=temp_title).all()
+    #    result_unspsc = unspscs_schema.dump(unspsc).data
+    #    for item in result_unspsc:
+    #        new_unspsc_id = item['id']
+    #        print(contract['id'])
+    #        print(new_unspsc_id)
+    #        print()  
+    #        db.session.query(Contract).filter(Contract.id == contract['id']).\
+    #            update({Contract.unspsc_id: new_unspsc_id}, synchronize_session=False)
+    #        db.session.commit()            
 
-            break
+    #        break
 
 
         

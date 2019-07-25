@@ -157,9 +157,10 @@ class Contract(db.Model):
     agency = db.relationship("Agency", backref="contracts")
 
     supplier_id = db.Column(db.Integer, db.ForeignKey("supplier.id"), nullable=True)
-    supplier = db.relationship("Supplier", backref="suppliers")
+    supplier = db.relationship("Supplier", backref="contracts")
 
     unspsc_id = db.Column(db.Integer, db.ForeignKey("unspsc.id"), nullable=True)
+    unspsc = db.relationship("Unspsc", backref="contracts")
 
 
 
