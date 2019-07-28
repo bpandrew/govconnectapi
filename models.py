@@ -176,6 +176,12 @@ class ContractSchema(ma.ModelSchema):
 
 
 #----------  USERS ----------
+user_unspsc_filter = db.Table('user_unspsc_filter',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('unspsc_id', db.Integer, db.ForeignKey('unspsc.id'), primary_key=True)
+)
+
+
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)

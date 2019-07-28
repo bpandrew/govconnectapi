@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, jsonify, Response
+from flask import Flask, request, jsonify, Response, render_template, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import desc
 from flask_marshmallow import Marshmallow
@@ -186,31 +186,32 @@ def users_delete(id_):
 
 # ------------  OPPORTUNITIES ---------------
 
-def generate(releases, count):
-    #print(count)
-    yield '['
-    i=1
-    for release in releases:
-        print(release)
-        if (i!=int(count)):
-            yield json.dumps(release) + ', '
-        else:
-            yield json.dumps(release) + ''
-        i=i+1
-    yield ']'
-
-
-@app.route("/op")
+@app.route("/op", methods=['GET'])
 def op():
+    page = request.args.get('page', 1, type=int)
+
     try:
-        opportunities=Op.query.order_by(desc(Op.publish_date)).all()
-        result = ops_schema.dump(opportunities).data
-        
-        print(result)
+        # Only show the open opportunities
+        opportunities = Op.query #.all() #session.query(Contract)
+        opportunities = opportunities.filter( getattr(Op,'close_date')>=datetime.now() )
+        opportunities = opportunities.paginate(page, 1000, False)
+
+
+        next_url = url_for('op', page=opportunities.next_num) \
+            if opportunities.has_next else None
+        prev_url = url_for('op', page=opportunities.prev_num) \
+            if opportunities.has_prev else None
+        total = opportunities.total
+        pages = opportunities.pages
 
         output = {}
+        output['pagination'] = {"next_url":next_url, "prev_url":prev_url, "total":total, "pages":pages}
+        output['results'] = ops_schema.dump(opportunities.items).data
+
+        #print(result)
+
         # Update all of the times to human readable
-        for op in result:
+        for op in output['results']:
             
             published = datetime.strptime(op['publish_date'], '%Y-%m-%d')
             #print(humanize.naturalday(published))
@@ -225,24 +226,17 @@ def op():
                     op['category_title'] = category['title'].capitalize()
                     op['category_id'] = category['id']
 
+        return jsonify(output)
 
-            try:
-                print("yo")
-            except:
-                pass
-
-
-        #output['result'] = result
-        return Response(generate(result, len(result)), content_type='application/json')
-        
-        #return jsonify(output)
 
     except Exception as e:
 	    return(str(e))
 
 
+
 @app.route("/op/<op_id>", methods=['GET'])
 def op_detail(op_id):
+    
     try:
         opportunity = Op.query.filter_by(id=op_id).first()
         result = op_schema.dumps(opportunity).data
@@ -397,17 +391,118 @@ def addenda_add():
 
 # ------------  CONTRACTS ---------------
 
+@app.route("/contracts", methods=['GET'])
+def contracts():
+    page = request.args.get('page', 1, type=int)
+    paginate = request.args.get('paginate', "yes", type=str)
+    display = request.args.get('display', 'filtered', type=str)
 
-@app.route("/contract")
-def contract():
-    try:
-        #contracts=Contract.query.order_by(desc(Contract.publish_date)).all()
-        contracts=Contract.query.all()
-        result = contracts_schema.dump(contracts).data
-        return jsonify(result)
+    #x = datetime.now()
+    #date_end = x.strftime("%Y-%m-%d")
+    date_end = request.args.get('date_end', None, type=str)
+    date_start = request.args.get('date_start', None, type=str)
+    agency_id = request.args.get('agency_id', None, type=int)
+    supplier_id = request.args.get('supplier_id', None, type=int)
 
-    except Exception as e:
-	    return(str(e))
+
+    filters = []
+
+    # Builds the filter string
+    if date_end!=None:
+        filters.append({'field': 'contract_start', 'operator': "<=", 'value': date_end})
+    if date_start!=None:
+        filters.append({'field': 'contract_start', 'operator': ">=", 'value': date_start})
+    if agency_id!=None:
+        filters.append({'field': 'agency_id', 'operator': "==", 'value': agency_id})
+    if supplier_id!=None:
+        filters.append({'field': 'supplier_id', 'operator': "==", 'value': supplier_id})
+    
+    #filters = [
+    #    {'field': 'contract_duration', 'operator': "==", 'value': 210},
+    #    {'field': 'contract_start', 'operator': ">=", 'value': date_start},
+    #    {'field': 'contract_start', 'operator': "<=", 'value': date_end}
+    #    ]
+
+    query = Contract.query #.all() #session.query(Contract)
+    for item in filters:
+        if item['operator']=="==":
+            query = query.filter( getattr(Contract,item['field'])==item['value'] )
+        elif item['operator']==">=":
+            query = query.filter( getattr(Contract,item['field'])>=item['value'] )
+        elif item['operator']=="<=":
+            query = query.filter( getattr(Contract,item['field'])<=item['value'] )
+        elif item['operator']=="!=":
+            query = query.filter( getattr(Contract,item['field'])!=item['value'] )
+    # now we can run the query
+    query = query.order_by(desc(Contract.publish_date))
+
+    output = {}
+
+    if paginate=="yes":
+        contracts = query.paginate(page, 1000, False)
+
+        next_url = url_for('contracts', page=contracts.next_num) \
+            if contracts.has_next else None
+        prev_url = url_for('contracts', page=contracts.prev_num) \
+            if contracts.has_prev else None
+        total = contracts.total
+        pages = contracts.pages
+
+        output['pagination'] = {"next_url":next_url, "prev_url":prev_url, "total":total, "pages":pages}
+        output['results'] = contracts_schema.dump(contracts.items).data
+    else:
+        contracts = query.all()
+        output['results'] = contracts_schema.dump(contracts).data
+    
+
+    #print(output['results'])
+    
+    #try:
+    # Format all of the dates and values
+    newest_contract = datetime.now()-timedelta(days=10000) #datetime.strptime(datetime.now(), '%Y-%m-%d')
+    oldest_contract = datetime.now() #datetime.strptime(datetime.now(), '%Y-%m-%d')
+    for item in output['results']:
+        
+        published = datetime.strptime(item['publish_date'], '%Y-%m-%d')
+        if newest_contract<published:
+            newest_contract = published
+        if oldest_contract>published:
+            oldest_contract = published
+
+        item['contract_open'] = "finished"
+        try:
+            item['contract_value'] = round(float(item['contract_value']))
+            value = float(item['contract_value'])
+            if value<1000000:
+                item['contract_value_human'] = humanize.intcomma(int(value))
+            else:
+                item['contract_value_human'] = humanize.intword(int(value))
+        except:
+            item['contract_value_human'] = item['contract_value']
+            item['contract_value'] = 0
+
+        #published = datetime.now() - datetime.strptime(result['publish_date'], '%Y-%m-%d')
+        x = datetime.strptime(item['contract_start'], '%Y-%m-%d')
+        start_year = x.strftime("%Y")
+        y = datetime.strptime(item['contract_end'], '%Y-%m-%d')
+        end_year = y.strftime("%Y")
+        item['contract_start_human'] = x.strftime("%b %d %Y")
+        item['contract_end_human'] = y.strftime("%b %d %Y")
+        if (y<datetime.now()+timedelta(days=30)) and (y>datetime.now()):
+            item['contract_open'] = "ending soon"
+        elif y>datetime.now():
+            item['contract_open'] = "ongoing"
+
+    output['data'] = {}
+
+    output['data']['newest_contract'] = newest_contract.strftime("%b %d %Y")
+    output['data']['oldest_contract'] = oldest_contract.strftime("%b %d %Y")
+
+
+    return jsonify(output)
+
+    #except Exception as e:
+	#    return(str(e))
 
 
 @app.route("/contract/add", methods=["POST"])
@@ -434,19 +529,35 @@ def contract_add():
     agency_id = data['agency_id']
     supplier_id = data['supplier_id']
 
-
-    db.create_all()
-    contract = Contract(title=title, cn_id=cn_id, contract_start=contract_start, contract_end=contract_end, contract_duration=contract_duration, category_temp_title=category_temp_title, agency_id=agency_id, confidentiality_contract=confidentiality_contract, agency_reference_id=agency_reference_id, confidentiality_outputs=confidentiality_outputs, contract_value=contract_value, procurement_method=procurement_method, description=description, publish_date=publish_date, supplier_id=supplier_id)
-    db.session.add(contract)
-    db.session.commit()
+    contract=Contract.query.filter_by(cn_id=cn_id).first()
+    if contract==None:
+        db.create_all()
+        contract = Contract(title=title, cn_id=cn_id, contract_start=contract_start, contract_end=contract_end, contract_duration=contract_duration, category_temp_title=category_temp_title, agency_id=agency_id, confidentiality_contract=confidentiality_contract, agency_reference_id=agency_reference_id, confidentiality_outputs=confidentiality_outputs, contract_value=contract_value, procurement_method=procurement_method, description=description, publish_date=publish_date, supplier_id=supplier_id)
+        db.session.add(contract)
+        db.session.commit()
 
     response = contract_schema.dump(contract).data
     return response
 
 
 
+@app.route("/contract/<contract_id>", methods=['GET'])
+def contract_detail(contract_id):
+    try:
+        contract = Contract.query.filter_by(id=contract_id).first()
+        result = contract_schema.dumps(contract).data
+
+        #result['contract_value_human'] = humanize.naturaltime(result['contract_value'])
+
+        return json.loads(result)
+    except Exception as e:
+	    return(str(e))
+
+
+
 @app.route("/contract/unspsc")
 def contract_unspsc():
+    # Shows all of the contracts that need to have the UNSPSC linked by the spider.
     try:    
         contract_unspsc = Contract.query.filter_by(unspsc_id = None).all()
         result = contracts_schema.dump(contract_unspsc).data  
