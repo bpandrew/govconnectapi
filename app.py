@@ -509,7 +509,7 @@ def contracts():
 def contract_add():
 
     data = request.form.to_dict()
-    print(data)
+    #print(data)
     title = data['title']
     cn_id = data['cn_id']
     contract_start =  data['contract_start']
