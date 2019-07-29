@@ -65,6 +65,7 @@ class Op(db.Model):
     publish_date = db.Column(db.Date())
     atm_type = db.Column(db.String(), nullable=True)
     multi_agency_access = db.Column(db.Integer(), nullable=True)
+    document_link = db.Column(db.String(), nullable=True)
     #addenda_available = db.Column(db.String())
     #estimated_value = db.Column(db.String()) #estimated_value_(aud)
     #location = db.Column(db.String()) ## NEEDS WORK act, nsw, vic, sa, wa, qld, nt, tas"

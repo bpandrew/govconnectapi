@@ -193,7 +193,7 @@ def op():
     try:
         # Only show the open opportunities
         opportunities = Op.query #.all() #session.query(Contract)
-        opportunities = opportunities.filter( getattr(Op,'close_date')>=datetime.now() )
+        opportunities = opportunities.filter( getattr(Op,'close_date')>=datetime.now()-timedelta(days=1) )
         opportunities = opportunities.paginate(page, 1000, False)
 
 
@@ -294,6 +294,7 @@ def op_add():
         multi_agency_access = data['multi_agency_access']
         address_for_lodgement = data['address_for_lodgement']
         agency_id = data['agency_id']
+        document_link = data['document_link']
         #estimated_value = db.Column(db.String()) #estimated_value_(aud)
         #location = db.Column(db.String()) ## NEEDS WORK act, nsw, vic, sa, wa, qld, nt, tas"
         #addenda_available = data['addenda_available']  #NEEDS WORK
@@ -307,7 +308,7 @@ def op_add():
             #db.session.add(comment)
 
             db.create_all()
-            opportunity = Op(title=title, atm_id=atm_id, description=description, atm_type=atm_type, publish_date=publish_date, close_date=close_date, agency_id=agency_id, conditions_for_participation=conditions_for_participation, panel_arrangement=panel_arrangement, timeframe_for_delivery=timeframe_for_delivery, multi_stage=multi_stage, multi_agency_access=multi_agency_access, address_for_lodgement=address_for_lodgement)
+            opportunity = Op(title=title, atm_id=atm_id, description=description, atm_type=atm_type, publish_date=publish_date, close_date=close_date, agency_id=agency_id, conditions_for_participation=conditions_for_participation, panel_arrangement=panel_arrangement, timeframe_for_delivery=timeframe_for_delivery, multi_stage=multi_stage, multi_agency_access=multi_agency_access, address_for_lodgement=address_for_lodgement, document_link=document_link)
             category = Unspsc.query.filter_by(unspsc=unspsc).first()
             opportunity.categories.append(category)
 
