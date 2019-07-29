@@ -194,7 +194,7 @@ def op():
         # Only show the open opportunities
         opportunities = Op.query #.all() #session.query(Contract)
         opportunities = opportunities.filter( getattr(Op,'close_date')>=datetime.now()-timedelta(days=1) )
-        opportunities = opportunities.paginate(page, 1000, False)
+        opportunities = opportunities.paginate(page, 500, False)
 
 
         next_url = url_for('op', page=opportunities.next_num) \
@@ -625,6 +625,7 @@ def unspsc():
 
         result = unspscs_schema.dump(unspsc).data  # THIS SHOWS ALL OF THE Ops FOR THE UNSPSCs
         #result = unspscs_simple_schema.dump(unspsc).data
+        return json.dumps(result)
         return jsonify(result)
     except Exception as e:
 	    return(str(e))
@@ -768,8 +769,8 @@ def unspsc_children(unspsc_id):
 
 # ------------  AGENCIES ---------------
 
-@app.route("/agency")
-def agency():
+@app.route("/agencies")
+def agencies():
     try:
         agencies=Agency.query.all()
         result = agencies_schema.dump(agencies).data
@@ -841,7 +842,14 @@ def suppliers_add():
         return api_response('Success - Supplier Already Exists', response)
 
 
-
+@app.route("/supplier/<supplier_id>", methods=['GET'])
+def supplier_detail(supplier_id):
+    try:
+        supplier = Supplier.query.filter_by(id=supplier_id).first()
+        result = supplier_schema.dumps(supplier).data
+        return json.loads(result)
+    except Exception as e:
+	    return(str(e))
 
 
 
