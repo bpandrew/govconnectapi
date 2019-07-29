@@ -177,11 +177,6 @@ class ContractSchema(ma.ModelSchema):
 
 
 #----------  USERS ----------
-user_unspsc_filter = db.Table('user_unspsc_filter',
-    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
-    db.Column('unspsc_id', db.Integer, db.ForeignKey('unspsc.id'), primary_key=True)
-)
-
 
 
 class User(db.Model):
@@ -195,6 +190,30 @@ class UserSchema(ma.ModelSchema):
        model = User
        #fields = ('id', 'full_name')
     comments = ma.Nested("CommentSchema", many=True, exclude=("email",))
+
+
+
+
+
+
+class FilterUnspsc(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    user = db.relationship("User", backref="filters")
+    unspsc_id = db.Column(db.Integer, db.ForeignKey("unspsc.id"), nullable=True)
+    unspsc = db.relationship("Unspsc", backref="filters")
+    
+
+
+class FilterUnspscSchema(ma.ModelSchema):
+    class Meta:
+       model = FilterUnspsc
+    user = ma.Nested(UnspscSchema, only=("id", "first_name", "last_name"))
+    unspsc = ma.Nested(UnspscSchema, only=("id", "title"))
+
+
+
+
 
 
 

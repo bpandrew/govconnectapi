@@ -7,8 +7,11 @@ import json
 from datetime import datetime, date, time
 from datetime import timedelta
 import humanize
+from flask_cors import CORS, cross_origin
 
 app = Flask(__name__)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 app.config.from_object(os.environ['APP_SETTINGS'])
 #print(os.environ['APP_SETTINGS'])
@@ -18,7 +21,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 print(db)
-from models import User, UserSchema, Comment, CommentSchema, Op, OpSchema, OpSimpleSchema, Unspsc, UnspscSchema, UnspscSchemaSimple, Agency, AgencySchema, Addenda, AddendaSchema, Contract, ContractSchema, Supplier, SupplierSchema, Page, Tag
+from models import User, UserSchema, Comment, CommentSchema, Op, OpSchema, OpSimpleSchema, Unspsc, UnspscSchema, UnspscSchemaSimple, Agency, AgencySchema, Addenda, AddendaSchema, Contract, ContractSchema, Supplier, SupplierSchema, FilterUnspsc, FilterUnspscSchema, Page, Tag
 
 
 # ---------------- LOAD SCHEMAS ---------------
@@ -49,6 +52,11 @@ contracts_schema = ContractSchema(many=True)
 
 supplier_schema = SupplierSchema()
 suppliers_schema = SupplierSchema(many=True)
+
+filterUnspsc_schema = FilterUnspscSchema()
+filterUnspscs_schema = FilterUnspscSchema(many=True)
+
+
 
 
 # ---------------- ROUTES ---------------
@@ -183,17 +191,55 @@ def users_delete(id_):
 
 
 
+@app.route("/filter/unspsc/add", methods=['GET'])
+@cross_origin()
+def filter_unspsc_add():
+
+    unspsc_id=request.args.get('unspsc_id')
+    user_id = 1
+    
+    db.create_all()
+    filter_ = FilterUnspsc(user_id=user_id, unspsc_id=unspsc_id)
+    db.session.add(filter_)
+    db.session.commit()
+
+    response = filterUnspsc_schema.dump(filter_).data
+    return api_response('Success - Added Filter', response)
+
+
+
 
 # ------------  OPPORTUNITIES ---------------
 
 @app.route("/op", methods=['GET'])
 def op():
     page = request.args.get('page', 1, type=int)
+    filter_results = request.args.get('filter', 1, type=int)
+
+    user_id = 1
+    unspsc_filters = []
+
+    # find all the UNSPSC filters
+    myfilter = FilterUnspsc.query.filter_by(user_id=user_id).all()
+    unspsc_filters_result = filterUnspscs_schema.dumps(myfilter).data
+    unspsc_filters_result = json.loads(unspsc_filters_result)
+
+    #print("************")
+    #print(unspsc_filters_result)
+
+    for item in unspsc_filters_result:
+        unspsc_filters.append( item['unspsc']['id'] ) 
+
+    #print("************")
+    #print(unspsc_filters)
+
 
     try:
         # Only show the open opportunities
         opportunities = Op.query #.all() #session.query(Contract)
         opportunities = opportunities.filter( getattr(Op,'close_date')>=datetime.now()-timedelta(days=1) )
+        #for item in unspsc_filters:
+        #opportunities = opportunities.filter(Op.categories.any(Unspsc.id == 1))   
         opportunities = opportunities.paginate(page, 500, False)
 
 
@@ -206,13 +252,14 @@ def op():
 
         output = {}
         output['pagination'] = {"next_url":next_url, "prev_url":prev_url, "total":total, "pages":pages}
-        output['results'] = ops_schema.dump(opportunities.items).data
+        output['results_raw'] = ops_schema.dump(opportunities.items).data
 
         #print(result)
 
+        output['results'] = []
         # Update all of the times to human readable
-        for op in output['results']:
-            
+        for op in output['results_raw']:
+            hide_op = False
             published = datetime.strptime(op['publish_date'], '%Y-%m-%d')
             #print(humanize.naturalday(published))
             op['published_date_human'] = humanize.naturalday(published)
@@ -221,10 +268,16 @@ def op():
             op['title'] = op['title'].capitalize()
 
             for category in op['categories']:
+                if category['id'] in unspsc_filters:
+                    hide_op = True
                 highest_level = 0
                 if category['level_int']>highest_level:
                     op['category_title'] = category['title'].capitalize()
                     op['category_id'] = category['id']
+
+            if hide_op==False:
+                output['results'].append(op)
+            
 
         return jsonify(output)
 
