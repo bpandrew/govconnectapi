@@ -330,9 +330,11 @@ def op_add():
             return api_response('Success - Added Opportunity', response)
         else:
             # UPDATE ANY CHANGES TO THE AOPPORTUNITY
-            #db.session.query(Op).filter(id == obj.id).\
-            #    update({op.title:title, op.atm_id:atm_id, op.description:description, op.atm_type:atm_type, op.publish_date:publish_date, op.close_date:close_date, op.agency_id:agency_id}, synchronize_session=False)
-            #db.session.commit()
+
+            #opportunity = Op.query.filter_by(atm_id=atm_id).first()
+            obj.document_link = document_link
+            db.session.commit()
+
             return api_response('Success - Opportunity Already Exists', None)
     except Exception as e:
 	    return(str(e))
