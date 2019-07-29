@@ -625,7 +625,7 @@ def unspsc():
 
         result = unspscs_schema.dump(unspsc).data  # THIS SHOWS ALL OF THE Ops FOR THE UNSPSCs
         #result = unspscs_simple_schema.dump(unspsc).data
-        return json.dumps(result)
+        #return json.dumps(result)
         return jsonify(result)
     except Exception as e:
 	    return(str(e))
