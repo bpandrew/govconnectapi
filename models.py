@@ -132,6 +132,19 @@ class SupplierSchema(ma.ModelSchema):
 
 
 
+#----------  SON ----------
+
+class Son(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    austender_id = db.Column(db.String())
+    austender_link = db.Column(db.String())
+
+class SonSchema(ma.ModelSchema):
+    class Meta:
+       model = Supplier
+
+
+
 #----------  CONTRACTS ----------
 
 #{"cn_id:": "cn3609370", "postcode:": "2000", "title": "Legal Services", "name:": "norton rose", "contract_period:": "10-may-2019 to 30-jun-2019", "category:": "legal services", "atm_id:": "", "town/city:": "sydney", "postal_address:": "", "confidentiality_-_contract:": "no", "agency_reference_id:": "75489", "confidentiality_-_outputs:": "no", "contract_value_(aud):": "$84,700.00", "consultancy:": "no", "country:": "australia", "abn:": "32 720 868 049", "agency:": "australian competition and consumer commission", "procurement_method:": "prequalified tender", "description:": "legal services", "state/territory:": "nsw", "publish_date:": "11-jul-2019"}
@@ -153,6 +166,10 @@ class Contract(db.Model):
     description = db.Column(db.String(), nullable=True)
     publish_date = db.Column(db.Date())
     category_temp_title = db.Column(db.String(), nullable=True)
+    atm_austender_id = db.Column(db.String(), nullable=True)
+
+    son_id = db.Column(db.Integer, db.ForeignKey("son.id"), nullable=True)
+    son = db.relationship("Son", backref="contracts")
 
     agency_id = db.Column(db.Integer, db.ForeignKey("agency.id"), nullable=True)
     agency = db.relationship("Agency", backref="contracts")

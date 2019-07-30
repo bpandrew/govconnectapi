@@ -22,7 +22,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 print(db)
-from models import User, UserSchema, Comment, CommentSchema, Op, OpSchema, OpSimpleSchema, Unspsc, UnspscSchema, UnspscSchemaSimple, Agency, AgencySchema, Addenda, AddendaSchema, Contract, ContractSchema, Supplier, SupplierSchema, FilterUnspsc, FilterUnspscSchema, Page, Tag
+from models import User, UserSchema, Comment, CommentSchema, Op, OpSchema, OpSimpleSchema, Unspsc, UnspscSchema, UnspscSchemaSimple, Agency, AgencySchema, Addenda, AddendaSchema, Contract, ContractSchema, Supplier, SupplierSchema, FilterUnspsc, FilterUnspscSchema, Page, Tag, Son, SonSchema
 
 
 # ---------------- LOAD SCHEMAS ---------------
@@ -57,7 +57,8 @@ suppliers_schema = SupplierSchema(many=True)
 filterUnspsc_schema = FilterUnspscSchema()
 filterUnspscs_schema = FilterUnspscSchema(many=True)
 
-
+son_schema = SonSchema()
+sons_schema = SonSchema(many=True)
 
 
 # ---------------- ROUTES ---------------
@@ -442,9 +443,7 @@ def op_add():
             response = op_schema.dump(opportunity).data
             return api_response('Success - Added Opportunity', response)
         else:
-            # UPDATE ANY CHANGES TO THE AOPPORTUNITY
-
-            #opportunity = Op.query.filter_by(atm_id=atm_id).first()
+            # UPDATE ANY CHANGES TO THE OPPORTUNITY
             obj.document_link = document_link
             db.session.commit()
 
@@ -631,13 +630,23 @@ def contract_add():
     contract_start =  data['contract_start']
     contract_end =  data['contract_end']
     contract_duration =  data['contract_duration']
-    #category_id = db.Column(db.String(), nullable=True)
-    #atm_id = db.Column(db.String(), nullable=True)
-    confidentiality_contract = data['confidentiality_contract']
-    agency_reference_id = data['agency_reference_id']
-    confidentiality_outputs = data['confidentiality_outputs']
+
+    if 'confidentiality_contract' in data:
+        confidentiality_contract = data['confidentiality_contract']
+    else:
+        confidentiality_contract = "No"
+
+    if 'agency_reference_id' in data:
+        agency_reference_id = data['agency_reference_id']
+    else:
+        agency_reference_id = None
+
+    if 'confidentiality_outputs' in data:
+        confidentiality_outputs = data['confidentiality_outputs']
+    else:
+        confidentiality_outputs = "No"
+
     contract_value = data['contract_value']
-    #agency_id = db.Column(db.String())
     procurement_method = data['procurement_method']
     description = data['description']
     publish_date = data['publish_date']
@@ -645,15 +654,30 @@ def contract_add():
     agency_id = data['agency_id']
     supplier_id = data['supplier_id']
 
+    if 'son_id_actual' in data:
+        son_id = data['son_id_actual']
+    else:
+        son_id = None
+
+    if 'atm_id' in data:
+        atm_id = data['atm_id']
+    else:
+        atm_id = None
+
     contract=Contract.query.filter_by(cn_id=cn_id).first()
     if contract==None:
         db.create_all()
-        contract = Contract(title=title, cn_id=cn_id, contract_start=contract_start, contract_end=contract_end, contract_duration=contract_duration, category_temp_title=category_temp_title, agency_id=agency_id, confidentiality_contract=confidentiality_contract, agency_reference_id=agency_reference_id, confidentiality_outputs=confidentiality_outputs, contract_value=contract_value, procurement_method=procurement_method, description=description, publish_date=publish_date, supplier_id=supplier_id)
+        contract = Contract(title=title, cn_id=cn_id, son_id=son_id, atm_austender_id=atm_id, contract_start=contract_start, contract_end=contract_end, contract_duration=contract_duration, category_temp_title=category_temp_title, agency_id=agency_id, confidentiality_contract=confidentiality_contract, agency_reference_id=agency_reference_id, confidentiality_outputs=confidentiality_outputs, contract_value=contract_value, procurement_method=procurement_method, description=description, publish_date=publish_date, supplier_id=supplier_id)
         db.session.add(contract)
+        db.session.commit()
+    else:
+        # UPDATE ANY CHANGES TO THE OPPORTUNITY
+        contract.son_id = son_id
+        contract.atm_id = atm_id
         db.session.commit()
 
     response = contract_schema.dump(contract).data
-    return response
+    return contract
 
 
 
@@ -711,12 +735,34 @@ def contract_unspsc():
                 results_distinct.append({"category_temp_title":item['category_temp_title'], "id":item['id']})
 
 
-
-
-
         return jsonify(results_distinct)
     except Exception as e:
 	    return(str(e))
+
+
+
+# ------------  SON ---------------
+
+@app.route("/son/add", methods=['GET'])
+def son_add():
+
+    austender_id=request.args.get('austender_id').upper()
+    austender_link=request.args.get('austender_link')
+    
+    son = Son.query.filter_by(austender_link=austender_link).first()
+    if son==None:
+        db.create_all()
+        son = Son(austender_id=austender_id, austender_link=austender_link)
+        db.session.add(son)
+        db.session.commit()
+
+        response = son_schema.dump(son).data
+        return api_response('Success - Son Added', response)
+    else:
+        response = son_schema.dump(son).data
+        return api_response('Success - Son Already Exists', response)
+
+
 
 
 
@@ -939,7 +985,11 @@ def suppliers_add():
 
     name=request.args.get('name').capitalize()
     abn=request.args.get('abn')
-    country=request.args.get('country').capitalize()
+    country=request.args.get('country')
+    try:
+        country = country.capitalize()
+    except:
+        pass
     
     supplier = Supplier.query.filter_by(abn=abn).first()
     if supplier==None:
