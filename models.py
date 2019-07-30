@@ -184,11 +184,13 @@ class User(db.Model):
     first_name = db.Column(db.String(64))
     last_name = db.Column(db.String(64))
     email = db.Column(db.String(120))
+    password = db.Column(db.String())
+    token = db.Column(db.String())
 
 class UserSchema(ma.ModelSchema):
     class Meta:
        model = User
-       #fields = ('id', 'full_name')
+       fields = ('id', 'first_name', 'last_name', 'email', 'token')
     comments = ma.Nested("CommentSchema", many=True, exclude=("email",))
 
 

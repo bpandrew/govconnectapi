@@ -139,6 +139,27 @@ def api_response(message, data):
 
 
 
+
+# ------------  LOGIN ---------------
+
+@app.route("/login", methods=['POST'])
+def login():
+
+    data = request.form.to_dict()
+    email = data['email']
+    password = data['password']
+    try:
+        user = User.query.filter_by(email=email).first()
+        result = user_schema.dumps(user).data
+        if len(result)<=2:
+            return api_response('Fail', result)
+        else:
+            return api_response('Success', result)
+    except Exception as e:
+	    return(str(e))
+
+
+
 # ------------  USERS ---------------
 
 @app.route("/users")
