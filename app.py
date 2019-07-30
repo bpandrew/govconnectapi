@@ -8,6 +8,7 @@ from datetime import datetime, date, time
 from datetime import timedelta
 import humanize
 from flask_cors import CORS, cross_origin
+import random, string
 
 app = Flask(__name__)
 cors = CORS(app)
@@ -139,6 +140,14 @@ def api_response(message, data):
 
 
 
+import hashlib, binascii, os
+
+def hash_password(password):
+    """Hash a password for storing."""
+    h = hashlib.md5(password.encode())
+    return h.hexdigest()
+
+
 
 # ------------  LOGIN ---------------
 
@@ -148,8 +157,10 @@ def login():
     data = request.form.to_dict()
     email = data['email']
     password = data['password']
+    password = hash_password(password)
     try:
-        user = User.query.filter_by(email=email).first()
+        print(email)
+        user = User.query.filter_by(email=email).filter_by(password=password).first()
         result = user_schema.dumps(user).data
         if len(result)<=2:
             return api_response('Fail', result)
@@ -182,20 +193,31 @@ def user_detail(user_id):
 	    return(str(e))
 
 
-@app.route("/user/add", methods=['GET'])
+@app.route("/user/add", methods=['POST'])
 def user_add():
 
-    first_name=request.args.get('first_name')
-    last_name=request.args.get('last_name')
-    email=request.args.get('email')
     
-    db.create_all()
-    user = User(first_name=first_name, last_name=last_name, email=email)
-    db.session.add(user)
-    db.session.commit()
+    data = request.form.to_dict()
+    first_name = data['first_name']
+    last_name = data['last_name']
+    email = data['email']
+    password = data['password']
 
-    response = user_schema.dump(user).data
-    return api_response('Success - Added User', response)
+    token = ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(16))
+    stored_password = hash_password(password)
+
+    user = User.query.filter_by(email=email).first()
+    result = user_schema.dumps(user).data
+    if len(result)>2:
+        return api_response('Error - email already exists', None)
+    else:
+        db.create_all()
+        user = User(first_name=first_name, last_name=last_name, email=email, password=stored_password, token=token)
+        db.session.add(user)
+        db.session.commit()
+
+        response = user_schema.dump(user).data
+        return api_response('Success', response)
 
 
 
@@ -217,15 +239,23 @@ def users_delete(id_):
 def filter_unspsc_add():
 
     unspsc_id=request.args.get('unspsc_id')
-    user_id = 1
-    
-    db.create_all()
-    filter_ = FilterUnspsc(user_id=user_id, unspsc_id=unspsc_id)
-    db.session.add(filter_)
-    db.session.commit()
 
-    response = filterUnspsc_schema.dump(filter_).data
-    return api_response('Success - Added Filter', response)
+    # Check the token matches the user ID, if not return empty results.
+    user_id = request.args.get('id')
+    token = request.args.get('token')
+    user = User.query.filter_by(id=user_id).filter_by(token=token).first()
+    result = user_schema.dumps(user).data
+    if len(result)<=2:
+        output = {"results": []}
+        return jsonify(output)  
+    else:
+        db.create_all()
+        filter_ = FilterUnspsc(user_id=user_id, unspsc_id=unspsc_id)
+        db.session.add(filter_)
+        db.session.commit()
+
+        response = filterUnspsc_schema.dump(filter_).data
+        return api_response('Success - Added Filter', response)
 
 
 
@@ -237,7 +267,16 @@ def op():
     page = request.args.get('page', 1, type=int)
     filter_results = request.args.get('filter', 1, type=int)
 
-    user_id = 1
+    # Check the token matches the user ID, if not return empty results.
+    user_id = request.args.get('id')
+    token = request.args.get('token')
+    user = User.query.filter_by(id=user_id).filter_by(token=token).first()
+    result = user_schema.dumps(user).data
+    if len(result)<=2:
+        output = {"results": []}
+        return jsonify(output)
+
+
     unspsc_filters = []
 
     # find all the UNSPSC filters
