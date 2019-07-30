@@ -673,7 +673,7 @@ def contract_add():
     else:
         # UPDATE ANY CHANGES TO THE OPPORTUNITY
         contract.son_id = son_id
-        contract.atm_id = atm_id
+        contract.atm_austender_id = atm_id
         db.session.commit()
 
     response = contract_schema.dump(contract).data
