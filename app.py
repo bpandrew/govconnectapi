@@ -725,6 +725,29 @@ def contract_unspsc():
     except Exception as e:
 	    return(str(e))
 
+# updates all of the UNSPSCs for each contract
+@app.route("/unspsc/update")
+def unspsc_update():
+    contract_unspsc = Contract.query.filter_by(unspsc_id = None).all()
+    result = contracts_schema.dump(contract_unspsc).data  
+
+    # Loop through and update from the UNSPSC database
+    for item in result:
+        #print(item['category_temp_title'])
+
+        obj = Unspsc.query #.all() #session.query(Contract)
+        obj = obj.filter(Unspsc.title.ilike(item['category_temp_title']))
+        obj = obj.first()
+
+        if obj!=None:
+            temp_result = unspsc_schema.dump(obj).data 
+            #print(temp_result)
+            #print(item['id'])
+            
+            contract_obj = Contract.query.filter_by(id = item['id']).first()
+            contract_obj.unspsc_id = temp_result['id']
+            db.session.commit()
+
 
 
 # ------------  SON ---------------
