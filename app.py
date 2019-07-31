@@ -728,7 +728,7 @@ def contract_unspsc():
 # updates all of the UNSPSCs for each contract
 @app.route("/unspsc/update")
 def unspsc_update():
-    contract_unspsc = Contract.query.filter_by(unspsc_id = None).limit(500).all()
+    contract_unspsc = Contract.query.filter_by(unspsc_id = None).order_by(desc(Contract.id)).limit(10).all()
     result = contracts_schema.dump(contract_unspsc).data  
 
     # Loop through and update from the UNSPSC database
@@ -964,8 +964,9 @@ def agency_detail(agency_id):
 def agency_add():
 
     title=request.args.get('title').capitalize()
-    portfolio=request.args.get('portfolio').capitalize()
-    if portfolio=="":
+    try:
+        portfolio=request.args.get('portfolio').capitalize()
+    except:
         portfolio = None
     
     agency = Agency.query.filter_by(title=title).first()
