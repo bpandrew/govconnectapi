@@ -198,17 +198,41 @@ class ContractSchema(ma.ModelSchema):
 
 #----------  APSJOBS ----------
 
-
-class ApsEmployee(db.Model):
+class Employee(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String())
     last_name = db.Column(db.String())
     employee_no = db.Column(db.String())
+    gender = db.Column(db.String()) 
 
-class ApsEmployeeSchema(ma.ModelSchema):
+class EmployeeSchema(ma.ModelSchema):
     class Meta:
-       model = ApsEmployee
+       model = Employee
 
+
+
+class Notice(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey("employee.id"), nullable=True)
+    employee = db.relationship("Employee", backref="notices")
+    agency_id = db.Column(db.Integer, db.ForeignKey("agency.id"), nullable=True)
+    agency = db.relationship("Agency", backref="notices")
+    classification_from = db.Column(db.String(), nullable=True)
+    classification = db.Column(db.String(), nullable=True)
+    position_details = db.Column(db.String(), nullable=True)
+    position = db.Column(db.String(), nullable=True)
+    publish_date = db.Column(db.Date(), nullable=True)
+    notice_type = db.Column(db.String(), nullable=True)
+    notice_no = db.Column(db.String(), nullable=True)
+    state = db.Column(db.String(), nullable=True)
+    suburb = db.Column(db.String(), nullable=True)
+    advertised = db.Column(db.String(), nullable=True)
+
+class NoticeSchema(ma.ModelSchema):
+    class Meta:
+       model = Notice
+    employee = ma.Nested(EmployeeSchema, only=("id", "first_name"))
+    agency = ma.Nested(AgencySchema, only=("id", "title"))
 
 
 

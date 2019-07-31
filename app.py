@@ -22,7 +22,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 print(db)
-from models import User, UserSchema, Comment, CommentSchema, Op, OpSchema, OpSimpleSchema, Unspsc, UnspscSchema, UnspscSchemaSimple, Agency, AgencySchema, Addenda, AddendaSchema, Contract, ContractSchema, Supplier, SupplierSchema, FilterUnspsc, FilterUnspscSchema, Page, Tag, Son, SonSchema
+from models import User, UserSchema, Comment, CommentSchema, Op, OpSchema, OpSimpleSchema, Unspsc, UnspscSchema, UnspscSchemaSimple, Agency, AgencySchema, Addenda, AddendaSchema, Contract, ContractSchema, Supplier, SupplierSchema, FilterUnspsc, FilterUnspscSchema, Page, Tag, Son, SonSchema, Employee, EmployeeSchema, Notice, NoticeSchema
 
 
 # ---------------- LOAD SCHEMAS ---------------
@@ -59,6 +59,14 @@ filterUnspscs_schema = FilterUnspscSchema(many=True)
 
 son_schema = SonSchema()
 sons_schema = SonSchema(many=True)
+
+employee_schema = EmployeeSchema()
+employees_schema = EmployeeSchema(many=True)
+
+notice_schema = NoticeSchema()
+notices_schema = NoticeSchema(many=True)
+
+
 
 
 # ---------------- ROUTES ---------------
@@ -952,17 +960,23 @@ def agency_detail(agency_id):
 def agency_add():
 
     title=request.args.get('title').capitalize()
+    portfolio=request.args.get('portfolio').capitalize()
+    if portfolio=="":
+        portfolio = None
     
     agency = Agency.query.filter_by(title=title).first()
     if agency==None:
         db.create_all()
-        agency = Agency(title=title)
+        agency = Agency(title=title, portfolio=portfolio)
         db.session.add(agency)
         db.session.commit()
 
         response = agency_schema.dump(agency).data
         return api_response('Success - Agency Added', response)
     else:
+        agency.portfolio = portfolio
+        db.session.commit()
+
         response = agency_schema.dump(agency).data
         return api_response('Success - Agency Already Exists', response)
 
@@ -1018,29 +1032,113 @@ def supplier_detail(supplier_id):
 
 
 
+# ------------  APS EMPLOYEE ---------------
+@app.route("/employee/add", methods=['POST'])
+def employee_add():
+
+    data = request.form.to_dict()
+    print(data)
+    first_name = data['employee_first_name']
+    last_name = data['employee_last_name']
+    employee_no = data['employee_no']
+    gender = data['gender']
+
+    employee = Employee.query.filter_by(employee_no=employee_no).first()
+    result = employee_schema.dumps(employee).data
+    if len(result)>2:
+        return api_response('User already exists', result)
+    else:
+        db.create_all()
+        employee = Employee(first_name=first_name, last_name=last_name, employee_no=employee_no, gender=gender)
+        db.session.add(employee)
+        db.session.commit()
+
+        response = employee_schema.dump(employee).data
+        return api_response('Success', response)
 
 
 
+#{'employee_first_name': u'Karen-Maree', 'agency_notice': u'Department of health', 'notice_no': u'10741900', u'classification': u'APS Level 6', u'advertised': u'10736497: PS42-Thu, Thursday, 18 October 2018', u'agency_employment_act': u'PS Act 1999', u'agency': u'Department of Health', 'employee_no': u'608-76477', 'notice_type': u'Promotion', 'employee_last_name': u'Garside', 'classification_from': u'APS Level 5', u'location': u'Parramatta - NSW', u'position_details': u'Senior Investigator,  Investigation Section', u'position': u'18-PBID-2028', 'portfolio': u'health'}
+
+# ------------  APS EMPLOYEE ---------------
+@app.route("/notice/add", methods=['POST'])
+def notice_add():
+
+    data = request.form.to_dict()
+    print(data)
+    notice_no = data['notice_no']
+    
+    try:
+        employee_id = data['employee_id']
+    except:
+        employee_id = None
+
+    notice_type = data['notice_type']
+
+    try:
+        agency_id = data['agency_id']
+    except:
+        agency_id = None
+
+    try:
+        classification_from = data['classification_from']
+    except:
+        classification_from=None
+
+    try:
+        classification = data['classification']
+    except:
+        classification=None
+
+    try:
+        position = data['position']
+    except:
+        position=None
+
+    try:
+        position = data['position']
+    except:
+        position=None
+
+    try:
+        advertised = data['advertised']
+    except:
+        advertised=None
 
 
+    published = datetime.strptime(data['published'], '%d %b %Y')
+    #published = published.strftime("%Y-%d-%m")
+    
+    try:
+        position_details = data['position_details']
+    except:
+        position_details=None
+
+    try:
+        state = data['state']
+    except:
+        state=None
+    
+    try:
+        suburb = data['suburb']
+    except:
+        suburb=None
 
 
+    notice = Notice.query.filter_by(notice_no=notice_no).first()
+    result = notice_schema.dumps(notice).data
+    if len(result)>2:
+        return api_response('notice already exists', result)
+    else:
+        db.create_all()
+        notice = Notice(publish_date=published, advertised=advertised, position_details=position_details, state=state, suburb=suburb, agency_id=agency_id, notice_no=notice_no, employee_id=employee_id, notice_type=notice_type, classification_from=classification_from, classification=classification, position=position)
+        db.session.add(notice)
+        db.session.commit()
+
+        response = notice_schema.dump(notice).data
+        return api_response('Success', response)
 
 
-
-@app.route("/comments")
-def comments():
-
-    comment = Comment.query.all()
-    result = comments_schema.dumps(comment).data
-    response= {
-        'data': result,
-        'status_code' : 202
-        }
-    return jsonify(result)
-
-
-# ------------  UNSPSC ---------------
 
 
 
