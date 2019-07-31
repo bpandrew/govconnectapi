@@ -8,6 +8,7 @@ from app import ma
 class Agency(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String)
+    portfolio = db.Column(db.String(), nullable=True)
 
 
 class AgencySchema(ma.ModelSchema):
@@ -188,8 +189,50 @@ class ContractSchema(ma.ModelSchema):
     agency = ma.Nested(AgencySchema, only=("id", "title"))
     supplier = ma.Nested(SupplierSchema, only=("id", "name", "abn", "country"))
     unspsc = ma.Nested(SupplierSchema, only=("id", "title", "unspsc", "level", "level_int", "parent_id"))
+    son = ma.Nested(SonSchema, only=("id", "austender_id"))
 
 
+
+
+#{'employee_first_name': u'Karen-Maree', 'agency_notice': u'Department of health', 'notice_no': u'10741900', u'classification': u'APS Level 6', u'advertised': u'10736497: PS42-Thu, Thursday, 18 October 2018', u'agency_employment_act': u'PS Act 1999', u'agency': u'Department of Health', 'employee_no': u'608-76477', 'notice_type': u'Promotion', 'employee_last_name': u'Garside', 'classification_from': u'APS Level 5', u'location': u'Parramatta - NSW', u'position_details': u'Senior Investigator,  Investigation Section', u'position': u'18-PBID-2028', 'portfolio': u'health'}
+
+#----------  APSJOBS ----------
+
+class ApsEmployee(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    first_name = db.Column(db.String())
+    last_name = db.Column(db.String())
+    employee_no = db.Column(db.String())
+
+class ApsEmployeeSchema(ma.ModelSchema):
+    class Meta:
+       model = ApsEmployee
+
+
+
+class ApsNotice(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    publish_date = db.Column(db.Date())
+    notice_type = db.Column(db.String())
+
+    aps_id = db.Column(db.Integer, db.ForeignKey("son.id"), nullable=True)
+    aps = db.relationship("ApsEmployee", backref="notices")
+
+    agency_id = db.Column(db.Integer, db.ForeignKey("agency.id"), nullable=True)
+    agency = db.relationship("Agency", backref="contracts")
+
+    classification_from = db.Column(db.String())
+    classification = db.Column(db.String())
+    position_details = db.Column(db.String())
+    position = db.Column(db.String())
+
+
+
+class ApsNoticeSchema(ma.ModelSchema):
+    class Meta:
+       model = ApsNotice
+    aps = ma.Nested(ApsEmployee, only=("id", "first_name", "last_name", "employee_no"))
+    agency = ma.Nested(AgencySchema, only=("id", "title"))
 
 
 
