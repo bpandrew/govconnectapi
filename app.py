@@ -707,28 +707,6 @@ def contract_detail(contract_id):
 def contract_unspsc():
     # Shows all of the contracts that need to have the UNSPSC linked by the spider.
     try:  
-
-        contract_unspsc = Contract.query.filter_by(unspsc_id = None).all()
-        result = contracts_schema.dump(contract_unspsc).data  
-
-        # Loop through and update from the UNSPSC database
-        for item in result:
-            #print(item['category_temp_title'])
-
-            obj = Unspsc.query #.all() #session.query(Contract)
-            obj = obj.filter(Unspsc.title.ilike(item['category_temp_title']))
-            obj = obj.first()
-
-            if obj!=None:
-                temp_result = unspsc_schema.dump(obj).data 
-                #print(temp_result)
-                #print(item['id'])
-                
-                contract_obj = Contract.query.filter_by(id = item['id']).first()
-                contract_obj.unspsc_id = temp_result['id']
-                db.session.commit()
-            
-
         # reload and only show the ones that need scraping form the unspsc site.
         contract_unspsc = Contract.query.filter_by(unspsc_id = None).all()
         result = contracts_schema.dump(contract_unspsc).data 
