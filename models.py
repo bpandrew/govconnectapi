@@ -198,6 +198,7 @@ class ContractSchema(ma.ModelSchema):
 
 #----------  APSJOBS ----------
 
+
 class ApsEmployee(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String())
@@ -210,29 +211,6 @@ class ApsEmployeeSchema(ma.ModelSchema):
 
 
 
-class ApsNotice(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    publish_date = db.Column(db.Date())
-    notice_type = db.Column(db.String())
-
-    aps_id = db.Column(db.Integer, db.ForeignKey("son.id"), nullable=True)
-    aps = db.relationship("ApsEmployee", backref="notices")
-
-    agency_id = db.Column(db.Integer, db.ForeignKey("agency.id"), nullable=True)
-    agency = db.relationship("Agency", backref="contracts")
-
-    classification_from = db.Column(db.String())
-    classification = db.Column(db.String())
-    position_details = db.Column(db.String())
-    position = db.Column(db.String())
-
-
-
-class ApsNoticeSchema(ma.ModelSchema):
-    class Meta:
-       model = ApsNotice
-    aps = ma.Nested(ApsEmployee, only=("id", "first_name", "last_name", "employee_no"))
-    agency = ma.Nested(AgencySchema, only=("id", "title"))
 
 
 
