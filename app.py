@@ -713,7 +713,7 @@ def contract_unspsc():
 
         # Loop through and update from the UNSPSC database
         for item in result:
-            print(item['category_temp_title'])
+            #print(item['category_temp_title'])
 
             obj = Unspsc.query #.all() #session.query(Contract)
             obj = obj.filter(Unspsc.title.ilike(item['category_temp_title']))
