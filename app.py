@@ -748,6 +748,9 @@ def unspsc_update():
             contract_obj.unspsc_id = temp_result['id']
             db.session.commit()
 
+    output={"data":"Success"}
+    return jsonify(output)
+
 
 
 # ------------  SON ---------------
