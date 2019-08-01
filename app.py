@@ -540,11 +540,6 @@ def contracts():
     if supplier_id!=None:
         filters.append({'field': 'supplier_id', 'operator': "==", 'value': supplier_id})
     
-    #filters = [
-    #    {'field': 'contract_duration', 'operator': "==", 'value': 210},
-    #    {'field': 'contract_start', 'operator': ">=", 'value': date_start},
-    #    {'field': 'contract_start', 'operator': "<=", 'value': date_end}
-    #    ]
 
     query = Contract.query #.all() #session.query(Contract)
     for item in filters:
@@ -562,7 +557,7 @@ def contracts():
     output = {}
 
     if paginate=="yes":
-        contracts = query.paginate(page, 1000, False)
+        contracts = query.paginate(page, 250, False)
 
         next_url = url_for('contracts', page=contracts.next_num) \
             if contracts.has_next else None
@@ -685,7 +680,7 @@ def contract_add():
         db.session.commit()
 
     response = contract_schema.dump(contract).data
-    return contract
+    return response
 
 
 
@@ -1165,6 +1160,18 @@ def unspsc_delete(id_):
 	    return(str(e))
 
 
+
+@app.route("/aps")
+def aps():
+    page = request.args.get('page', 1, type=int)
+
+    try:
+        employee = Employee.query.all()
+        #employee = employee.paginate(page, 250, False)
+        result = employees_schema.dump(employee).data
+        return jsonify(result)
+    except Exception as e:
+	    return(str(e))
 
 
 
