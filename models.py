@@ -205,9 +205,11 @@ class Employee(db.Model):
     employee_no = db.Column(db.String())
     gender = db.Column(db.String()) 
 
+
 class EmployeeSchema(ma.ModelSchema):
     class Meta:
        model = Employee
+    notices = ma.Nested("NoticeSchema", many=True, exclude=("advertised",))
 
 
 
