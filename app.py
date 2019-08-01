@@ -22,7 +22,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 print(db)
-from models import User, UserSchema, Comment, CommentSchema, Op, OpSchema, OpSimpleSchema, Unspsc, UnspscSchema, UnspscSchemaSimple, Agency, AgencySchema, Addenda, AddendaSchema, Contract, ContractSchema, Supplier, SupplierSchema, FilterUnspsc, FilterUnspscSchema, Page, Tag, Son, SonSchema, Employee, EmployeeSchema, Notice, NoticeSchema
+from models import User, UserSchema, Comment, CommentSchema, Op, OpSchema, OpSimpleSchema, Unspsc, UnspscSchema, UnspscSchemaSimple, Agency, AgencySchema, Addenda, AddendaSchema, Contract, ContractSchema, Supplier, SupplierSchema, FilterUnspsc, FilterUnspscSchema, Page, Tag, Son, SonSchema, Employee, EmployeeSchema, Notice, NoticeSchema, Division, DivisionSchema, Branch, BranchSchema
 
 
 # ---------------- LOAD SCHEMAS ---------------
@@ -65,6 +65,13 @@ employees_schema = EmployeeSchema(many=True)
 
 notice_schema = NoticeSchema()
 notices_schema = NoticeSchema(many=True)
+
+
+division_schema = DivisionSchema()
+divisions_schema = DivisionSchema(many=True)
+
+branch_schema = BranchSchema()
+branchs_schema = BranchSchema(many=True)
 
 
 
@@ -667,10 +674,33 @@ def contract_add():
     else:
         atm_id = None
 
+    if 'division' in data:
+        division = data['division']
+        if division.lower()=="none":
+            data['division'] = None
+    else:
+        division = None
+
+    if 'branch' in data:
+        branch = data['branch']
+        if branch.lower()=="none":
+            data['branch'] = None
+    else:
+        branch = None
+
+    if 'contact_name' in data:
+        contact_name = data['contact_name']
+        if contact_name.lower()=="none":
+            data['contact_name'] = None
+    else:
+        contact_name = None
+
+
+
     contract=Contract.query.filter_by(cn_id=cn_id).first()
     if contract==None:
         db.create_all()
-        contract = Contract(title=title, cn_id=cn_id, son_id=son_id, atm_austender_id=atm_id, contract_start=contract_start, contract_end=contract_end, contract_duration=contract_duration, category_temp_title=category_temp_title, agency_id=agency_id, confidentiality_contract=confidentiality_contract, agency_reference_id=agency_reference_id, confidentiality_outputs=confidentiality_outputs, contract_value=contract_value, procurement_method=procurement_method, description=description, publish_date=publish_date, supplier_id=supplier_id)
+        contract = Contract(contact_name=contact_name, branch=branch, division=division, title=title, cn_id=cn_id, son_id=son_id, atm_austender_id=atm_id, contract_start=contract_start, contract_end=contract_end, contract_duration=contract_duration, category_temp_title=category_temp_title, agency_id=agency_id, confidentiality_contract=confidentiality_contract, agency_reference_id=agency_reference_id, confidentiality_outputs=confidentiality_outputs, contract_value=contract_value, procurement_method=procurement_method, description=description, publish_date=publish_date, supplier_id=supplier_id)
         db.session.add(contract)
         db.session.commit()
     else:
@@ -979,6 +1009,48 @@ def agency_add():
 
         response = agency_schema.dump(agency).data
         return api_response('Success - Agency Already Exists', response)
+
+
+@app.route("/division/add", methods=['GET'])
+def division_add():
+
+    title=request.args.get('title').capitalize()
+    agency_id=request.args.get('agency_id')
+    
+    division = Division.query.filter_by(title=title).first()
+    if division==None:
+        db.create_all()
+        division = Division(title=title, agency_id=agency_id)
+        db.session.add(division)
+        db.session.commit()
+
+        response = division_schema.dump(division).data
+        return api_response('Success - division Added', response)
+    else:
+        response = division_schema.dump(division).data
+        return api_response('Success - division Already Exists', response)
+
+
+
+@app.route("/branch/add", methods=['GET'])
+def branch_add():
+
+    title=request.args.get('title').capitalize()
+    division_id=request.args.get('division_id')
+    
+    branch = Branch.query.filter_by(title=title).first()
+    if branch==None:
+        db.create_all()
+        branch = Branch(title=title, division_id=division_id)
+        db.session.add(branch)
+        db.session.commit()
+
+        response = branch_schema.dump(branch).data
+        return api_response('Success - branch Added', response)
+    else:
+        response = branch_schema.dump(branch).data
+        return api_response('Success - branch Already Exists', response)
+
 
 
 

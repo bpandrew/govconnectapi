@@ -5,18 +5,45 @@ from app import ma
 
 # -------------- AGENCY ---------------
 
+
 class Agency(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String)
     portfolio = db.Column(db.String(), nullable=True)
-
 
 class AgencySchema(ma.ModelSchema):
     class Meta:
        model = Agency
     opportunities = ma.Nested("OpSchema") #, only=("id", "title")
     contracts = ma.Nested("ContractSchema") #, only=("id", "title")
+    #divisions = ma.Nested("DivisionSchema", many=True, only=("id", "title"))
 
+
+
+class Division(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String())
+    agency_id = db.Column(db.Integer, db.ForeignKey("agency.id"))
+    agency = db.relationship("Agency", backref="divisions")
+    
+
+class DivisionSchema(ma.ModelSchema):
+    class Meta:
+       model = Division
+    #branches = ma.Nested("BranchSchema", many=True, only=("id", "title"))
+    
+
+
+class Branch(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String())
+    division_id = db.Column(db.Integer, db.ForeignKey("division.id"))
+    division = db.relationship("Division", backref="branches")
+    
+
+class BranchSchema(ma.ModelSchema):
+    class Meta:
+       model = Branch
 
 
 # --------------- LOCATION -----------------
@@ -75,7 +102,6 @@ class Op(db.Model):
     agency = db.relationship("Agency", backref="opportunities")
 
    
-
 
 class OpSchema(ma.ModelSchema):
     class Meta:
@@ -168,6 +194,7 @@ class Contract(db.Model):
     publish_date = db.Column(db.Date())
     category_temp_title = db.Column(db.String(), nullable=True)
     atm_austender_id = db.Column(db.String(), nullable=True)
+    contact_name = db.Column(db.String(), nullable=True)
 
     son_id = db.Column(db.Integer, db.ForeignKey("son.id"), nullable=True)
     son = db.relationship("Son", backref="contracts")
@@ -181,6 +208,12 @@ class Contract(db.Model):
     unspsc_id = db.Column(db.Integer, db.ForeignKey("unspsc.id"), nullable=True)
     unspsc = db.relationship("Unspsc", backref="contracts")
 
+    division_id = db.Column(db.Integer, db.ForeignKey("division.id"), nullable=True)
+    division = db.relationship("Division", backref="contracts")
+
+    branch_id = db.Column(db.Integer, db.ForeignKey("branch.id"), nullable=True)
+    branch = db.relationship("Branch", backref="contracts")
+
 
 
 class ContractSchema(ma.ModelSchema):
@@ -190,6 +223,8 @@ class ContractSchema(ma.ModelSchema):
     supplier = ma.Nested(SupplierSchema, only=("id", "name", "abn", "country"))
     unspsc = ma.Nested(SupplierSchema, only=("id", "title", "unspsc", "level", "level_int", "parent_id"))
     son = ma.Nested(SonSchema, only=("id", "austender_id"))
+    division = ma.Nested(DivisionSchema, only=("id", "title"))
+    branch = ma.Nested(BranchSchema, only=("id", "title"))
 
 
 
