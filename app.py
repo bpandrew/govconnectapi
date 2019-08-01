@@ -674,19 +674,15 @@ def contract_add():
     else:
         atm_id = None
 
-    if 'division' in data:
-        division = data['division']
-        if division.lower()=="none":
-            data['division'] = None
+    if 'division_id' in data:
+        division_id = data['division_id']
     else:
-        division = None
+        division_id = None
 
-    if 'branch' in data:
-        branch = data['branch']
-        if branch.lower()=="none":
-            data['branch'] = None
+    if 'branch_id' in data:
+        branch_id = data['branch_id']
     else:
-        branch = None
+        branch_id = None
 
     if 'contact_name' in data:
         contact_name = data['contact_name']
@@ -700,13 +696,16 @@ def contract_add():
     contract=Contract.query.filter_by(cn_id=cn_id).first()
     if contract==None:
         db.create_all()
-        contract = Contract(contact_name=contact_name, branch=branch, division=division, title=title, cn_id=cn_id, son_id=son_id, atm_austender_id=atm_id, contract_start=contract_start, contract_end=contract_end, contract_duration=contract_duration, category_temp_title=category_temp_title, agency_id=agency_id, confidentiality_contract=confidentiality_contract, agency_reference_id=agency_reference_id, confidentiality_outputs=confidentiality_outputs, contract_value=contract_value, procurement_method=procurement_method, description=description, publish_date=publish_date, supplier_id=supplier_id)
+        contract = Contract(contact_name=contact_name, branch_id=branch_id, division_id=division_id, title=title, cn_id=cn_id, son_id=son_id, atm_austender_id=atm_id, contract_start=contract_start, contract_end=contract_end, contract_duration=contract_duration, category_temp_title=category_temp_title, agency_id=agency_id, confidentiality_contract=confidentiality_contract, agency_reference_id=agency_reference_id, confidentiality_outputs=confidentiality_outputs, contract_value=contract_value, procurement_method=procurement_method, description=description, publish_date=publish_date, supplier_id=supplier_id)
         db.session.add(contract)
         db.session.commit()
     else:
         # UPDATE ANY CHANGES TO THE OPPORTUNITY
         contract.son_id = son_id
         contract.atm_austender_id = atm_id
+        contract.contact_name = contact_name
+        contract.branch_id = branch_id
+        contract.division_id = division_id
         db.session.commit()
 
     response = contract_schema.dump(contract).data
