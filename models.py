@@ -14,9 +14,9 @@ class Agency(db.Model):
 class AgencySchema(ma.ModelSchema):
     class Meta:
        model = Agency
-    opportunities = ma.Nested("OpSchema") #, only=("id", "title")
-    contracts = ma.Nested("ContractSchema") #, only=("id", "title")
-    #divisions = ma.Nested("DivisionSchema", many=True, only=("id", "title"))
+    #opportunities = ma.Nested("OpSchema") #, only=("id", "title")
+    #contracts = ma.Nested("ContractSchema") #, only=("id", "title")
+    divisions = ma.Nested("DivisionSchema", many=True, only=("id", "title", "branches"))
 
 
 
@@ -30,7 +30,7 @@ class Division(db.Model):
 class DivisionSchema(ma.ModelSchema):
     class Meta:
        model = Division
-    #branches = ma.Nested("BranchSchema", many=True, only=("id", "title"))
+    branches = ma.Nested("BranchSchema", many=True, only=("id", "title"))
     
 
 

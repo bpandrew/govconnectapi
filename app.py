@@ -42,8 +42,8 @@ unspscs_schema = UnspscSchema(many=True)
 unspsc_simple_schema = UnspscSchemaSimple()
 unspscs_simple_schema = UnspscSchemaSimple(many=True)
 
-agency_schema = UnspscSchema()
-agencies_schema = UnspscSchema(many=True)
+agency_schema = AgencySchema()
+agencies_schema = AgencySchema(many=True)
 
 addenda_schema = AddendaSchema()
 addendas_schema = AddendaSchema(many=True)
