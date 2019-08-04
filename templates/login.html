@@ -1,0 +1,57 @@
+{% include "header_simple.html" %}
+
+<!-- [ content ] Start -->
+<div class="authentication-wrapper authentication-1 px-4">
+    <div class="authentication-inner py-5">
+
+        <!-- [ Logo ] Start -->
+        <div class="d-flex justify-content-center align-items-center">
+            <div class="ui-w-100">
+                <div class="w-100 position-relative">
+                    <img src="{{ url_for('static',filename='img/logo-dark.png') }}" alt="Brand Logo" class="img-fluid">
+                </div>
+            </div>
+        </div>
+        <!-- [ Logo ] End -->
+
+        <!-- [ Form ] Start -->
+
+        <!-- [ Form ] Start -->
+
+        <form action="" method="post" novalidate class="my-5" id="form1">
+            {{ form.hidden_tag() }} {% if data.error!=None %}
+            <span class="error_text">Incorrect login details</span> {% endif %}
+            <div class="form-group">
+                <label class="form-label">{{ form.email.label }}</label> {{ form.email(class_="form-control") }}
+                <div class="clearfix">{% for error in form.email.errors %}<span class="error_text">{{ error }}</span>{% endfor %}</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label d-flex justify-content-between align-items-end">
+					   <span>{{ form.password.label }}</span>
+					   <a href="pages_authentication_password-reset.html" class="d-block small">Forgot password?</a>
+				   </label> {{ form.password(class_="form-control") }}
+                <div class="clearfix">{% for error in form.password.errors %}<span class="error_text">{{ error }}</span>{% endfor %}</div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center m-0">
+                <label class="custom-control custom-checkbox m-0">
+					   <input type="checkbox" class="custom-control-input">
+					   <span class="custom-control-label">Remember me</span>
+				   </label><button type="submit" form="form1" value="Submit" class="btn btn-primary">Log in</button>
+            </div>
+
+        </form>
+        <!-- [ Form ] End -->
+
+        <div class="text-center text-muted">
+            Don't have an account yet?
+            <a href="/user/add">Create an Account</a>
+        </div>
+
+
+
+
+    </div>
+</div>
+<!-- [ content ] End -->
+
+{% include "footer_simple.html" %}

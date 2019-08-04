@@ -1,374 +1,164 @@
 import os
-from flask import Flask, request, jsonify, Response, render_template, url_for
+import requests 
+from flask import Flask, request, jsonify, render_template, session, redirect, url_for, g, Response
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import desc
 from flask_marshmallow import Marshmallow
 import json
-from datetime import datetime, date, time
-from datetime import timedelta
+from datetime import datetime, date, time, timedelta
 import humanize
 from flask_cors import CORS, cross_origin
 import random, string
+import pandas as pd
+import numpy as np
+from pandas.io.json import json_normalize
+import functions # import all of the custom written functions
+
 
 app = Flask(__name__)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
-
+app.config['SECRET_KEY'] = 'you-will-never-guess'
 app.config.from_object(os.environ['APP_SETTINGS'])
-#print(os.environ['APP_SETTINGS'])
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
-print(db)
+# import all of the database models and schemas
 from models import User, UserSchema, Comment, CommentSchema, Op, OpSchema, OpSimpleSchema, Unspsc, UnspscSchema, UnspscSchemaSimple, Agency, AgencySchema, Addenda, AddendaSchema, Contract, ContractSchema, Supplier, SupplierSchema, FilterUnspsc, FilterUnspscSchema, Page, Tag, Son, SonSchema, Employee, EmployeeSchema, Notice, NoticeSchema, Division, DivisionSchema, Branch, BranchSchema
 
 
-# ---------------- LOAD SCHEMAS ---------------
-
-user_schema = UserSchema()
-users_schema = UserSchema(many=True)
-
-comment_schema = CommentSchema()
-comments_schema = CommentSchema(many=True)
-
-op_schema = OpSchema()
-ops_schema = OpSimpleSchema(many=True)
-
-unspsc_schema = UnspscSchema()
-unspscs_schema = UnspscSchema(many=True)
-
-unspsc_simple_schema = UnspscSchemaSimple()
-unspscs_simple_schema = UnspscSchemaSimple(many=True)
-
-agency_schema = AgencySchema()
-agencies_schema = AgencySchema(many=True)
-
-addenda_schema = AddendaSchema()
-addendas_schema = AddendaSchema(many=True)
-
-contract_schema = ContractSchema()
-contracts_schema = ContractSchema(many=True)
-
-supplier_schema = SupplierSchema()
-suppliers_schema = SupplierSchema(many=True)
-
-filterUnspsc_schema = FilterUnspscSchema()
-filterUnspscs_schema = FilterUnspscSchema(many=True)
-
-son_schema = SonSchema()
-sons_schema = SonSchema(many=True)
-
-employee_schema = EmployeeSchema()
-employees_schema = EmployeeSchema(many=True)
-
-notice_schema = NoticeSchema()
-notices_schema = NoticeSchema(many=True)
+# ------------------------------------ LOGIN / LOGOUT ------------------------------------
+# ----------------------------------------------------------------------------------------
 
 
-division_schema = DivisionSchema()
-divisions_schema = DivisionSchema(many=True)
-
-branch_schema = BranchSchema()
-branchs_schema = BranchSchema(many=True)
-
-
-
-
-# ---------------- ROUTES ---------------
-
+# --- LANDING PAGE ---
 @app.route("/")
 def hello():
-
-    # check if the title is linked to any contracts where the unspsc_id==None
-    contract_unspsc = Contract.query.filter_by(unspsc_id=None).all()
-    result = contracts_schema.dump(contract_unspsc).data
-
-    #for contract in result:
-    #    temp_title = contract['category_temp_title'].capitalize()
-    #    unspsc = Unspsc.query.filter_by(title=temp_title).all()
-    #    result_unspsc = unspscs_schema.dump(unspsc).data
-    #    for item in result_unspsc:
-    #        new_unspsc_id = item['id']
-    #        print(contract['id'])
-    #        print(new_unspsc_id)
-    #        print()  
-    #        db.session.query(Contract).filter(Contract.id == contract['id']).\
-    #            update({Contract.unspsc_id: new_unspsc_id}, synchronize_session=False)
-    #        db.session.commit()            
-
-    #        break
+    return render_template('index.html')
 
 
-        
-
-
-    #print(result[0])
-    #jsonify(result)
-
-    return jsonify(result)
-
-    #db.session.query(Op).delete()
-    #db.session.commit()
-
-    #opportunity = Op.query.filter_by(id=240).first()
-    #opportunity = Op.query.first()
-    #opportunity.categories = []
-    #opportunity.categories.remove(somecategory)
-    #db.session.commit()
-    #db.session.delete(opportunity)
-    #db.session.commit()
-
-    #db.create_all()
-
-    #page = Page()
-    #tag = Tag()
-    #page.tags.append(tag)
-    #db.session.add(page)
-
-    #opportunity=Op.query.filter_by(id=240).first()
-    #category = Unspsc.query.filter_by(id=224).first()
-    #opportunity.categories.append(category)
-    #db.session.add(opportunity)
-
-    #db.session.commit()
-
-    return "Hello World!!"
-
-# ------------  FUNCTIONS ---------------
-
-def api_response(message, data):
-    # Formats the response for the API
-    if data==None:
-        response= {
-            'message':message,
-            'data': None,
-            'status_code' : 200
-        }
-    else:
-        response = {
-            'message':message,
-            'data': data,
-            'status_code' : 200
-        }
-    return jsonify(response)
-
-
-
-import hashlib, binascii, os
-
-def hash_password(password):
-    """Hash a password for storing."""
-    h = hashlib.md5(password.encode())
-    return h.hexdigest()
-
-
-
-# ------------  LOGIN ---------------
-
-@app.route("/login", methods=['POST'])
+# --- LOGIN PAGE ---
+from forms import LoginForm
+@app.route('/login', methods=['GET', 'POST'])
 def login():
+    # Load the form
+    form = LoginForm()
+    # Check for errors
+    data = {}
+    data['error'] = request.args.get('error')
+    if form.validate_on_submit():
+        # hash the password
+        password = functions.hash_password(form.password.data)
 
-    data = request.form.to_dict()
-    email = data['email']
-    password = data['password']
-    password = hash_password(password)
-    try:
-        print(email)
-        user = User.query.filter_by(email=email).filter_by(password=password).first()
-        result = user_schema.dumps(user).data
-        if len(result)<=2:
-            return api_response('Fail', result)
+        obj = User.query.filter_by(email=form.email.data).filter_by(password=password).first()
+        result = json.loads(UserSchema().dumps(obj).data)
+        if obj!=None:
+            session['first_name'] = result['first_name']
+            session['user_id'] = result['id']
+            session['user_token'] = result['token']
+            return redirect(url_for('op'))
         else:
-            return api_response('Success', result)
-    except Exception as e:
-	    return(str(e))
+            return redirect(url_for('login')+"?error=1")
+
+    return render_template('login.html', form=form, data=data)
 
 
-
-# ------------  USERS ---------------
-
-@app.route("/users")
-def users():
-    try:
-        users=User.query.all()
-        result = users_schema.dump(users).data
-        return jsonify(result)
-    except Exception as e:
-	    return(str(e))
+# --- LOGOUT PAGE ---
+@app.route("/logout")
+def logout():
+    session['first_name'] = None
+    session['user_id'] = None
+    session['user_token'] = None
+    return redirect(url_for('login'))
 
 
-@app.route("/user/<user_id>", methods=['GET'])
-def user_detail(user_id):
-    try:
-        user = User.query.filter_by(id=user_id).all()
-        result = users_schema.dumps(user).data
-        return api_response('Success', result)
-    except Exception as e:
-	    return(str(e))
+# ----------------------------------------- USERS ----------------------------------------
+# ----------------------------------------------------------------------------------------
 
+from forms import AddUser
 
-@app.route("/user/add", methods=['POST'])
+@app.route('/user/add', methods=['GET', 'POST'])
 def user_add():
+    # Load the form
+    form = AddUser()
+    data = {}
+    data['error'] = request.args.get('error')
 
-    
-    data = request.form.to_dict()
-    first_name = data['first_name']
-    last_name = data['last_name']
-    email = data['email']
-    password = data['password']
+    if form.validate_on_submit():
+        # Add the User
+        token = ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(16))
+        stored_password = functions.hash_password(form.password.data) # Has the password
 
-    token = ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(16))
-    stored_password = hash_password(password)
+        user = User.query.filter_by(email=form.email.data).first()
+        result = UserSchema().dumps(user).data
+        if user!=None:
+            return redirect(url_for('user_add')+"?error=1")
+        else:
+            db.create_all()
+            user = User(first_name=form.first_name.data, last_name=form.last_name.data, email=form.email.data, password=stored_password, token=token)
+            db.session.add(user)
+            db.session.commit()
+            result = UserSchema().dump(user).data
+            
+            session['first_name'] = result['first_name']
+            session['user_id'] = result['id']
+            session['user_token'] = result['token']
+            return redirect(url_for('op'))
 
-    user = User.query.filter_by(email=email).first()
-    result = user_schema.dumps(user).data
-    if len(result)>2:
-        return api_response('Error - email already exists', None)
-    else:
-        db.create_all()
-        user = User(first_name=first_name, last_name=last_name, email=email, password=stored_password, token=token)
-        db.session.add(user)
-        db.session.commit()
-
-        response = user_schema.dump(user).data
-        return api_response('Success', response)
-
-
-
-@app.route("/users/delete/<id_>")
-def users_delete(id_):
-    try:
-        obj=User.query.filter_by(id=id_).one()
-        db.session.delete(obj)
-        db.session.commit()
-        return "User deleted. user id={}".format(id_)
-    except Exception as e:
-	    return(str(e))
+    return render_template('register.html', form=form, data=data)
 
 
 
 
-@app.route("/filter/unspsc/add", methods=['GET'])
-@cross_origin()
-def filter_unspsc_add():
-
-    unspsc_id=request.args.get('unspsc_id')
-
-    # Check the token matches the user ID, if not return empty results.
-    user_id = request.args.get('id')
-    token = request.args.get('token')
-    user = User.query.filter_by(id=user_id).filter_by(token=token).first()
-    result = user_schema.dumps(user).data
-    if len(result)<=2:
-        output = {"results": []}
-        return jsonify(output)  
-    else:
-        db.create_all()
-        filter_ = FilterUnspsc(user_id=user_id, unspsc_id=unspsc_id)
-        db.session.add(filter_)
-        db.session.commit()
-
-        response = filterUnspsc_schema.dump(filter_).data
-        return api_response('Success - Added Filter', response)
-
-
-
-
-# ------------  OPPORTUNITIES ---------------
+# ------------------------------------- OPPORTUNITIES ------------------------------------
+# ----------------------------------------------------------------------------------------
 
 @app.route("/op", methods=['GET'])
 def op():
+    functions.login_required(session['user_token']) # confirm the user is logged in
+    
     page = request.args.get('page', 1, type=int)
     filter_results = request.args.get('filter', 1, type=int)
 
-    # Check the token matches the user ID, if not return empty results.
-    user_id = request.args.get('id')
-    token = request.args.get('token')
-    user = User.query.filter_by(id=user_id).filter_by(token=token).first()
-    result = user_schema.dumps(user).data
-    if len(result)<=2:
-        output = {"results": []}
-        return jsonify(output)
-
-
+    # find all the UNSPSC filters for the user
     unspsc_filters = []
-
-    # find all the UNSPSC filters
-    myfilter = FilterUnspsc.query.filter_by(user_id=user_id).all()
-    unspsc_filters_result = filterUnspscs_schema.dumps(myfilter).data
+    myfilter = FilterUnspsc.query.filter_by(user_id=session['user_id']).all()
+    unspsc_filters_result = FilterUnspscSchema(many=True).dumps(myfilter).data
     unspsc_filters_result = json.loads(unspsc_filters_result)
-
-    #print("************")
-    #print(unspsc_filters_result)
-
     for item in unspsc_filters_result:
         unspsc_filters.append( item['unspsc']['id'] ) 
+    print(unspsc_filters)
 
-    #print("************")
-    #print(unspsc_filters)
+    opportunities = Op.query
+    opportunities = opportunities.filter( getattr(Op,'close_date')>=datetime.now()-timedelta(days=1) ) # Only show the open opportunities
+    opportunities = opportunities.all() #.paginate(page, 100, False)
+ 
+    output = {}
+    output['results_raw'] = OpSimpleSchema(many=True).dump(opportunities).data
+    output['results'] = []
 
+    # Update all of the times to human readable # THIS MAY BE ABLE TO BE DONE IS JS CLIENT SIDE - TO AVOID THIS LOOP?
+    for op in output['results_raw']:
+        published = datetime.strptime(op['publish_date'], '%Y-%m-%d')
+        op['published_date_human'] = humanize.naturalday(published)
+        close_date = datetime.now() - datetime.strptime(op['close_date'], '%Y-%m-%d')
+        op['close_date_human'] = humanize.naturaltime(close_date)
+        op['title'] = op['title'].capitalize()
+        op['category_display'] = max(op['categories'], key=lambda x:x['level_int']) # Get the highest (most specific) category provided for the ATM
+        output['results'].append(op)
+        
+    return render_template('opportunities.html', data=output)
 
-    try:
-        # Only show the open opportunities
-        opportunities = Op.query #.all() #session.query(Contract)
-        opportunities = opportunities.filter( getattr(Op,'close_date')>=datetime.now()-timedelta(days=1) )
-        #for item in unspsc_filters:
-        #opportunities = opportunities.filter(Op.categories.any(Unspsc.id == 1))   
-        opportunities = opportunities.paginate(page, 500, False)
-
-
-        next_url = url_for('op', page=opportunities.next_num) \
-            if opportunities.has_next else None
-        prev_url = url_for('op', page=opportunities.prev_num) \
-            if opportunities.has_prev else None
-        total = opportunities.total
-        pages = opportunities.pages
-
-        output = {}
-        output['pagination'] = {"next_url":next_url, "prev_url":prev_url, "total":total, "pages":pages}
-        output['results_raw'] = ops_schema.dump(opportunities.items).data
-
-        #print(result)
-
-        output['results'] = []
-        # Update all of the times to human readable
-        for op in output['results_raw']:
-            hide_op = False
-            published = datetime.strptime(op['publish_date'], '%Y-%m-%d')
-            #print(humanize.naturalday(published))
-            op['published_date_human'] = humanize.naturalday(published)
-            close_date = datetime.now() - datetime.strptime(op['close_date'], '%Y-%m-%d')
-            op['close_date_human'] = humanize.naturaltime(close_date)
-            op['title'] = op['title'].capitalize()
-
-            for category in op['categories']:
-                if category['id'] in unspsc_filters:
-                    hide_op = True
-                highest_level = 0
-                if category['level_int']>highest_level:
-                    op['category_title'] = category['title'].capitalize()
-                    op['category_id'] = category['id']
-
-            if hide_op==False:
-                output['results'].append(op)
-            
-
-        return jsonify(output)
-
-
-    except Exception as e:
-	    return(str(e))
 
 
 
 @app.route("/op/<op_id>", methods=['GET'])
 def op_detail(op_id):
-    
     try:
         opportunity = Op.query.filter_by(id=op_id).first()
-        result = op_schema.dumps(opportunity).data
+        result = OpSchema().dumps(opportunity).data
         result = json.loads(result)
 
         published = datetime.now() - datetime.strptime(result['publish_date'], '%Y-%m-%d')
@@ -395,53 +185,28 @@ def op_detail(op_id):
         result['multi_stage'] = 'Yes' if result['multi_stage'] == 1 else 'No'
         result['multi_agency_access'] = 'Yes' if result['multi_agency_access'] == 1 else 'No'
         
-        return result
+        #return result
 
+        return render_template('opportunity.html', data=result)
 
     except Exception as e:
 	    return(str(e))
 
 
+
 @app.route("/op/add", methods=["POST"])
 def op_add():
     try:
-        data = request.form.to_dict()
-        atm_id = data['atm_id']
-        unspsc = data['unspsc']
-
-        
-        title = data['title']
-        atm_id = data['atm_id']
-        description = data['description']
-        atm_type = data['atm_type']
-        publish_date = data['publish_date']
-        close_date = data['close_date']
-        conditions_for_participation = data['conditions_for_participation']
-        panel_arrangement = data['panel_arrangement']
-        timeframe_for_delivery = data['timeframe_for_delivery']
-        multi_stage = data['multi-stage']
-        multi_agency_access = data['multi_agency_access']
-        address_for_lodgement = data['address_for_lodgement']
-        agency_id = data['agency_id']
-        document_link = data['document_link']
-        #estimated_value = db.Column(db.String()) #estimated_value_(aud)
-        #location = db.Column(db.String()) ## NEEDS WORK act, nsw, vic, sa, wa, qld, nt, tas"
-        #addenda_available = data['addenda_available']  #NEEDS WORK
-        
-        
+        data = request.form.to_dict() # Transofrm the POST data into a dictionary
 
         obj=Op.query.filter_by(atm_id=atm_id).first()
         if obj==None:
-            #db.session.add(opportunity)
-            #data = opportunity
-            #db.session.add(comment)
-
             db.create_all()
-            opportunity = Op(title=title, atm_id=atm_id, description=description, atm_type=atm_type, publish_date=publish_date, close_date=close_date, agency_id=agency_id, conditions_for_participation=conditions_for_participation, panel_arrangement=panel_arrangement, timeframe_for_delivery=timeframe_for_delivery, multi_stage=multi_stage, multi_agency_access=multi_agency_access, address_for_lodgement=address_for_lodgement, document_link=document_link)
-            category = Unspsc.query.filter_by(unspsc=unspsc).first()
+            opportunity = Op(title=data['title'], atm_id=data['atm_id'], description=data['description'], atm_type=data['atm_type'], publish_date=data['publish_date'], close_date=data['close_date'], agency_id=data['agency_id'], conditions_for_participation=data['conditions_for_participation'], panel_arrangement=data['panel_arrangement'], timeframe_for_delivery=data['timeframe_for_delivery'], multi_stage=data['multi-stage'], multi_agency_access=data['multi_agency_access'], address_for_lodgement=data['address_for_lodgement'], document_link=data['document_link'])
+            category = Unspsc.query.filter_by(unspsc=data['unspsc']).first()
             opportunity.categories.append(category)
 
-            # Loop through and add all of the categories
+            # Loop through and add all of the parent/child categories
             unspsc_complete = False
             while unspsc_complete==False:
                 if category.parent_id!=0:
@@ -449,95 +214,63 @@ def op_add():
                     opportunity.categories.append(category)
                     if category.parent_id==0:
                         unspsc_complete=True
-
                     db.session.add(opportunity)
                     db.session.commit()
                 else:
                     unspsc_complete=True
 
-            response = op_schema.dump(opportunity).data
-            return api_response('Success - Added Opportunity', response)
+            response = OpSchema().dump(opportunity).data
+            return functions.json_response('Success - Added Opportunity', response)
         else:
-            # UPDATE ANY CHANGES TO THE OPPORTUNITY
+            response = OpSchema().dump(obj).data # get the existing op data
+            # Update any changes to the opportunity
             obj.document_link = document_link
             db.session.commit()
 
-            return api_response('Success - Opportunity Already Exists', None)
+            return functions.json_response('Success - Opportunity Already Exists', response)
     except Exception as e:
 	    return(str(e))
 
 
 
-@app.route("/op/delete/<id_>")
-def opportunities_delete(id_):
-    try:
-        obj=Op.query.filter_by(id=id_).one()
-        db.session.delete(obj)
-        db.session.commit()
-        return api_response('Success - Opportunity Deleted', None)
-    except Exception as e:
-	    return(str(e))
+# ----------------------------------------- CONTRACTS ----------------------------------------
+# --------------------------------------------------------------------------------------------
 
 
-
-# ------------  ADDENDA ---------------
-
-@app.route("/addenda")
-def addenda():
-    try:
-        addenda=Addenda.query.all()
-        result = addendas_schema.dump(addenda).data
-        return jsonify(result)
-    except Exception as e:
-	    return(str(e))
-
-
-@app.route("/addenda/<addenda_id>", methods=['GET'])
-def addenda_detail(addenda_id):
-    try:
-        addenda = Addenda.query.filter_by(id=addenda_id).all()
-        result = addenda_schema.dumps(addenda).data
-        return json.loads(result)
-    except Exception as e:
-	    return(str(e))
-
-
-@app.route("/addenda/add", methods=['GET'])
-def addenda_add():
-
-    title=request.args.get('title')
-    #published=request.args.get('published')
-    published = datetime.datetime.now()
-    
-    db.create_all()
-    addenda = Addenda(title=title, published=published)
-    db.session.add(addenda)
-    db.session.commit()
-
-    response = addenda_schema.dump(addenda).data
-    return api_response('Success - Added Addenda', response)
-
-
-
-# ------------  CONTRACTS ---------------
 
 @app.route("/contracts", methods=['GET'])
-def contracts():
-    page = request.args.get('page', 1, type=int)
+def contracts(supplier_id=None):
+    functions.login_required(session['user_token']) # confirm the user is logged in
+
+    page = request.args.get('page', 0, type=int)
     paginate = request.args.get('paginate', "yes", type=str)
     display = request.args.get('display', 'filtered', type=str)
 
-    #x = datetime.now()
-    #date_end = x.strftime("%Y-%m-%d")
     date_end = request.args.get('date_end', None, type=str)
     date_start = request.args.get('date_start', None, type=str)
     agency_id = request.args.get('agency_id', None, type=int)
-    supplier_id = request.args.get('supplier_id', None, type=int)
 
+    output = {}
+
+    if display.lower()!="search":
+        d = datetime.now()
+        d = d-timedelta(days=(page*7))
+        week_start = d-timedelta(days=d.weekday())
+        start_date_human = week_start.strftime("%a %d %b")
+        publish_date_start = week_start.strftime("%Y-%m-%d")
+        publish_date_end = week_start+timedelta(days=6)
+        end_date_human = publish_date_end.strftime("%a %d %b \'%y")
+        #print(start_date, end_date)
+        output['data'] = {}
+        output['data']['newest_contract'] = end_date_human
+        output['data']['oldest_contract'] = start_date_human
 
     filters = []
-
     # Builds the filter string
+    if publish_date_end!=None:
+        filters.append({'field': 'publish_date', 'operator': "<=", 'value': publish_date_end})
+    if publish_date_start!=None:
+        filters.append({'field': 'publish_date', 'operator': ">=", 'value': publish_date_start})
     if date_end!=None:
         filters.append({'field': 'contract_start', 'operator': "<=", 'value': date_end})
     if date_start!=None:
@@ -547,8 +280,7 @@ def contracts():
     if supplier_id!=None:
         filters.append({'field': 'supplier_id', 'operator': "==", 'value': supplier_id})
     
-
-    query = Contract.query #.all() #session.query(Contract)
+    query = Contract.query
     for item in filters:
         if item['operator']=="==":
             query = query.filter( getattr(Contract,item['field'])==item['value'] )
@@ -558,42 +290,17 @@ def contracts():
             query = query.filter( getattr(Contract,item['field'])<=item['value'] )
         elif item['operator']=="!=":
             query = query.filter( getattr(Contract,item['field'])!=item['value'] )
-    # now we can run the query
+    # Run the query with the filter
     query = query.order_by(desc(Contract.publish_date))
 
-    output = {}
-
-    if paginate=="yes":
-        contracts = query.paginate(page, 250, False)
-
-        next_url = url_for('contracts', page=contracts.next_num) \
-            if contracts.has_next else None
-        prev_url = url_for('contracts', page=contracts.prev_num) \
-            if contracts.has_prev else None
-        total = contracts.total
-        pages = contracts.pages
-
-        output['pagination'] = {"next_url":next_url, "prev_url":prev_url, "total":total, "pages":pages}
-        output['results'] = contracts_schema.dump(contracts.items).data
-    else:
-        contracts = query.all()
-        output['results'] = contracts_schema.dump(contracts).data
-    
-
-    #print(output['results'])
-    
-    #try:
+    next_url = url_for('contracts', page=page+1)
+    prev_url = url_for('contracts', page=page-1)
+    output['pagination'] = {"next_url":next_url, "prev_url":prev_url, "current":page}
+    contracts = query.all()
+    output['results'] = ContractSchema(many=True).dump(contracts).data
+   
     # Format all of the dates and values
-    newest_contract = datetime.now()-timedelta(days=10000) #datetime.strptime(datetime.now(), '%Y-%m-%d')
-    oldest_contract = datetime.now() #datetime.strptime(datetime.now(), '%Y-%m-%d')
     for item in output['results']:
-        
-        published = datetime.strptime(item['publish_date'], '%Y-%m-%d')
-        if newest_contract<published:
-            newest_contract = published
-        if oldest_contract>published:
-            oldest_contract = published
-
         item['contract_open'] = "finished"
         try:
             item['contract_value'] = round(float(item['contract_value']))
@@ -606,7 +313,6 @@ def contracts():
             item['contract_value_human'] = item['contract_value']
             item['contract_value'] = 0
 
-        #published = datetime.now() - datetime.strptime(result['publish_date'], '%Y-%m-%d')
         x = datetime.strptime(item['contract_start'], '%Y-%m-%d')
         start_year = x.strftime("%Y")
         y = datetime.strptime(item['contract_end'], '%Y-%m-%d')
@@ -618,16 +324,97 @@ def contracts():
         elif y>datetime.now():
             item['contract_open'] = "ongoing"
 
-    output['data'] = {}
-
-    output['data']['newest_contract'] = newest_contract.strftime("%b %d %Y")
-    output['data']['oldest_contract'] = oldest_contract.strftime("%b %d %Y")
+    return render_template('contracts.html', data=output)
 
 
-    return jsonify(output)
 
-    #except Exception as e:
-	#    return(str(e))
+@app.route("/contract/<contract_id>", methods=['GET'])
+def contract_detail(contract_id):
+    contract = Contract.query.filter_by(id=contract_id).first()
+    data = ContractSchema().dumps(contract).data
+    data = json.loads(data)
+
+    data['contract_open'] = "FINISHED"
+    x = datetime.strptime(data['contract_start'], '%Y-%m-%d')
+    start_year = x.strftime("%Y")
+    y = datetime.strptime(data['contract_end'], '%Y-%m-%d')
+    end_year = y.strftime("%Y")
+    data['contract_start_human'] = x.strftime("%b %d %Y")
+    data['contract_end_human'] = y.strftime("%b %d %Y")
+    # create the closing text
+    if y>datetime.now():
+        data['contract_closing'] = "will end " + humanize.naturaltime(y)
+    else:
+        data['contract_closing'] = "ended " + humanize.naturaltime(y)
+
+    if (y<datetime.now()+timedelta(days=30)) and (y>datetime.now()):
+        data['contract_open'] = "ENDING SOON"
+    elif y>datetime.now():
+        data['contract_open'] = "ONGOING"
+
+    contract_data = data.copy()
+
+    contract = Contract.query.filter_by(supplier_id=contract_data['supplier']['id']).all()
+    contracts = ContractSchema(many=True).dumps(contract).data
+    contracts = json.loads(contracts)
+
+    contracts = json_normalize(contracts)
+
+    cfy_start, cfy_end, lfy_start, lfy_end, now_string = functions.financial_years()
+
+    cfy = contracts[contracts['contract_start']>=cfy_start]
+    cfy = cfy[cfy['contract_start']<=cfy_end]
+    lfy = contracts[contracts['contract_start']>=lfy_start]
+    lfy = lfy[lfy['contract_start']<=lfy_end]
+
+    insights = {}
+
+    lfy['contract_value'] = lfy['contract_value'].astype(float)
+    cfy['contract_value'] = cfy['contract_value'].astype(float)
+    insights['sum_contracts_prev_fy'] = functions.format_currency(lfy[lfy['agency.id']==data['agency']['id']]['contract_value'].sum())
+    insights['sum_contracts_current_fy'] = functions.format_currency(cfy[cfy['agency.id']==data['agency']['id']]['contract_value'].sum()) #functions.format_currency(
+
+    data['contract_value'] = functions.format_currency(data['contract_value'])
+
+    # Sum the total earned in the Contracted Agency
+    insights['sum_contracts_in_agency_prev_fy'] = humanize.apnumber(lfy['contract_value'][lfy['agency.id'] == data['agency']['id']].sum())
+    insights['sum_contracts_in_agency_current_fy'] = humanize.apnumber(cfy['contract_value'][cfy['agency.id'] == data['agency']['id']].sum())
+
+    # Find the highest revenue agencies for this and last year
+    df_temp = cfy.groupby(['agency.title']).sum().reset_index()
+    insights['highest_revenue_current_fy'] = functions.humanise_array(list(df_temp['agency.title'][:4].values))
+
+    df_temp = lfy.groupby(['agency.title']).sum().reset_index()
+    insights['highest_revenue_prev_fy'] = functions.humanise_array(list(df_temp['agency.title'][:4].values))
+
+    # Find all of the open contracts in this agency
+    df_temp = contracts[contracts['contract_end']>now_string] # limit to the 'Open' contracts
+    df_temp = df_temp[df_temp['agency.id']==contract_data['agency']['id']] # limit it to the current agency
+    df_temp = df_temp[df_temp['cn_id']!=contract_data['cn_id']] # exclude the current contract
+    insights['contracts_in_agency'] = []
+    for index, row in df_temp.iterrows():
+        temp_dict = {}
+        temp_dict['contract_id']=row['id']
+        temp_dict['title']=row['title']
+        try:
+            temp_dict['unspsc'] = row['unspsc.title']
+        except:
+            temp_dict['unspsc'] = "-"
+
+        temp_dict['contract_value']= "$"+ humanize.intcomma(row['contract_value'])
+        contract_end = datetime.strptime(row['contract_end'], '%Y-%m-%d')
+        temp_dict['closing_days'] = humanize.naturaltime(contract_end) 
+        temp_dict['division_title'] = row['division.title']
+        temp_dict['division_id'] = row['division.id']
+        temp_dict['branch_title'] = row['branch.title']
+        temp_dict['branch_id'] = row['branch.id']
+        temp_dict['category_temp_title'] = row['category_temp_title']
+        insights['contracts_in_agency'].append(temp_dict)
+
+    data['insights'] = insights
+
+    return render_template('contract.html', data=data)
+
 
 
 @app.route("/contract/add", methods=["POST"])
@@ -691,8 +478,6 @@ def contract_add():
     else:
         contact_name = None
 
-
-
     contract=Contract.query.filter_by(cn_id=cn_id).first()
     if contract==None:
         db.create_all()
@@ -708,162 +493,13 @@ def contract_add():
         contract.division_id = division_id
         db.session.commit()
 
-    response = contract_schema.dump(contract).data
+    response = ContractSchema().dump(contract).data
     return response
 
 
 
-@app.route("/contract/<contract_id>", methods=['GET'])
-def contract_detail(contract_id):
-    try:
-        contract = Contract.query.filter_by(id=contract_id).first()
-        result = contract_schema.dumps(contract).data
-
-        #result['contract_value_human'] = humanize.naturaltime(result['contract_value'])
-
-        return json.loads(result)
-    except Exception as e:
-	    return(str(e))
-
-
-
-@app.route("/contract/unspsc")
-def contract_unspsc():
-    # Shows all of the contracts that need to have the UNSPSC linked by the spider.
-    try:  
-        # reload and only show the ones that need scraping form the unspsc site.
-        contract_unspsc = Contract.query.filter_by(unspsc_id = None).all()
-        result = contracts_schema.dump(contract_unspsc).data 
-
-        results_distinct = []
-        searched_text = []
-        for item in result:
-            if item['category_temp_title'] in searched_text:
-                pass
-            else:
-                searched_text.append(item['category_temp_title'])
-                results_distinct.append({"category_temp_title":item['category_temp_title'], "id":item['id']})
-
-
-        return jsonify(results_distinct)
-    except Exception as e:
-	    return(str(e))
-
-# updates all of the UNSPSCs for each contract
-@app.route("/unspsc/update")
-def unspsc_update():
-    contract_unspsc = Contract.query.filter_by(unspsc_id = None).order_by(desc(Contract.id)).limit(10).all()
-    result = contracts_schema.dump(contract_unspsc).data  
-
-    # Loop through and update from the UNSPSC database
-    for item in result:
-        #print(item['category_temp_title'])
-
-        obj = Unspsc.query #.all() #session.query(Contract)
-        obj = obj.filter(Unspsc.title.ilike(item['category_temp_title']))
-        obj = obj.first()
-
-        if obj!=None:
-            temp_result = unspsc_schema.dump(obj).data 
-            #print(temp_result)
-            #print(item['id'])
-            
-            contract_obj = Contract.query.filter_by(id = item['id']).first()
-            contract_obj.unspsc_id = temp_result['id']
-            db.session.commit()
-
-    output={"data":"Success"}
-    return jsonify(output)
-
-
-
-# ------------  SON ---------------
-
-@app.route("/son/add", methods=['GET'])
-def son_add():
-
-    austender_id=request.args.get('austender_id').upper()
-    austender_link=request.args.get('austender_link')
-    
-    son = Son.query.filter_by(austender_link=austender_link).first()
-    if son==None:
-        db.create_all()
-        son = Son(austender_id=austender_id, austender_link=austender_link)
-        db.session.add(son)
-        db.session.commit()
-
-        response = son_schema.dump(son).data
-        return api_response('Success - Son Added', response)
-    else:
-        response = son_schema.dump(son).data
-        return api_response('Success - Son Already Exists', response)
-
-
-
-
-
-# ------------  UNSPSC ---------------
-
-@app.route("/unspsc")
-def unspsc():
-    try:
-        filter_null = bool(request.args.get('filter_scraped'))
-        filter_ = request.args.get('filter')
-        if filter_null==True:
-            # only show results that have a null title
-            unspsc=Unspsc.query.filter_by(scraped=0).all()
-        else:
-            if filter_=="segment":
-                unspsc = Unspsc.query.filter_by(level=filter_).order_by(Unspsc.title).all()
-            else:
-                unspsc = Unspsc.query.all()
-
-        result = unspscs_schema.dump(unspsc).data  # THIS SHOWS ALL OF THE Ops FOR THE UNSPSCs
-        #result = unspscs_simple_schema.dump(unspsc).data
-        return json.dumps(result)
-        #return jsonify(result)
-    except Exception as e:
-	    return(str(e))
-
-
-@app.route("/unspsc/<unspsc_id>", methods=['GET'])
-def unspsc_detail(unspsc_id):
-    #try:
-    unspsc = Unspsc.query.filter_by(id=unspsc_id).first()
-    result = unspsc_schema.dumps(unspsc).data
-    result = json.loads(result)
-
-    unspsc = Unspsc.query.filter_by(parent_id=unspsc_id).order_by(Unspsc.title).all()
-    children = unspscs_schema.dump(unspsc).data
-    result['children'] = children
-    
-    return result
-
-    #except Exception as e:
-	#    return(str(e))
-
-
-
-def update_contract_unspsc():
-    # check if the title is linked to any contracts where the unspsc_id==None
-    contract_unspsc = Contract.query.filter_by(unspsc_id=None).all()
-    result = contracts_schema.dump(contract_unspsc).data
-
-    for contract in result:
-        temp_title = contract['category_temp_title'].capitalize()
-        unspsc = Unspsc.query.filter_by(title=temp_title).all()
-        result_unspsc = unspscs_schema.dump(unspsc).data
-        for item in result_unspsc:
-            new_unspsc_id = item['id']
-            print(contract['id'])
-            print(new_unspsc_id)
-            print()  
-            db.session.query(Contract).filter(Contract.id == contract['id']).\
-                update({Contract.unspsc_id: new_unspsc_id}, synchronize_session=False)
-            db.session.commit()            
-            break
-
-
+# ------------------------------------------- UNSPSC -----------------------------------------
+# --------------------------------------------------------------------------------------------
 
 
 @app.route("/unspsc/add/<unspsc>/<title_>")
@@ -899,11 +535,11 @@ def unspsc_add(unspsc, title_):
                     db.session.add(unspsc)
                     db.session.commit()
 
-            update_contract_unspsc()
-            return api_response('Success - All unspscs Added', None)
+            functions.update_contract_unspsc()
+            return functions.json_response('Success - All unspscs Added', None)
         else:
-            update_contract_unspsc()
-            return api_response('Success - unspsc Already Exists', None)
+            functions.update_contract_unspsc()
+            return functions.json_response('Success - unspsc Already Exists', None)
 
 
     except Exception as e:
@@ -919,7 +555,7 @@ def unspsc_title():
         db.session.query(Unspsc).filter(Unspsc.unspsc == unspsc).\
             update({Unspsc.title: title, Unspsc.scraped: 1}, synchronize_session=False)
         db.session.commit()
-        return api_response('Success - UNSPSC title updated', None)
+        return functions.json_response('Success - UNSPSC title updated', None)
 
     except Exception as e:
 	    return(str(e))
@@ -954,7 +590,7 @@ def unspsc_children(unspsc_id):
     
     try:
         unspsc = Unspsc.query.filter_by(parent_id=unspsc_id).all()
-        result = unspscs_schema.dump(unspsc).data
+        result = UnspscSchema(many=True).dump(unspsc).data
         result = jsonify(result)
         return result
 
@@ -962,26 +598,60 @@ def unspsc_children(unspsc_id):
         return(str(e))
 
 
-# ------------  AGENCIES ---------------
 
-@app.route("/agencies")
-def agencies():
-    try:
-        agencies=Agency.query.all()
-        result = agencies_schema.dump(agencies).data
-        return jsonify(result)
-    except Exception as e:
-	    return(str(e))
+# updates all of the UNSPSCs for each contract
+@app.route("/unspsc/update")
+def unspsc_update():
+    contract_unspsc = Contract.query.filter_by(unspsc_id = None).order_by(desc(Contract.id)).limit(10).all()
+    result = ContractSchema(many=True).dump(contract_unspsc).data  
+
+    # Loop through and update from the UNSPSC database
+    for item in result:
+        #print(item['category_temp_title'])
+
+        obj = Unspsc.query #.all() #session.query(Contract)
+        obj = obj.filter(Unspsc.title.ilike(item['category_temp_title']))
+        obj = obj.first()
+
+        if obj!=None:
+            temp_result = UnspscSchema().dump(obj).data 
+            #print(temp_result)
+            #print(item['id'])
+            
+            contract_obj = Contract.query.filter_by(id = item['id']).first()
+            contract_obj.unspsc_id = temp_result['id']
+            db.session.commit()
+
+    output={"data":"Success"}
+    return jsonify(output)
+
+# ------------------------------------------- SON -----------------------------------------
+# --------------------------------------------------------------------------------------------
 
 
-@app.route("/agency/<agency_id>", methods=['GET'])
-def agency_detail(agency_id):
-    try:
-        agency = Agency.query.filter_by(id=agency_id).first()
-        result = agency_schema.dumps(agency).data
-        return json.loads(result)
-    except Exception as e:
-	    return(str(e))
+@app.route("/son/add", methods=['GET'])
+def son_add():
+
+    austender_id=request.args.get('austender_id').upper()
+    austender_link=request.args.get('austender_link')
+    
+    son = Son.query.filter_by(austender_link=austender_link).first()
+    if son==None:
+        db.create_all()
+        son = Son(austender_id=austender_id, austender_link=austender_link)
+        db.session.add(son)
+        db.session.commit()
+
+        response = SonSchema().dump(son).data
+        return functions.json_response('Success - Son Added', response)
+    else:
+        response = SonSchema().dump(son).data
+        return functions.json_response('Success - Son Already Exists', response)
+
+
+
+# ------------------------------------------- AGENCY -----------------------------------------
+# --------------------------------------------------------------------------------------------
 
 
 @app.route("/agency/add", methods=['GET'])
@@ -1000,14 +670,14 @@ def agency_add():
         db.session.add(agency)
         db.session.commit()
 
-        response = agency_schema.dump(agency).data
-        return api_response('Success - Agency Added', response)
+        response = AgencySchema().dump(agency).data
+        return functions.json_response('Success - Agency Added', response)
     else:
         agency.portfolio = portfolio
         db.session.commit()
 
-        response = agency_schema.dump(agency).data
-        return api_response('Success - Agency Already Exists', response)
+        response = AgencySchema().dump(agency).data
+        return functions.json_response('Success - Agency Already Exists', response)
 
 
 @app.route("/division/add", methods=['GET'])
@@ -1023,11 +693,11 @@ def division_add():
         db.session.add(division)
         db.session.commit()
 
-        response = division_schema.dump(division).data
-        return api_response('Success - division Added', response)
+        response = DivisionSchema().dump(division).data
+        return functions.json_response('Success - division Added', response)
     else:
-        response = division_schema.dump(division).data
-        return api_response('Success - division Already Exists', response)
+        response = DivisionSchema().dump(division).data
+        return functions.json_response('Success - division Already Exists', response)
 
 
 
@@ -1044,26 +714,15 @@ def branch_add():
         db.session.add(branch)
         db.session.commit()
 
-        response = branch_schema.dump(branch).data
-        return api_response('Success - branch Added', response)
+        response = BranchSchema().dump(branch).data
+        return functions.json_response('Success - branch Added', response)
     else:
-        response = branch_schema.dump(branch).data
-        return api_response('Success - branch Already Exists', response)
+        response = BranchSchema().dump(branch).data
+        return functions.json_response('Success - branch Already Exists', response)
 
 
-
-
-# ------------  SUPPLIERS ---------------
-
-@app.route("/suppliers")
-def suppliers():
-    try:
-        suppliers=Supplier.query.all()
-        result = suppliers_schema.dump(suppliers).data
-        return jsonify(result)
-    except Exception as e:
-	    return(str(e))
-
+# ------------------------------------ SUPPLIERS ------------------------------------
+# ---------------------------------------------------------------------------------
 
 @app.route("/suppliers/add", methods=['GET'])
 def suppliers_add():
@@ -1083,27 +742,18 @@ def suppliers_add():
         db.session.add(supplier)
         db.session.commit()
 
-        response = supplier_schema.dump(supplier).data
-        return api_response('Success - Supplier Added', response)
+        response = SupplierSchema().dump(supplier).data
+        return functions.json_response('Success - Supplier Added', response)
     else:
-        response = supplier_schema.dump(supplier).data
-        return api_response('Success - Supplier Already Exists', response)
-
-
-@app.route("/supplier/<supplier_id>", methods=['GET'])
-def supplier_detail(supplier_id):
-    try:
-        supplier = Supplier.query.filter_by(id=supplier_id).first()
-        result = supplier_schema.dumps(supplier).data
-        return json.loads(result)
-    except Exception as e:
-	    return(str(e))
+        response = SupplierSchema().dump(supplier).data
+        return functions.json_response('Success - Supplier Already Exists', response)
 
 
 
 
+# ------------------------------------ APS EMPLOYEE ------------------------------------
+# ---------------------------------------------------------------------------------
 
-# ------------  APS EMPLOYEE ---------------
 @app.route("/employee/add", methods=['POST'])
 def employee_add():
 
@@ -1115,23 +765,23 @@ def employee_add():
     gender = data['gender']
 
     employee = Employee.query.filter_by(employee_no=employee_no).first()
-    result = employee_schema.dumps(employee).data
+    result = EmployeeSchema().dumps(employee).data
     if len(result)>2:
-        return api_response('User already exists', result)
+        return functions.json_response('User already exists', result)
     else:
         db.create_all()
         employee = Employee(first_name=first_name, last_name=last_name, employee_no=employee_no, gender=gender)
         db.session.add(employee)
         db.session.commit()
 
-        response = employee_schema.dump(employee).data
-        return api_response('Success', response)
+        response = EmployeeSchema().dump(employee).data
+        return functions.json_response('Success', response)
 
 
 
-#{'employee_first_name': u'Karen-Maree', 'agency_notice': u'Department of health', 'notice_no': u'10741900', u'classification': u'APS Level 6', u'advertised': u'10736497: PS42-Thu, Thursday, 18 October 2018', u'agency_employment_act': u'PS Act 1999', u'agency': u'Department of Health', 'employee_no': u'608-76477', 'notice_type': u'Promotion', 'employee_last_name': u'Garside', 'classification_from': u'APS Level 5', u'location': u'Parramatta - NSW', u'position_details': u'Senior Investigator,  Investigation Section', u'position': u'18-PBID-2028', 'portfolio': u'health'}
+# ------------------------------------ APS NOTICE ------------------------------------
+# ---------------------------------------------------------------------------------
 
-# ------------  APS EMPLOYEE ---------------
 @app.route("/notice/add", methods=['POST'])
 def notice_add():
 
@@ -1197,54 +847,24 @@ def notice_add():
 
 
     notice = Notice.query.filter_by(notice_no=notice_no).first()
-    result = notice_schema.dumps(notice).data
+    result = NoticeSchema().dumps(notice).data
     if len(result)>2:
-        return api_response('notice already exists', result)
+        return functions.json_response('notice already exists', result)
     else:
         db.create_all()
         notice = Notice(publish_date=published, advertised=advertised, position_details=position_details, state=state, suburb=suburb, agency_id=agency_id, notice_no=notice_no, employee_id=employee_id, notice_type=notice_type, classification_from=classification_from, classification=classification, position=position)
         db.session.add(notice)
         db.session.commit()
 
-        response = notice_schema.dump(notice).data
-        return api_response('Success', response)
+        response = NoticeSchema().dump(notice).data
+        return functions.json_response('Success', response)
 
 
 
 
 
 
-
-
-@app.route("/unspsc/delete/<id_>")
-def unspsc_delete(id_):
-    try:
-        if str(id_)=='all':
-            db.session.query(Unspsc).delete()
-        else:
-            obj=Unspsc.query.filter_by(id=id_).one()
-            db.session.delete(obj)
-
-        db.session.commit()
-        return "Unspsc deleted. Unspsc id={}".format(id_)
-    except Exception as e:
-	    return(str(e))
-
-
-
-@app.route("/aps")
-def aps():
-    page = request.args.get('page', 1, type=int)
-
-    try:
-        employee = Employee.query.all()
-        #employee = employee.paginate(page, 250, False)
-        result = employees_schema.dump(employee).data
-        return jsonify(result)
-    except Exception as e:
-	    return(str(e))
-
-
-
+# ------------------------------------ RUN APP ------------------------------------
+# ---------------------------------------------------------------------------------
 if __name__ == '__main__':
     app.run()

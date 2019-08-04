@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+
+<html lang="en" class="material-style layout-fixed">
+
+<head>
+    <title>Government Connect</title>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <meta name="description" content="" />
+    <meta name="keywords" content="">
+    <meta name="author" content="" />
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static',filename='img/favicon.ico') }}">
+
+    <!-- Google fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700" rel="stylesheet">
+
+    <!-- Icon fonts -->
+    <link rel="stylesheet" href="{{ url_for('static',filename='fonts/fontawesome.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='fonts/ionicons.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='fonts/linearicons.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='fonts/open-iconic.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='fonts/pe-icon-7-stroke.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='fonts/feather.css') }}">
+
+    <!-- Core stylesheets -->
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/bootstrap-material.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/shreerang-material.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/uikit.css') }}">
+
+    <!-- Libs -->
+    <link rel="stylesheet" href="{{ url_for('static',filename='libs/perfect-scrollbar/perfect-scrollbar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='libs/flot/flot.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='libs/datatables/datatables.css') }}">
+
+</head>
+
+<body>
+    <!-- [ Preloader ] Start -->
+    <div class="page-loader">
+        <div class="bg-primary"></div>
+    </div>
+    <!-- [ Preloader ] End -->
+
+    <!-- [ Layout wrapper ] Start -->
+    <div class="layout-wrapper layout-2">
+        <div class="layout-inner">
+            <!-- [ Layout sidenav ] Start -->
+            <div id="layout-sidenav" class="layout-sidenav sidenav sidenav-vertical bg-white">
+                <div class="app-brand demo">
+                    <span class="ui-w-60">
+						<img src="{{ url_for('static',filename='img/logo.png') }}" alt="Brand Logo" class="img-fluid">
+					</span>
+                    <a href="javascript:" class="layout-sidenav-toggle sidenav-link text-large ml-auto">
+                        <i class="ion ion-md-menu align-middle"></i>
+                    </a>
+                </div>
+                <div class="sidenav-divider mt-0"></div>
+
+                <!-- Links -->
+                <ul class="sidenav-inner py-1">
+
+                    <li class="sidenav-item active open">
+                        <a href="javascript:" class="sidenav-link sidenav-toggle">
+                            <i class="sidenav-icon fas fa-inbox"></i>
+                            <div>Inbox</div>
+                        </a>
+                        <ul class="sidenav-menu">
+                            <li class="sidenav-item">
+                                <a href="/op" class="sidenav-link">
+                                    <div>Opportunities</div>
+                                </a>
+                            </li>
+                            <li class="sidenav-item">
+                                <a href="/contracts" class="sidenav-link">
+                                    <div>Awarded Contracts</div>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- Layouts -->
+                    <li class="sidenav-divider mb-1"></li>
+                    <li class="sidenav-header small font-weight-semibold">Insights</li>
+                    <li class="sidenav-item">
+                        <a href="typography.html" class="sidenav-link">
+                            <i class="sidenav-icon fas fa-building"></i>
+                            <div>Agencies</div>
+                        </a>
+                    </li>
+                    <li class="sidenav-item">
+                        <a href="typography.html" class="sidenav-link">
+                            <i class="sidenav-icon fas fa-parachute-box"></i>
+                            <div>Suppliers</div>
+                        </a>
+                    </li>
+                    <li class="sidenav-item">
+                        <a href="typography.html" class="sidenav-link">
+                            <i class="sidenav-icon fas fa-users"></i>
+                            <div>APS Staff</div>
+                        </a>
+                    </li>
+                    <li class="sidenav-item">
+                        <a href="typography.html" class="sidenav-link">
+                            <i class="sidenav-icon fas fa-filter"></i>
+                            <div>UNSPS Categories</div>
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+            <!-- [ Layout sidenav ] End -->
+
+
+            <!-- [ Layout container ] Start -->
+            <div class="layout-container">
+                <!-- [ Layout navbar ( Header ) ] Start -->
+                <nav class="layout-navbar navbar navbar-expand-lg align-items-lg-center bg-primary container-p-x" id="layout-navbar">
+
+                    <a href="index.html" class="navbar-brand app-brand demo d-lg-none py-0 mr-4">
+                        <span class="ui-w-60">
+							<img src="{{ url_for('static',filename='img/logo-dark.png') }}" alt="Brand Logo" class="img-fluid">
+						</span>
+                    </a>
+
+                    <!-- Sidenav toggle (see {{ url_for('static',filename='XXX') }}css/demo/demo.css) -->
+                    <div class="layout-sidenav-toggle navbar-nav d-lg-none align-items-lg-center mr-auto">
+                        <a class="nav-item nav-link px-0 mr-lg-4" href="javascript:">
+                            <i class="ion ion-md-menu text-large align-middle"></i>
+                        </a>
+                    </div>
+
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#layout-navbar-collapse">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+
+                    <div class="navbar-collapse collapse" id="layout-navbar-collapse">
+                        <!-- Divider -->
+                        <hr class="d-lg-none w-100 my-2">
+
+                        <div class="navbar-nav align-items-lg-center ml-auto">
+                            <div class="demo-navbar-user nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">
+                                    <span class="d-inline-flex flex-lg-row-reverse align-items-center align-middle">
+                                        <span class="px-1 mr-lg-2 ml-2 ml-lg-0">Benjamin Andrew</span>
+                                    </span>
+                                </a>
+                                <div class="dropdown-menu dropdown-menu-right">
+                                    <a href="javascript:" class="dropdown-item">
+                                        <i class="feather icon-user text-muted"></i> &nbsp; My profile</a>
+                                    <a href="javascript:" class="dropdown-item">
+                                        <i class="feather icon-settings text-muted"></i> &nbsp; Account settings</a>
+                                    <div class="dropdown-divider"></div>
+                                    <a href="/logout" class="dropdown-item">
+                                        <i class="feather icon-power text-danger"></i> &nbsp; Log Out</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+                <!-- [ Layout navbar ( Header ) ] End -->
+
+                <!-- [ Layout content ] Start -->
+                <div class="layout-content">

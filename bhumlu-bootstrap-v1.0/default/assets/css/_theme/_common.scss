@@ -1,0 +1,56 @@
+// -------------------------------------------------------------------------------
+// Theme mixin
+
+@mixin srthemesvilla-common-theme($background, $color: null) {
+  @include text-emphasis-variant('.text-primary', $background);
+  @include bg-variant('.bg-primary', $background);
+  @include srthemesvilla-badge-variant('.badge-primary', $background, $color);
+  @include srthemesvilla-badge-outline-variant('.badge-outline-primary', $background);
+  @include srthemesvilla-pagination-theme($background, $color);
+  @include srthemesvilla-progress-bar-theme($background, $color);
+  @include srthemesvilla-list-group-theme($background, $color);
+  @include srthemesvilla-alert-variant('.alert-primary', $background);
+  @include srthemesvilla-alert-dark-variant('.alert-dark-primary', $background, $color);
+  @include srthemesvilla-tooltip-variant('.tooltip-primary, .tooltip-primary > .tooltip, .ngb-tooltip-primary + ngb-tooltip-window', $background, $color);
+  @include srthemesvilla-popover-variant('.popover-primary, .popover-primary > .popover, .ngb-popover-primary + ngb-popover-window', $background, $color);
+  @include srthemesvilla-table-row-variant('.table-primary', $background);
+  @include srthemesvilla-button-variant('.btn-primary', $background, $color);
+  @include srthemesvilla-button-outline-variant('.btn-outline-primary', $background, $color);
+  @include srthemesvilla-dropdown-theme($background, $color);
+  @include srthemesvilla-nav-theme($background, $color);
+  @include srthemesvilla-custom-control-theme($background, $color);
+  @include srthemesvilla-custom-file-input-theme($background);
+  @include srthemesvilla-form-control-theme($background);
+  @include srthemesvilla-switcher-theme($background, $color);
+  @include srthemesvilla-navbar-variant('.navbar.bg-primary', $primary-color);
+  @include srthemesvilla-sidenav-variant('.sidenav.bg-primary', $primary-color);
+  @include srthemesvilla-footer-variant('.footer.bg-primary', $primary-color);
+  .fill-primary { fill: $background }
+}
+
+@mixin srthemesvilla-common-material-theme($background, $color: null) {
+  @include text-emphasis-variant('.text-primary', $background);
+  @include bg-variant('.bg-primary', $background);
+  @include srthemesvilla-badge-variant('.badge-primary', $background, $color);
+  @include srthemesvilla-badge-outline-variant('.badge-outline-primary', $background);
+  @include srthemesvilla-pagination-theme($background, $color);
+  @include srthemesvilla-progress-bar-theme($background, $color);
+  @include srthemesvilla-list-group-theme($background, $color);
+  @include srthemesvilla-alert-variant('.alert-primary', $background);
+  @include srthemesvilla-alert-dark-variant('.alert-dark-primary', $background, $color);
+  @include srthemesvilla-tooltip-variant('.tooltip-primary, .tooltip-primary > .tooltip, .ngb-tooltip-primary + ngb-tooltip-window', $background, $color);
+  @include srthemesvilla-popover-variant('.popover-primary, .popover-primary > .popover, .ngb-popover-primary + ngb-popover-window', $background, $color);
+  @include srthemesvilla-table-row-variant('.table-primary', $background);
+  @include srthemesvilla-material-button-variant('.btn-primary', $background, $color);
+  @include srthemesvilla-material-button-outline-variant('.btn-outline-primary', $background, $color);
+  @include srthemesvilla-material-dropdown-theme($background, $color);
+  @include srthemesvilla-material-nav-theme($background, $color);
+  @include srthemesvilla-material-custom-control-theme($background, $color);
+  @include srthemesvilla-material-custom-file-input-theme($background);
+  @include srthemesvilla-material-form-control-theme($background);
+  @include srthemesvilla-material-switcher-theme($background);
+  @include srthemesvilla-navbar-variant('.navbar.bg-primary', $primary-color);
+  @include srthemesvilla-sidenav-variant('.sidenav.bg-primary', $primary-color);
+  @include srthemesvilla-footer-variant('.footer.bg-primary', $primary-color);
+  .fill-primary { fill: $background }
+}

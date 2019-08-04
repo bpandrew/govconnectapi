@@ -1,0 +1,164 @@
+{% include "header.html" %}
+
+<!-- [ content ] Start -->
+
+
+<div class="container-fluid flex-grow-1 container-p-y">
+    <h4 class="font-weight-bold py-3 mb-0">{{ data.title }}</h4>
+    <h4 class="">{{data.contract_value}}</h4>
+    <div class="text-muted small mt-0 mb-4 d-block breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#"><i class="feather icon-home"></i></a></li>
+            <li class="breadcrumb-item">Contract</li>
+            <li class="breadcrumb-item active">{{data.cn_id.upper()}}</li>
+        </ol>
+    </div>
+
+    <!-- Header -->
+    <div class="card mb-4">
+        <div class="row no-gutters row-bordered row-border-light">
+            <div class="col-md-6">
+                <div class="media-body px-3 py-4">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <div>
+                            <strong class="text-primary text-large"><a href="/agency/{{ data.agency.id }}" class="showload">{{ data.agency.title }}</a></strong> {% if (data.division!=None) %} {% if (data.division.title.lower()!=""): %}<br>Division:&nbsp;&nbsp;
+                            <a href="/agency/{{ data.agency.id }}?divid={{ data.division.id }}" class="showload">{{ data.division.title }}</a>{% endif %} {% if (data.branch!=None) %}{% if (data.branch.title.lower()!="") and (data.division.title.lower()!=data.branch.title.lower()):
+                            %}
+                            <br>Branch:&nbsp;&nbsp;<a href="/agency/{{ data.agency.id }}?branchid={{ data.branch.id }}" class="showload">{{ data.branch.title }}</a>{% endif %}{% endif %} {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="media-body px-3 py-4">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <div>
+                            <strong class="text-primary text-large"><a href="/supplier/{{ data.supplier.id }}" class="showload">{{ data.supplier.name }}</a></strong>
+                            <br>ABN:&nbsp;&nbsp;{{ data.supplier.abn }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- / Header -->
+
+    <div class="row">
+        <div class="col">
+
+            <!-- Description -->
+            <div class="card mb-4">
+                <h6 class="card-header">Contract Overview</h6>
+                <div class="card-body">
+                    <p>
+                        <b>{{ data.supplier.name }}</b> was awarded a {{data.contract_value}} contract via {{ data.procurement_method.lower() }} in the <b>{{ data.agency.title }}{% if data.division!=None %}, {{data.division['title']}}{% endif%}{% if data.branch!=None
+                        %}, {{data.branch['title']}} {% endif%}</b>for '{{ data.title }}'. </p>
+                    <p>This contract {{ data.contract_closing }}.</p>
+                    <p>
+                        <h5>Earnings</h5>{{ data.supplier.name }} earned {{data.insights['sum_contracts_prev_fy']}} from the {{ data.agency.title }} last financial year. {{data.insights['sum_contracts_current_fy']}} has been earned to date this financial
+                        year.
+                    </p>
+                </div>
+            </div>
+            <!-- / Description -->
+
+        </div>
+        <div class="col-md-4 col-xl-4">
+
+            <!-- Project details -->
+            <div class="card mb-4">
+                <h6 class="card-header">Details</h6>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div class="text-muted">ID</div>
+                        <div>
+                            {{ data.cn_id.upper() }}
+                        </div>
+                    </li>
+                    {% if (data.atm_austender_id!=None) and (data.atm_austender_id!="")%}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div class="text-muted">Approach to Market</div>
+                        <div><a href="op/">{{data.atm_austender_id}}</a></div>
+                    </li>
+                    {% endif %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div class="text-muted">Published</div>
+                        <div>
+                            {{data.publish_date}}
+                        </div>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div class="text-muted">Close date</div>
+                        <div>{{data.contract_end}}</div>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div class="text-muted">Contract duration</div>
+                        <div>{{data.contract_duration}} days</div>
+                    </li>
+                </ul>
+            </div>
+            <!-- / Project details -->
+
+        </div>
+    </div>
+
+
+
+    <!-- DataTable within card -->
+    <div class="card">
+        <div class="card-body">
+            <div class="card-title with-elements">
+                <h5 class="m-0 mr-2">Ongoing Contracts</h5>
+            </div>
+            <div class="card-subtitle text-muted mb-3">
+                {{ data.supplier.name }} currently has {{ data.insights['contracts_in_agency']|length }} other ongoing contract(s) in {{ data.agency.title }};</p>
+                {{data['contracts_in_agency']}}
+            </div>
+
+            <div class="card-datatable table-responsive">
+                <table id="myTable" class="table table-hover card-table">
+                    <thead style="font-size:small">
+                        <tr>
+                            <th>Title</th>
+                            <th>Category</th>
+                            <th>Agency</th>
+                            <th>Division</th>
+                            <th>Branch</th>
+                            <th>Value</th>
+                            <th>Closing</th>
+                        </tr>
+                    </thead>
+                    <tbody style="font-size:small">
+                        {% for contract in data.insights['contracts_in_agency'] %}
+                        <tr>
+                            <td><a href="/contract/{{ contract.contract_id }}" class="showload">{{ contract.title }}</a></td>
+                            <td>{{ contract.category_temp_title }}</td>
+                            <td>{{ data.agency.title }}</td>
+                            <td>{{ contract.division_title }}</td>
+                            <td>{{ contract.branch_title }}</td>
+                            <td>{{ contract.contract_value }}</td>
+                            <td nowrap>{{ contract.closing_days }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- [ content ] End -->
+
+{% include "footer.html" %}
+
+<script>
+    $(document).ready(function() {
+        $('#myTable').DataTable({
+            "scrollX": false,
+            "order": [
+                [2, "desc"]
+            ],
+        }, );
+    });
+</script>

@@ -1,0 +1,82 @@
+{% include "header.html" %}
+
+
+<!-- [ content ] Start -->
+<div class="container-fluid flex-grow-1 container-p-y" style="width: 98% !important;">
+    <h4 class="font-weight-bold py-3 mb-0">Awarded Contracts</h4>
+    <div class="text-muted small mt-0 mb-4 d-block breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#"><i class="feather icon-home"></i></a></li>
+            <li class="breadcrumb-item active">Contracts</li>
+        </ol>
+    </div>
+
+    <!-- DataTable within card -->
+    <div class="card">
+        <div class="card-body">
+            <div class="card-title with-elements">
+                <h5 class="m-0 mr-2">Showing contracts published this week</h5>
+                <div class="card-title-elements">
+                    ({{data.data['oldest_contract']}} - {{data.data['newest_contract']}})
+                </div>
+                <div class="card-title-elements ml-md-auto">
+                    {% if data.pagination['next_url'] %}<button type="button" class="btn btn-xs btn-outline-primary"><a href="{{ data.pagination['next_url'] }}" class="showload">Previous week</a></button>{% endif%} {% if (data.pagination['prev_url'])
+                    and (data.pagination['current']>0) %}
+                    <button type="button" class="btn btn-xs btn-outline-primary"><a href="{{ data.pagination['prev_url'] }}" class="showload">Next week</a></button>{% endif%}
+                </div>
+            </div>
+
+            <div class="card-datatable table-responsive">
+                <table id="myTable" class="table table-hover card-table">
+                    <thead style="font-size:small">
+                        <tr>
+                            <th></th>
+                            <th>Title</th>
+                            <th>Supplier</th>
+                            <th>Category</th>
+                            <th>Agency</th>
+                            <th>Division</th>
+                            <th>SON</th>
+                            <th>Value</th>
+                            <th>Published</th>
+
+                        </tr>
+                    </thead>
+                    <tbody style="font-size:small">
+                        {% for contract in data.results %}
+                        <tr>
+                            <td><i class="fa fa-star-o fa-lg" style="color: #cccccc"></i></td>
+                            <td><a href="/contract/{{ contract.id }}" class="showload">{{ contract.title }}</a></td>
+                            <td>{{ contract.supplier.name }}</td>
+                            <td>{{ contract.category_temp_title }}</td>
+                            <td>{{ contract.agency.title }}</td>
+                            <td>{{ contract.division.title }}</td>
+                            <td>{{ contract.branch.title }}</td>
+                            <td>${{ contract.contract_value }}</td>
+                            <td nowrap>{{ contract.publish_date }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {{ data }}
+
+</div>
+<!-- [ content ] End -->
+
+
+{% include "footer.html" %}
+
+<script>
+    $(document).ready(function() {
+        $('#myTable').DataTable({
+            "scrollX": false,
+            "order": [
+                [0, "desc"]
+            ],
+        }, );
+    });
+</script>
