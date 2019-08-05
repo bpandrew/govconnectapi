@@ -115,6 +115,7 @@
                 {{data['contracts_in_agency']}}
             </div>
 
+            {% if data.insights['contracts_in_agency']|length > 0: %}
             <div class="card-datatable table-responsive">
                 <table id="myTable" class="table table-hover card-table">
                     <thead style="font-size:small">
@@ -143,6 +144,7 @@
                     </tbody>
                 </table>
             </div>
+            {% endif %}
         </div>
     </div>
 

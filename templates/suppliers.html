@@ -1,0 +1,51 @@
+{% include "header.html" %}
+
+
+<!-- [ content ] Start -->
+<div class="container-fluid flex-grow-1 container-p-y" style="width: 98% !important;">
+    <h4 class="font-weight-bold py-3 mb-0">Suppliers</h4>
+    <div class="text-muted small mt-0 mb-4 d-block breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#"><i class="feather icon-home"></i></a></li>
+            <li class="breadcrumb-item active">Suppliers</li>
+        </ol>
+    </div>
+
+    <!-- DataTable within card -->
+    <div class="card">
+        <div class="card-datatable table-responsive">
+            <table id="myTable" class="table table-hover card-table" style="">
+                <thead style="font-size:small">
+                    <tr>
+                        <th>Title</th>
+                    </tr>
+                </thead>
+                <tbody style="font-size:small">
+                    {% for supplier in data %}
+                    <tr>
+                        <td><a href="/supplier/{{ supplier.id }}">{{ supplier.name }}</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+<!-- [ content ] End -->
+
+
+
+
+{% include "footer.html" %}
+
+<script>
+    $(document).ready(function() {
+        $('#myTable').DataTable({
+            "scrollX": false,
+            "order": [
+                [0, "desc"]
+            ],
+        }, );
+    });
+</script>

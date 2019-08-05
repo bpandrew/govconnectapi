@@ -700,6 +700,13 @@ def son_add():
 # ------------------------------------------- AGENCY -----------------------------------------
 # --------------------------------------------------------------------------------------------
 
+@app.route("/agencies")
+def agencies():
+    agencies=Agency.query.all()
+    result = AgencySchema(many=True).dump(agencies).data
+    return render_template('agencies.html', data=result)
+
+
 
 @app.route("/agency/add", methods=['GET'])
 def agency_add():
@@ -770,6 +777,14 @@ def branch_add():
 
 # ------------------------------------ SUPPLIERS ------------------------------------
 # ---------------------------------------------------------------------------------
+@app.route("/suppliers")
+def suppliers():
+    suppliers=Supplier.query.all()
+    result = SupplierSchema(many=True).dump(suppliers).data
+    return render_template('suppliers.html', data=result)
+
+
+
 
 @app.route("/suppliers/add", methods=['GET'])
 def suppliers_add():
