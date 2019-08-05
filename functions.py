@@ -36,8 +36,8 @@ def login_required(token):
 
 # format as a currency
 def format_currency(value):
-	value = float(value)
 	try:
+		value = float(value)
 		if value<1000000:
 			output = "$"+ humanize.intcomma(value)
 			return output
