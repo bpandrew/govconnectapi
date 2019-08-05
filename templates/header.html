@@ -34,6 +34,16 @@
     <link rel="stylesheet" href="{{ url_for('static',filename='libs/flot/flot.css') }}">
     <link rel="stylesheet" href="{{ url_for('static',filename='libs/datatables/datatables.css') }}">
 
+
+    <script>
+        $(document).ready(function() {
+            $(".showload").on('click', function(event) {
+                $("div#loading_container").hide(); // hide the main content div
+                $("div#loading_icon").show(); // hide the main content div
+            })
+        });
+    </script>
+
 </head>
 
 <body>
@@ -68,12 +78,12 @@
                         </a>
                         <ul class="sidenav-menu">
                             <li class="sidenav-item">
-                                <a href="/op" class="sidenav-link">
+                                <a href="/op" class="sidenav-link showload">
                                     <div>Opportunities</div>
                                 </a>
                             </li>
                             <li class="sidenav-item">
-                                <a href="/contracts" class="sidenav-link">
+                                <a href="/contracts" class="sidenav-link showload">
                                     <div>Awarded Contracts</div>
                                 </a>
                             </li>
@@ -84,25 +94,25 @@
                     <li class="sidenav-divider mb-1"></li>
                     <li class="sidenav-header small font-weight-semibold">Insights</li>
                     <li class="sidenav-item">
-                        <a href="/agencies" class="sidenav-link">
+                        <a href="/agencies" class="sidenav-link showload">
                             <i class="sidenav-icon fas fa-building"></i>
                             <div>Agencies</div>
                         </a>
                     </li>
                     <li class="sidenav-item">
-                        <a href="/suppliers" class="sidenav-link">
+                        <a href="/suppliers" class="sidenav-link showload">
                             <i class="sidenav-icon fas fa-parachute-box"></i>
                             <div>Suppliers</div>
                         </a>
                     </li>
                     <li class="sidenav-item">
-                        <a href="/staff" class="sidenav-link">
+                        <a href="/staff" class="sidenav-link showload">
                             <i class="sidenav-icon fas fa-users"></i>
                             <div>APS Staff</div>
                         </a>
                     </li>
                     <li class="sidenav-item">
-                        <a href="/categories" class="sidenav-link">
+                        <a href="/categories" class="sidenav-link showload">
                             <i class="sidenav-icon fas fa-filter"></i>
                             <div>UNSPS Categories</div>
                         </a>
@@ -147,12 +157,12 @@
                                     </span>
                                 </a>
                                 <div class="dropdown-menu dropdown-menu-right">
-                                    <a href="javascript:" class="dropdown-item">
+                                    <a href="javascript:" class="dropdown-item showload">
                                         <i class="feather icon-user text-muted"></i> &nbsp; My profile</a>
-                                    <a href="javascript:" class="dropdown-item">
+                                    <a href="javascript:" class="dropdown-item showload">
                                         <i class="feather icon-settings text-muted"></i> &nbsp; Account settings</a>
                                     <div class="dropdown-divider"></div>
-                                    <a href="/logout" class="dropdown-item">
+                                    <a href="/logout" class="dropdown-item showload">
                                         <i class="feather icon-power text-danger"></i> &nbsp; Log Out</a>
                                 </div>
                             </div>
@@ -162,4 +172,5 @@
                 <!-- [ Layout navbar ( Header ) ] End -->
 
                 <!-- [ Layout content ] Start -->
-                <div class="layout-content">
+                <div id="loading_icon" style="display:none; text-align: center; margin-top: 30px;"><img src="https://loading.io/spinners/cloudy/index.cloudy-sky-preloader.svg"><br><small>Please be patient, we are generating live data for you.</small></div>
+                <div id="loading_container" class="layout-content">

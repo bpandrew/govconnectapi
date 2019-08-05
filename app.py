@@ -117,7 +117,10 @@ def user_add():
 
 @app.route("/op", methods=['GET'])
 def op():
-    functions.login_required(session['user_token']) # confirm the user is logged in
+    try:
+        functions.login_required(session['user_token']) # confirm the user is logged in
+    except:
+        return redirect(url_for('login'))
     
     page = request.args.get('page', 1, type=int)
     filter_results = request.args.get('filter', 1, type=int)
@@ -240,7 +243,10 @@ def op_add():
 
 @app.route("/contracts", methods=['GET'])
 def contracts(supplier_id=None):
-    functions.login_required(session['user_token']) # confirm the user is logged in
+    try:
+        functions.login_required(session['user_token']) # confirm the user is logged in
+    except:
+        return redirect(url_for('login'))
 
     page = request.args.get('page', 0, type=int)
     paginate = request.args.get('paginate', "yes", type=str)
