@@ -936,6 +936,15 @@ def suppliers_add():
 # ------------------------------------ APS EMPLOYEE ------------------------------------
 # ---------------------------------------------------------------------------------
 
+@app.route("/staff")
+def staff():
+    aps=Employee.query.all()
+    result = EmployeeSchema(many=True).dump(aps).data
+    return render_template('aps.html', data=result)
+
+
+
+
 @app.route("/employee/add", methods=['POST'])
 def employee_add():
 
