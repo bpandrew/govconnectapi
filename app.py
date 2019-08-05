@@ -927,7 +927,10 @@ def supplier_detail(supplier_id):
     #df = result['results']
 	df = json_normalize(result)
 	if len(df)>0:
-		df['contract_value'] = df['contract_value'].astype(float)
+		try:
+			df['contract_value'] = df['contract_value'].astype(float)
+		except:
+			pass
 		cfy_start, cfy_end, lfy_start, lfy_end, now_string = functions.financial_years()
 
 		cfy = df[df['contract_start']>=cfy_start]
