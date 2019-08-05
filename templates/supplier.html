@@ -131,7 +131,7 @@
         </div>
 	</div>
 	<div class="row">
-        <div class="col-xl-6">
+        <div class="col-xl-8">
 
 			<!-- Posts -->			
 			<div class="card mb-4">
@@ -140,19 +140,17 @@
 				</div>
 			</div>
 		</div>
-		<div class="col-xl-6">
+	</div>
+	<div class="row">
+		<div class="col-xl-8">
 			<div class="card mb-4">
 				<div class="card-body">
 					<canvas id="bar-chart-grouped" class="chartjs-demo" style="display: block; max-width: 100%; height:{{ data.agency_chart_data['chart_height']}}px;"></canvas>
-					<p><br><br>{{data.supplier_details['name']}} generated revenue from {{ data.agency_chart_data['lfy_agencies']|safe}} last financial year, and {{ data.agency_chart_data['cfy_agencies']|safe}} to date this financial year.</p>
+					<p><hr><br>{{data.supplier_details['name']}} generated revenue from {{ data.agency_chart_data['lfy_agencies']|safe}} last financial year, and {{ data.agency_chart_data['cfy_agencies']|safe}} to date this financial year.</p>
 				</div>
 			</div>
 		</div>
     </div>
-
-    {{ data }}
-
-    	<br><br><br> {{ data.analysis_json['open_contracts'] }}
 
 </div>
 
