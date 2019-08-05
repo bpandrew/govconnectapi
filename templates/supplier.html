@@ -1,0 +1,403 @@
+{% include "header.html" %}
+
+<!-- [ content ] Start -->
+
+
+<div class="container-fluid flex-grow-1 container-p-y">
+    <h4 class="font-weight-bold py-3 mb-0">Supplier Details</h4>
+    <div class="text-muted small mt-0 mb-4 d-block breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#"><i class="feather icon-home"></i></a></li>
+            <li class="breadcrumb-item">Supplier</li>
+            <li class="breadcrumb-item active">{{data.supplier_details['name']}}</li>
+        </ol>
+    </div>
+
+	<div class="row">
+        <div class="col-xl-6">
+			<div class="card mb-4">
+				<div class="card-body">
+					<div class="row">
+						<div class="col-md-auto col-sm-12">
+							<img src="https://designshack.net/wp-content/uploads/placeholder-image.png" alt="" class="d-block ui-w-100 mb-3">
+						</div>
+						<div class="col">
+							<h4 class="font-weight-bold mb-4">{{ data.supplier_details['name'] }}</h4>
+							<div class="text-muted mb-4">
+								{% if data.analysis_json|length >0 %} 
+								<p>{{data.supplier_details['name']}} earned {{data.analysis_json['sum_contracts_prev_fy']}} in government revenue last financial year. 
+									{% if data.analysis_json['highest_revenue_prev_fy']|length >0 %}   
+										The majority from the {{data.analysis_json['highest_revenue_prev_fy'][0]}}.
+									{%endif %}
+								</p>
+								<p>
+									{{data.analysis_json['sum_contracts_current_fy']}} has been contracted to date this financial year; 
+									{% if data.analysis_json['highest_revenue_current_fy']|length >0 %}   
+										the majority from the {{data.analysis_json['highest_revenue_current_fy'][0]}}.
+									{%endif %}
+								{% else %}
+								<p>Currenly no contract data on this supplier.</p>
+								{%endif %}
+								</p>
+						</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-xl-6">
+			<div class="card mb-4">
+                <hr class="border-light m-0" style="margin-bottom: -10px">
+
+                <div class="card-body">
+                    <h6 class="my-3">Entity Details</h6>
+                    <div class="row mb-2">
+                        <div class="col-md-5 text-muted">ABN:</div>
+                        <div class="col-md-7">
+                            {{data.supplier_details['abn']}}
+                        </div>
+                    </div>
+
+					<div class="row mb-2">
+                        <div class="col-md-5 text-muted">GST registered:</div>
+                        <div class="col-md-7">
+                            XX
+                        </div>
+                    </div>
+
+					<div class="row mb-2">
+                        <div class="col-md-5 text-muted">Indigenous:</div>
+                        <div class="col-md-7">
+                            Yes/No
+                        </div>
+                    </div>
+                </div>
+            </div>
+		</div>
+    </div>
+
+    <!-- Header -->
+
+
+    <div class="row">
+        <div class="col">
+			<div class="card mb-4">
+                <div class="card-body">
+					
+					<div class="card-title with-elements">
+						<h5 class="m-0 mr-2">Supplier Contracts</h5>
+						<div class="card-title-elements">
+						</div>
+						<div class="card-title-elements ml-md-auto">
+							<button type="button" id="ongoing" class="btn btn-xs btn-outline-primary active">Ongoining Contracts</button>
+							<button type="button" id="cfy" class="btn btn-xs btn-outline-primary">This Financial Year to date</button>
+							<button type="button" id="lfy" class="btn btn-xs btn-outline-primary">Last Financial Year</button>
+						</div>
+					</div>
+
+
+                    <div class="card-datatable table-responsive" style="margin-top: -25px">
+                        <table id="myTable" class="table table-hover card-table">
+                            <thead style="font-size:small">
+							<tr>
+								<th>Title</th>
+								<th>Agency</th>
+								<th>Division</th>
+								<th>Category</th>
+								<th>Value</th>
+								<th>Contract Start</th>
+								<th>Contract End</th>                            
+							</tr>
+                            </thead>
+                            <tbody style="font-size:small">
+                                {% for contract in data.analysis_json['open_contracts']: %}
+								<tr data-year="{{ contract.year }}" data-ongoing="{{ contract.ongoing }}">
+									<td><a href="/contract/{{ contract.contract_id }}">{{ contract.title }}</a></td>
+									<td>{{ contract.agency }}</td>
+									<td>{% if contract.division_title!="nan" %}{{ contract.division_title }}{% endif %}</td>
+									<td>{{ contract.unspsc}}</td>
+									<td>{{ contract.contract_value }}</td>
+									<td>{{ contract.contract_start }}</td>
+									<td>{{ contract.contract_end }}</td>
+								</tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+	</div>
+	<div class="row">
+        <div class="col-xl-6">
+
+			<!-- Posts -->			
+			<div class="card mb-4">
+				<div class="card-body">
+					<canvas id="line-chart" class="chartjs-demo" style="display: block; max-width: 100%;"></canvas>
+				</div>
+			</div>
+		</div>
+		<div class="col-xl-6">
+			<div class="card mb-4">
+				<div class="card-body">
+					<canvas id="bar-chart-grouped" class="chartjs-demo" style="display: block; max-width: 100%; height:{{ data.agency_chart_data['chart_height']}}px;"></canvas>
+					<p><br><br>{{data.supplier_details['name']}} generated revenue from {{ data.agency_chart_data['lfy_agencies']|safe}} last financial year, and {{ data.agency_chart_data['cfy_agencies']|safe}} to date this financial year.</p>
+				</div>
+			</div>
+		</div>
+    </div>
+
+    {{ data }}
+
+    	<br><br><br> {{ data.analysis_json['open_contracts'] }}
+
+</div>
+
+<!-- [ content ] End -->
+
+{% include "footer.html" %}
+
+
+{% if data.chart_data|length >0 %}
+
+<script>
+    function currentMonth() {
+
+        const monthNames = ["January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ];
+        var d = new Date();
+        var n = monthNames[d.getMonth()]
+        return n;
+    }
+</script>
+
+<script>
+    new Chart(document.getElementById("line-chart"), {
+        type: 'line',
+        data: {
+            labels: {{data.chart_data['cfy_x'] | safe}},
+            datasets: [{
+                data: {{data.chart_data['cfy_y']}},
+                label: "This Financial Year",
+                borderColor: "#3e95cd",
+                fill: true
+            }, {
+                data: {{data.chart_data['lfy_y']}},
+                label: "Last Financial Year",
+                borderColor: "#8e5ea2",
+                fill: false
+            }]
+        },
+        options: {
+            annotation: {
+                annotations: [{
+                    type: "line",
+                    mode: "vertical",
+                    scaleID: "x-axis-0",
+                    value: currentMonth(),
+                    borderColor: "black",
+                    borderDash: [2, 4],
+                    borderWidth: 2,
+                }]
+            },
+
+
+            title: {
+                display: true,
+                text: "{{data.supplier_details['name']}} - Monthly government revenue, and projected future earnings from ongoing contracts."
+            },
+            scales: {
+                yAxes: [{
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Monthly Revenue'
+                    },
+                    ticks: {
+                        beginAtZero: true,
+                        callback: function(value, index, values) {
+                            if (parseInt(value) >= 1000) {
+                                return '$' + value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                            } else {
+                                return '$' + value;
+                            }
+                        }
+                    }
+                }]
+            },
+            tooltips: {
+                callbacks: {
+                    label: function(tooltipItem, data) {
+                        return data.datasets[tooltipItem.datasetIndex].label + ' - $' + (Math.round(tooltipItem.yLabel)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endif %} {% if data.agency_chart_data|length >0 %}
+<script>
+    new Chart(document.getElementById("bar-chart-grouped"), {
+        type: 'horizontalBar',
+        data: {
+            labels: {{data.agency_chart_data['agency_list'] | safe}},
+            datasets: [{
+                label: "This Financial Year",
+                backgroundColor: "#3e95cd",
+                data: {{data.agency_chart_data['cfy_values'] | safe}}
+            }, {
+                label: "Last Financial Year",
+                backgroundColor: "#8e5ea2",
+                data: {{data.agency_chart_data['lfy_values'] | safe}}
+            }]
+        },
+        options: {
+            title: {
+                display: true,
+                text: "{{data.supplier_details['name']}} - Revenue by Government Agency"
+            },
+            scales: {
+                xAxes: [{
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Annual Revenue per Agency'
+                    },
+                    ticks: {
+                        beginAtZero: true,
+                        callback: function(value, index, values) {
+                            if (parseInt(value) >= 1000) {
+                                return '$' + (value / 1000).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + 'K';
+                            } else {
+                                return '$' + value;
+                            }
+                        }
+                    }
+                }]
+            },
+            tooltips: {
+                callbacks: {
+                    label: function(tooltipItem, data) {
+                        return tooltipItem.yLabel + ' - $' + (Math.round(tooltipItem.xLabel)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endif %}
+
+
+
+<script>
+    $(document).ready(function() {
+        table = $('#myTable').DataTable({
+            "orderCellsTop": true,
+            "fixedHeader": true,
+            "order": [
+                [4, "desc"]
+            ],
+            "columnDefs": [{
+                className: "dt-nowrap",
+                "targets": [4]
+            }],
+            "footerCallback": function(row, data, start, end, display) {
+                var api = this.api(),
+                    data;
+
+                // Remove the formatting to get integer data for summation
+                var intVal = function(i) {
+                    return typeof i === 'string' ?
+                        i.replace(/[\$,]/g, '') * 1 :
+                        typeof i === 'number' ?
+                        i : 0;
+                };
+
+                // Total over all pages
+                total = api
+                    .column(4)
+                    .data()
+                    .reduce(function(a, b) {
+                        return intVal(a) + intVal(b);
+                    }, 0);
+
+                // Total over this page
+                pageTotal = api
+                    .column(4, {
+                        page: 'current'
+                    })
+                    .data()
+                    .reduce(function(a, b) {
+                        return intVal(a) + intVal(b);
+                    }, 0);
+
+                // Update footer
+                $(api.column(4).footer()).html(
+
+                    '$' + pageTotal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + ' <br><small>( $' + total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + ' total)</small>'
+                );
+            }
+        });
+
+        $("#ongoing").click(function() {
+            $.fn.dataTable.ext.search.pop();
+            $.fn.dataTable.ext.search.push(
+                function(settings, data, dataIndex) {
+                    return $(table.row(dataIndex).node()).attr('data-ongoing') == 1;
+                }
+            );
+            $("#ongoing").addClass("active");
+            $("#cfy").removeClass("active");
+            $("#lfy").removeClass("active");
+            table.draw();
+        });
+
+        $("#ongoing").trigger('click');
+
+        $("#cfy").click(function() {
+            $.fn.dataTable.ext.search.pop();
+            $.fn.dataTable.ext.search.push(
+                function(settings, data, dataIndex) {
+                    return $(table.row(dataIndex).node()).attr('data-year') == "cfy";
+                }
+            );
+            $("#ongoing").removeClass("active");
+            $("#cfy").addClass("active");
+            $("#lfy").removeClass("active");
+            table.draw();
+        });
+
+        $("#lfy").click(function() {
+            $.fn.dataTable.ext.search.pop();
+            $.fn.dataTable.ext.search.push(
+                function(settings, data, dataIndex) {
+                    return $(table.row(dataIndex).node()).attr('data-year') == "lfy";
+                }
+            );
+            $("#ongoing").removeClass("active");
+            $("#cfy").removeClass("active");
+            $("#lfy").addClass("active");
+            table.draw();
+        });
+
+
+        // Setup - add a text input to each footer cell
+        $('#myTable thead tr').clone(true).appendTo('#myTable thead');
+        $('#myTable thead tr:eq(1) th').each(function(i) {
+            var title = $(this).text();
+            $(this).html('<input type="text" placeholder="Filter ' + title + '" />');
+
+            $('input', this).on('keyup change', function() {
+                if (table.column(i).search() !== this.value) {
+                    table
+                        .column(i)
+                        .search(this.value)
+                        .draw();
+                }
+            });
+        });
+
+    });
+</script>

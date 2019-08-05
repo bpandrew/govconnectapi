@@ -20,9 +20,9 @@
                     ({{data.data['oldest_contract']}} - {{data.data['newest_contract']}})
                 </div>
                 <div class="card-title-elements ml-md-auto">
-                    {% if data.pagination['next_url'] %}<button type="button" class="btn btn-xs btn-outline-primary"><a href="{{ data.pagination['next_url'] }}" class="showload">Previous week</a></button>{% endif%} {% if (data.pagination['prev_url'])
+                    {% if data.pagination['next_url'] %}<button type="button" class="btn btn-xs btn-outline-primary showload"><a href="{{ data.pagination['next_url'] }}" class="showload">Previous week</a></button>{% endif%} {% if (data.pagination['prev_url'])
                     and (data.pagination['current']>0) %}
-                    <button type="button" class="btn btn-xs btn-outline-primary"><a href="{{ data.pagination['prev_url'] }}" class="showload">Next week</a></button>{% endif%}
+                    <button type="button" class="btn btn-xs btn-outline-primary showload"><a href="{{ data.pagination['prev_url'] }}" class="showload">Next week</a></button>{% endif%}
                 </div>
             </div>
 
@@ -30,7 +30,6 @@
                 <table id="myTable" class="table table-hover card-table">
                     <thead style="font-size:small">
                         <tr>
-                            <th></th>
                             <th>Title</th>
                             <th>Supplier</th>
                             <th>Category</th>
@@ -39,13 +38,11 @@
                             <th>Branch</th>
                             <th>Value</th>
                             <th>Published</th>
-
                         </tr>
                     </thead>
                     <tbody style="font-size:small">
                         {% for contract in data.results %}
                         <tr>
-                            <td><i class="fa fa-star-o fa-lg" style="color: #cccccc"></i></td>
                             <td><a href="/contract/{{ contract.id }}" class="showload">{{ contract.title }}</a></td>
                             <td>{{ contract.supplier.name }}</td>
                             <td>{{ contract.category_temp_title }}</td>

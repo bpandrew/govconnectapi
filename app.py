@@ -13,6 +13,7 @@ import pandas as pd
 import numpy as np
 from pandas.io.json import json_normalize
 import functions # import all of the custom written functions
+import charts
 
 
 app = Flask(__name__)
@@ -714,6 +715,17 @@ def agencies():
 
 
 
+@app.route("/agency/<agency_id>", methods=['GET'])
+def agency_detail(agency_id):
+    agency = Agency.query.filter_by(id=agency_id).first()
+    result = AgencySchema().dumps(agency).data
+    result = json.loads(result)
+
+    return render_template('agency.html', data=result)
+
+
+
+
 @app.route("/agency/add", methods=['GET'])
 def agency_add():
 
@@ -788,6 +800,108 @@ def suppliers():
     suppliers=Supplier.query.all()
     result = SupplierSchema(many=True).dump(suppliers).data
     return render_template('suppliers.html', data=result)
+
+
+@app.route("/supplier/<supplier_id>", methods=['GET'])
+def supplier_detail(supplier_id):
+    supplier = Supplier.query.filter_by(id=supplier_id).first()
+    result = SupplierSchema().dumps(supplier).data
+    result = json.loads(result)
+
+    data = {}
+    data['supplier_details'] = result
+
+    # --------------------  ANALYSIS  ------------------------
+
+    #QUERY_ENDPOINT = session['endpoint']+"contracts?paginate=no&supplier_id="+ str(supplier_id)
+    #uResponse = requests.get(url = QUERY_ENDPOINT)
+    #query_data = json.loads(uResponse.text)
+
+    supplier_contracts = Contract.query.filter_by(supplier_id=supplier_id)
+    result = ContractSchema(many=True).dumps(supplier_contracts).data
+    result = json.loads(result)
+
+    print(result)
+
+    #df = result['results']
+    df = json_normalize(result)
+    if len(df)>0:
+        df['contract_value'] = df['contract_value'].astype(float)
+
+        cfy_start, cfy_end, lfy_start, lfy_end, now_string = functions.financial_years()
+
+        cfy = df[df['contract_start']>=cfy_start]
+        cfy = cfy[cfy['contract_start']<=cfy_end]
+        lfy = df[df['contract_start']>=lfy_start]
+        lfy = lfy[lfy['contract_start']<=lfy_end]
+
+        analysis_json ={}
+        analysis_json['sum_contracts_prev_fy'] = functions.format_currency(lfy['contract_value'].sum())
+        analysis_json['sum_contracts_current_fy'] = functions.format_currency(cfy['contract_value'].sum())
+
+        # Find the highest revenue agencies for this and last year
+        df_temp = cfy.groupby(['agency.title']).sum().reset_index()
+        analysis_json['highest_revenue_current_fy'] = df_temp['agency.title'][:1].values
+
+        df_temp = lfy.groupby(['agency.title']).sum().reset_index()
+        analysis_json['highest_revenue_prev_fy'] = df_temp['agency.title'][:1].values
+
+        # Find all of the open contracts in this agency
+        df_temp = df.copy()
+        df_temp = df_temp[df_temp['contract_end']>lfy_start]
+
+        analysis_json['open_contracts'] = []
+        for index, row in df_temp.iterrows():
+            temp_dict = {}
+            # is this project ongoing?
+            if row['contract_end']>now_string:
+                temp_dict['ongoing'] = 1
+            else:
+                temp_dict['ongoing'] = 0
+
+            if (row['contract_start']>=lfy_start) and (row['contract_start']<=lfy_end):
+                temp_dict['year'] = "lfy"
+            else:
+                temp_dict['year'] = "cfy"
+
+            temp_dict['contract_id']=row['id']
+            temp_dict['division_title']=row['division.title']
+            temp_dict['branch_title']=row['branch.title']
+            temp_dict['agency']=row['agency.title']
+            try:
+                temp_dict['unspsc'] = row['unspsc.title']
+            except:
+                temp_dict['unspsc'] = ""
+            temp_dict['title']=row['title']
+            temp_dict['contract_value']= "$"+ humanize.intcomma(row['contract_value'])
+            temp_dict['contract_end'] = row['contract_end']
+            temp_dict['contract_start'] = row['contract_start']
+            contract_end = datetime.strptime(row['contract_end'], '%Y-%m-%d')
+            temp_dict['closing_days'] = humanize.naturaltime(contract_end) 
+            analysis_json['open_contracts'].append(temp_dict)
+        
+        data['analysis_json'] = analysis_json
+
+        #  ------------------------  CHARTING  --------------------------
+
+        chart_data = {}
+        chart_data['lfy_x'], chart_data['lfy_y'], chart_data['cfy_x'], chart_data['cfy_y'] = charts.chart_revenue(df, lfy_start, lfy_end, cfy_start, cfy_end)
+        data['chart_data'] = chart_data
+
+        # Generate the agency revenue chart
+        agency_chart_data = {}
+        agency_chart_data['agency_list'], agency_chart_data['lfy_values'], agency_chart_data['cfy_values'], agency_chart_data['chart_height'], agency_chart_data['lfy_agencies'], agency_chart_data['cfy_agencies'] = charts.chart_agency_revenue(df, lfy_start, lfy_end, cfy_start, cfy_end)
+        data['agency_chart_data'] = agency_chart_data
+
+    else:
+         data['analysis_json'] = {}
+
+
+
+
+
+
+    return render_template('supplier.html', data=data)
 
 
 

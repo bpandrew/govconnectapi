@@ -52,6 +52,15 @@
 <script src="{{ url_for('static',filename='libs/datatables/datatables.js') }}"></script>
 <script src="{{ url_for('static',filename='js/pages/tables_datatables.js') }}"></script>
 
+<script>
+    $(document).ready(function() {
+        $(".showload").on('click', function(event) {
+            $("div#loading_container").hide(); // hide the main content div
+            $("div#loading_icon").show(); // hide the main content div
+        })
+    });
+</script>
+
 
 </body>
 

@@ -1,5 +1,5 @@
 cd /Users/benjaminandrew/Documents/govconnectapi 
-source env/bin/activate
+////source env/bin/activate
 
 source /Users/benjaminandrew/Documents/govconnectapi/env3/bin/activate
 

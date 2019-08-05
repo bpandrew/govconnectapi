@@ -45,7 +45,6 @@ def user_detail(user_id):
 @app.route("/user/add", methods=['POST'])
 def user_add():
 
-    
     data = request.form.to_dict()
     first_name = data['first_name']
     last_name = data['last_name']
