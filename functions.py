@@ -36,13 +36,16 @@ def login_required(token):
 
 # format as a currency
 def format_currency(value):
-    value = float(value)
-    if value<1000000:
-        output = "$"+ humanize.intcomma(value) +"0"
-        return output
-    else:
-        output = "$"+ humanize.intword(value)
-        return output
+	value = float(value)
+	try:
+		if value<1000000:
+			output = "$"+ humanize.intcomma(value)
+			return output
+		else:
+			output = "$"+ humanize.intword(value)
+		return output
+	except:
+		return None
 
 
 # Generate the dates for the current financial year and the previous

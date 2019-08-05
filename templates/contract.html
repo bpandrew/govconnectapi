@@ -52,7 +52,7 @@
                 <div class="card-body">
                     <p>
                         <b>{{ data.supplier.name }}</b> was awarded a {{data.contract_value}} contract via {{ data.procurement_method.lower() }} in the <b>{{ data.agency.title }}{% if data.division!=None %}, {{data.division['title']}}{% endif%}{% if data.branch!=None
-                        %}, {{data.branch['title']}} {% endif%}</b>for '{{ data.title }}'. </p>
+                        %}, {{data.branch['title']}} {% endif%}</b> for '{{ data.description }}'. </p>
                     <p>This contract {{ data.contract_closing }}.</p>
                     <p>
                         <h5>Earnings</h5>{{ data.supplier.name }} earned {{data.insights['sum_contracts_prev_fy']}} from the {{ data.agency.title }} last financial year. {{data.insights['sum_contracts_current_fy']}} has been earned to date this financial
@@ -147,6 +147,8 @@
             {% endif %}
         </div>
     </div>
+
+	{{ data }}
 
 </div>
 

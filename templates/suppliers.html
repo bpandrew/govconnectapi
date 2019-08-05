@@ -18,18 +18,21 @@
                 <thead style="font-size:small">
                     <tr>
                         <th>Name</th>
+						<th>ABN</th>
                     </tr>
                 </thead>
                 <tbody style="font-size:small">
                     {% for supplier in data %}
                     <tr>
                         <td><a href="/supplier/{{ supplier.id }}">{{ supplier.name }}</a></td>
+						<td>{{ supplier.abn }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
+
 
 </div>
 <!-- [ content ] End -->

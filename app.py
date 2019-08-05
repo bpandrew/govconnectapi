@@ -337,90 +337,97 @@ def contracts(supplier_id=None):
 
 @app.route("/contract/<contract_id>", methods=['GET'])
 def contract_detail(contract_id):
-    contract = Contract.query.filter_by(id=contract_id).first()
-    data = ContractSchema().dumps(contract).data
-    data = json.loads(data)
 
-    data['contract_open'] = "FINISHED"
-    x = datetime.strptime(data['contract_start'], '%Y-%m-%d')
-    start_year = x.strftime("%Y")
-    y = datetime.strptime(data['contract_end'], '%Y-%m-%d')
-    end_year = y.strftime("%Y")
-    data['contract_start_human'] = x.strftime("%b %d %Y")
-    data['contract_end_human'] = y.strftime("%b %d %Y")
-    # create the closing text
-    if y>datetime.now():
-        data['contract_closing'] = "will end " + humanize.naturaltime(y)
-    else:
-        data['contract_closing'] = "ended " + humanize.naturaltime(y)
-
-    if (y<datetime.now()+timedelta(days=30)) and (y>datetime.now()):
-        data['contract_open'] = "ENDING SOON"
-    elif y>datetime.now():
-        data['contract_open'] = "ONGOING"
-
-    contract_data = data.copy()
-
-    contract = Contract.query.filter_by(supplier_id=contract_data['supplier']['id']).all()
-    contracts = ContractSchema(many=True).dumps(contract).data
-    contracts = json.loads(contracts)
-
-    contracts = json_normalize(contracts)
-
-    cfy_start, cfy_end, lfy_start, lfy_end, now_string = functions.financial_years()
-
-    cfy = contracts[contracts['contract_start']>=cfy_start]
-    cfy = cfy[cfy['contract_start']<=cfy_end]
-    lfy = contracts[contracts['contract_start']>=lfy_start]
-    lfy = lfy[lfy['contract_start']<=lfy_end]
-
-    insights = {}
-
-    lfy['contract_value'] = lfy['contract_value'].astype(float)
-    cfy['contract_value'] = cfy['contract_value'].astype(float)
-    insights['sum_contracts_prev_fy'] = functions.format_currency(lfy[lfy['agency.id']==data['agency']['id']]['contract_value'].sum())
-    insights['sum_contracts_current_fy'] = functions.format_currency(cfy[cfy['agency.id']==data['agency']['id']]['contract_value'].sum()) #functions.format_currency(
-
-    data['contract_value'] = functions.format_currency(data['contract_value'])
-
-    # Sum the total earned in the Contracted Agency
-    insights['sum_contracts_in_agency_prev_fy'] = humanize.apnumber(lfy['contract_value'][lfy['agency.id'] == data['agency']['id']].sum())
-    insights['sum_contracts_in_agency_current_fy'] = humanize.apnumber(cfy['contract_value'][cfy['agency.id'] == data['agency']['id']].sum())
-
-    # Find the highest revenue agencies for this and last year
-    df_temp = cfy.groupby(['agency.title']).sum().reset_index()
-    insights['highest_revenue_current_fy'] = functions.humanise_array(list(df_temp['agency.title'][:4].values))
-
-    df_temp = lfy.groupby(['agency.title']).sum().reset_index()
-    insights['highest_revenue_prev_fy'] = functions.humanise_array(list(df_temp['agency.title'][:4].values))
-
-    # Find all of the open contracts in this agency
-    df_temp = contracts[contracts['contract_end']>now_string] # limit to the 'Open' contracts
-    df_temp = df_temp[df_temp['agency.id']==contract_data['agency']['id']] # limit it to the current agency
-    df_temp = df_temp[df_temp['cn_id']!=contract_data['cn_id']] # exclude the current contract
-    insights['contracts_in_agency'] = []
-    for index, row in df_temp.iterrows():
-        temp_dict = {}
-        temp_dict['contract_id']=row['id']
-        temp_dict['title']=row['title']
-        try:
-            temp_dict['unspsc'] = row['unspsc.title']
-        except:
-            temp_dict['unspsc'] = "-"
-
-        temp_dict['contract_value']= "$"+ humanize.intcomma(row['contract_value'])
-        contract_end = datetime.strptime(row['contract_end'], '%Y-%m-%d')
-        temp_dict['closing_days'] = humanize.naturaltime(contract_end) 
-        temp_dict['division_title'] = row['division.title']
-        temp_dict['division_id'] = row['division.id']
-        temp_dict['branch_title'] = row['branch.title']
-        temp_dict['branch_id'] = row['branch.id']
-        temp_dict['category_temp_title'] = row['category_temp_title']
-        insights['contracts_in_agency'].append(temp_dict)
-
-    data['insights'] = insights
-
-    return render_template('contract.html', data=data)
+	contract = Contract.query.filter_by(id=contract_id).first()
+	data = ContractSchema().dumps(contract).data
+	data = json.loads(data)
+	data['contract_open'] = "FINISHED"
+	x = datetime.strptime(data['contract_start'], '%Y-%m-%d')
+	start_year = x.strftime("%Y")
+	y = datetime.strptime(data['contract_end'], '%Y-%m-%d')
+	end_year = y.strftime("%Y")
+	data['contract_start_human'] = x.strftime("%b %d %Y")
+	data['contract_end_human'] = y.strftime("%b %d %Y")
+	# create the closing text
+	if y>datetime.now():
+		data['contract_closing'] = "will end " + humanize.naturaltime(y)
+	else:
+		data['contract_closing'] = "ended " + humanize.naturaltime(y)
+		
+	if (y<datetime.now()+timedelta(days=30)) and (y>datetime.now()):
+		data['contract_open'] = "ENDING SOON"
+	elif y>datetime.now():
+		data['contract_open'] = "ONGOING"
+		
+	contract_data = data.copy()
+	
+	contract = Contract.query.filter_by(supplier_id=contract_data['supplier']['id']).all()
+	contracts = ContractSchema(many=True).dumps(contract).data
+	contracts = json.loads(contracts)
+	
+	contracts = json_normalize(contracts)
+	
+	cfy_start, cfy_end, lfy_start, lfy_end, now_string = functions.financial_years()
+	cfy = contracts[contracts['contract_start']>=cfy_start]
+	cfy = cfy[cfy['contract_start']<=cfy_end]
+	lfy = contracts[contracts['contract_start']>=lfy_start]
+	lfy = lfy[lfy['contract_start']<=lfy_end]
+	
+	insights = {}
+	
+	lfy['contract_value'] = lfy['contract_value'] #.astype(float)
+	cfy['contract_value'] = cfy['contract_value'] #.astype(float)
+	insights['sum_contracts_prev_fy'] = functions.format_currency(lfy[lfy['agency.id']==data['agency']['id']]['contract_value'].sum())
+	insights['sum_contracts_current_fy'] = functions.format_currency(cfy[cfy['agency.id']==data['agency']['id']]['contract_value'].sum()) #functions.format_currency(
+		
+	data['contract_value'] = functions.format_currency(data['contract_value'])
+	
+	# Sum the total earned in the Contracted Agency
+	insights['sum_contracts_in_agency_prev_fy'] = humanize.apnumber(lfy['contract_value'][lfy['agency.id'] == data['agency']['id']].sum())
+	insights['sum_contracts_in_agency_current_fy'] = humanize.apnumber(cfy['contract_value'][cfy['agency.id'] == data['agency']['id']].sum())
+	
+	# Find the highest revenue agencies for this and last year
+	df_temp = cfy.groupby(['agency.title']).sum().reset_index()
+	insights['highest_revenue_current_fy'] = functions.humanise_array(list(df_temp['agency.title'][:4].values))
+	
+	df_temp = lfy.groupby(['agency.title']).sum().reset_index()
+	insights['highest_revenue_prev_fy'] = functions.humanise_array(list(df_temp['agency.title'][:4].values))
+	
+	# Find all of the open contracts in this agency
+	df_temp = contracts[contracts['contract_end']>now_string] # limit to the 'Open' contracts
+	df_temp = df_temp[df_temp['agency.id']==contract_data['agency']['id']] # limit it to the current agency
+	df_temp = df_temp[df_temp['cn_id']!=contract_data['cn_id']] # exclude the current contract
+	insights['contracts_in_agency'] = []
+	
+	for index, row in df_temp.iterrows():
+		temp_dict = {}
+		temp_dict['contract_id']=row['id']
+		temp_dict['title']=row['title']
+		try:
+			temp_dict['unspsc'] = row['unspsc.title']
+		except:
+			temp_dict['unspsc'] = "-"
+		temp_dict['contract_value']= "$"+ humanize.intcomma(row['contract_value'])
+		contract_end = datetime.strptime(row['contract_end'], '%Y-%m-%d')
+		temp_dict['closing_days'] = humanize.naturaltime(contract_end)
+		try:
+			temp_dict['division_title'] = row['division.title']
+			temp_dict['division_id'] = row['division.id']
+		except:
+			temp_dict['division_title'] = None
+			temp_dict['division_id'] = None
+		try:
+			temp_dict['branch_title'] = row['branch.title']
+			temp_dict['branch_id'] = row['branch.id']
+		except:
+			temp_dict['branch_title'] = None
+			temp_dict['branch_id'] = None
+		temp_dict['category_temp_title'] = row['category_temp_title']
+		insights['contracts_in_agency'].append(temp_dict)
+		
+	data['insights'] = insights
+	
+	return render_template('contract.html', data=data)
 
 
 
@@ -941,8 +948,6 @@ def staff():
     aps=Employee.query.all()
     result = EmployeeSchema(many=True).dump(aps).data
     return render_template('aps.html', data=result)
-
-
 
 
 @app.route("/employee/add", methods=['POST'])
