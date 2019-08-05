@@ -139,9 +139,9 @@ class UnspscSchema(ma.ModelSchema):
 
 
 class UnspscSchemaSimple(ma.ModelSchema):
-    class Meta:
-       model = Unspsc
-    #opportunities = ma.Nested("OpSchema", many=True, only=("id", "title"))
+	class Meta:
+		model = Unspsc
+		#opportunities = ma.Nested("OpSchema", many=True, only=("id", "title"))
 
 
 
@@ -154,8 +154,9 @@ class Supplier(db.Model):
     country = db.Column(db.String())
 
 class SupplierSchema(ma.ModelSchema):
-    class Meta:
-       model = Supplier
+	class Meta:	
+		model = Supplier
+		fields = ("id", "name", "abn")
 
 
 
