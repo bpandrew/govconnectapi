@@ -4,12 +4,14 @@
 
 
 <div class="container-fluid flex-grow-1 container-p-y">
-    <h4 class="font-weight-bold py-3 mb-0">Agency Details</h4>
+    <h4 class="font-weight-bold py-3 mb-0">{{ data.page_data['current_name'] }} Details</h4>
     <div class="text-muted small mt-0 mb-4 d-block breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="#"><i class="feather icon-home"></i></a></li>
-            <li class="breadcrumb-item">Agency</li>
-            <li class="breadcrumb-item active">{{data.title}}</li>
+			<li class="breadcrumb-item"><a href="/agencies">Agencies</a></li>
+			{% for item in data.page_data['breadcrumbs']: %}
+			<li class="breadcrumb-item active"><a href="/agency{{ item['link'] }}">{{item['title']}}</a></li>
+			{% endfor %}
         </ol>
     </div>
 
@@ -22,7 +24,7 @@
                     <img src="https://designshack.net/wp-content/uploads/placeholder-image.png" alt="" class="d-block ui-w-100 mb-3">
                 </div>
                 <div class="col">
-                    <h4 class="font-weight-bold mb-4">{{ data.title }}</h4>
+                    <h4 class="font-weight-bold mb-4">{{data.page_data['title']}}</h4>
                     <div class="text-muted mb-4">
                         Lorem ipsum dolor sit amet, nibh suavitate qualisque ut nam. Ad harum primis electram duo, porro principes ei has.
                     </div>
@@ -39,7 +41,7 @@
                 <div class="card-body">
 
                     <div class="row mb-2">
-                        <div class="col-md-3 text-muted">Agency Details:</div>
+                        <div class="col-md-3 text-muted">{{ data.page_data['current_name'] }} Details:</div>
                         <div class="col-md-9">
                             XXX
                         </div>
@@ -56,7 +58,7 @@
             <div class="card mb-4">
                 <div class="card-body">
                     <div class="card-title with-elements">
-                        <h5 class="m-0 mr-2">Ongoing Contracts</h5>
+                        <h5 class="m-0 mr-2">Contracts</h5>
                     </div>
                     <div class="card-subtitle text-muted mb-3">
                         {{ data.title }} currently has XX ongoing contract(s);</p>
@@ -65,15 +67,29 @@
                         <table id="currentContractsTable" class="table table-hover card-table">
                             <thead style="font-size:small">
                                 <tr>
-                                    <th>Title</th>
+									<th>Title</th>
+									<th>Supplier</th>
+									<th>Category</th>
+									<th>Agency</th>
+									<th>Division</th>
+									<th>Branch</th>
+									<th>Value</th>
+									<th>Published</th>
                                 </tr>
                             </thead>
-                            <tbody style="font-size:small">
-                                {% for division in data.divisions: %}
-                                <tr>
-                                    <td><a href="/contract/{{ division.id }}" class="showload">{{ division.title }}</a></td>
-                                </tr>
-                                {% endfor %}
+							<tbody style="font-size:small">		
+								{% for contract in data.contract_data: %}
+								<tr>
+									<td><a href="/contract/{{ contract.id }}" class="showload">{{ contract.title }}</a></td>
+									<td>{{ contract.supplier.name }}</td>
+									<td>{{ contract.category_temp_title }}</td>
+									<td>{{ contract.agency.title }}</td>
+									<td>{{ contract.division.title }}</td>
+									<td>{{ contract.branch.title }}</td>
+									<td>${{ contract.contract_value }}</td>
+									<td nowrap>{{ contract.publish_date }}</td>
+								</tr>
+								{% endfor %}
                             </tbody>
                         </table>
                     </div>
@@ -94,27 +110,29 @@
                 </div>
                 <hr class="border-light m-0" style="margin-bottom: -10px">
 
+				{% if data.page_data['subordinates']!=None: %}
                 <div class="card-body">
-                    <h5>Divisions within the Agency</h5>
+                    <h5>Subordinate {{data.page_data['subordinate_name']}}</h5>
                     <div class="card-datatable table-responsive" style="margin-top: -25px">
                         <table id="myTable" class="table table-hover card-table">
                             <thead style="font-size:small">
                                 <tr>
-                                    <th>Title</th>
+                                    <th>{{ data.page_data['subordinate_name_single'] }}</th>
                                 </tr>
                             </thead>
                             <tbody style="font-size:small">
-                                {% for division in data.divisions: %}
+								
+								{% for item in data.page_data['subordinates']: %}
                                 <tr>
-                                    <td><a href="/contract/{{ division.id }}" class="showload">{{ division.title }}</a></td>
+                                    <td><a href="/agency{{data.page_data['subordinate_url']}}/{{ item.id }}" class="showload">{{ item.title }}</a></td>
                                 </tr>
-                                {% endfor %}
+								{% endfor %}
+								
                             </tbody>
                         </table>
                     </div>
-
-
-                </div>
+				</div>
+				{% endif %}
             </div>
             <!-- / Side info -->
 

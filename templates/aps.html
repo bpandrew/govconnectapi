@@ -3,11 +3,11 @@
 
 <!-- [ content ] Start -->
 <div class="container-fluid flex-grow-1 container-p-y" style="width: 98% !important;">
-    <h4 class="font-weight-bold py-3 mb-0">APS</h4>
+    <h4 class="font-weight-bold py-3 mb-0">APS Staff</h4>
     <div class="text-muted small mt-0 mb-4 d-block breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="#"><i class="feather icon-home"></i></a></li>
-            <li class="breadcrumb-item active">APS</li>
+            <li class="breadcrumb-item active">APS Employees</li>
         </ol>
     </div>
 
@@ -27,22 +27,21 @@
                     </tr>
                 </thead>
                 <tbody style="font-size:small">
-                    {% for employee in data %}
+                    {% for employee in data['aps_staff'] %}
                     <tr>
                     	<td><a href="/aps/{{ employee.id }}">{{ employee.employee_no }}</a></td>
-						<td>{% if (employee.first_name|length<2) or (employee.first_name.lower()=="name"): %}<div style="color: #cccccc">Protected</div>{%else%}{{employee.first_name}}{%endif%}</td>
-						<td>{% if (employee.last_name|length<2) or (employee.last_name.lower()=="witheld"): %}<div style="color: #cccccc">Identity</div>{%else%}{{employee.last_name}}{%endif%}</td>
-						<td>{{employee}}</td>
-						<td></td>
-						<td></td>
+						<td nowrap>{% if (employee.first_name|length<2) or (employee.first_name.lower()=="name"): %}<div style="color: #cccccc">Protected</div>{%else%}{{employee.first_name}}{%endif%}</td>
+						<td nowrap>{% if (employee.last_name|length<2) or (employee.last_name.lower()=="witheld"): %}<div style="color: #cccccc">Identity</div>{%else%}{{employee.last_name}}{%endif%}</td>
+						<td nowrap>{{employee['latest_notice']['classification']}}</td>
+						<td>{{employee['latest_notice']['agency']['title']}}</td>
+						<td>{{employee['latest_notice']['position_details']}}</td>
+						<td nowrap>{{employee['latest_notice']['publish_date']}}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
 	</div>
-	
-	{{data}}
 
 </div>
 <!-- [ content ] End -->

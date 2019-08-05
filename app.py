@@ -24,6 +24,8 @@ app.config.from_object(os.environ['APP_SETTINGS'])
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+
+
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 # import all of the database models and schemas
@@ -32,6 +34,10 @@ from models import User, UserSchema, Comment, CommentSchema, Op, OpSchema, OpSim
 
 # ------------------------------------ LOGIN / LOGOUT ------------------------------------
 # ----------------------------------------------------------------------------------------
+
+@app.route("/cache")
+def cache():
+    return str(datetime.now())
 
 
 # --- LANDING PAGE ---
@@ -723,12 +729,99 @@ def agencies():
 
 
 @app.route("/agency/<agency_id>", methods=['GET'])
-def agency_detail(agency_id):
-    agency = Agency.query.filter_by(id=agency_id).first()
-    result = AgencySchema().dumps(agency).data
-    result = json.loads(result)
+@app.route("/agency/<agency_id>/<division_id>", methods=['GET'])
+@app.route("/agency/<agency_id>/<division_id>/<branch_id>", methods=['GET'])
+def agency_detail(agency_id, division_id=0, branch_id=0):
+	division_id = int(division_id)
+	branch_id = int(branch_id)
 
-    return render_template('agency.html', data=result)
+	data = {} # holds all of the data to be sent to the view
+	data['page_data'] = {} #holds the basic display data for the page
+
+	# find the level we want to drill down into the agency results
+	drill_down = "agency"
+	if division_id>0:
+		drill_down = "division"
+	if branch_id>0:
+		drill_down = "branch"
+
+	agency = Agency.query.filter_by(id=agency_id).first()
+	agency_data = AgencySchema().dumps(agency).data
+	data['agency_data'] = json.loads(agency_data)
+	data['page_data']['subordinate_url'] = "/"+str(data['agency_data']['id'])
+
+	if division_id>0:
+		division = Division.query.filter_by(id=division_id).first()
+		division_data = DivisionSchema().dumps(division).data
+		data['division_data'] = json.loads(division_data)
+		data['page_data']['subordinate_url'] = "/"+str(data['agency_data']['id'])+"/"+ str(data['division_data']['id'])
+	else:
+		data['division_data'] = None
+
+	if branch_id>0:
+		branch = Branch.query.filter_by(id=branch_id).first()
+		branch_data = DivisionSchema().dumps(branch).data
+		data['branch_data'] = json.loads(branch_data)
+		data['page_data']['subordinate_url'] = None
+
+	else:
+		data['branch_data'] = None
+
+	# create the dataset for the Agency Page to display the correct level of detail
+	data['page_data']['breadcrumbs'] = [{"title":data['agency_data']['title'], "id":data['agency_data']['id'], "link":"/"+str(data['agency_data']['id']) }]
+	if drill_down=="agency":
+		data['page_data']['title'] = data['agency_data']['title']
+		data['page_data']['title_id'] = data['agency_data']['id']
+		data['page_data']['subordinates'] = data['agency_data']['divisions']
+		data['page_data']['subordinate_name'] = "Divisions"
+		data['page_data']['subordinate_name_single'] = "Division"
+		data['page_data']['current_name'] = "Agency"
+	if drill_down=="division":
+		data['page_data']['title'] = data['division_data']['title']
+		data['page_data']['title_id'] = data['division_data']['id']
+		data['page_data']['subordinates'] = data['division_data']['branches']
+		data['page_data']['subordinate_name'] = "Branches"
+		data['page_data']['subordinate_name_single'] = "Branch"
+		data['page_data']['current_name'] = "Division"
+		data['page_data']['breadcrumbs'].append({"title":data['division_data']['title'], "id":data['division_data']['id'], "link":"/"+str(data['agency_data']['id'])+"/"+ str(data['division_data']['id']) })
+	if drill_down=="branch":
+		data['page_data']['title'] = data['branch_data']['title']
+		data['page_data']['title_id'] = data['branch_data']['id']
+		data['page_data']['subordinates'] = None
+		data['page_data']['subordinate_name'] = None
+		data['page_data']['subordinate_name_single'] = None
+		data['page_data']['current_name'] = "Branch"
+		data['page_data']['breadcrumbs'].append({"title":data['division_data']['title'], "id":data['division_data']['id'], "link":"/"+str(data['agency_data']['id'])+"/"+ str(data['division_data']['id']) })
+		data['page_data']['breadcrumbs'].append({"title":data['branch_data']['title'], "id":data['branch_data']['id'], "link":"/"+str(data['agency_data']['id'])+"/"+ str(data['division_data']['id'])+"/"+ str(data['branch_data']['id']) })
+		
+
+	# Get all of the contracts for the Agency/Division/Branch
+	contracts = Contract.query.filter_by(agency_id=data['agency_data']['id'])
+	if division_id>0:
+		contracts = contracts.filter( getattr(Contract, "division_id" ) == division_id )
+	if branch_id>0:
+		contracts = contracts.filter( getattr(Contract, "branch_id" ) == branch_id )
+	contracts = contracts.all()
+	contract_data = ContractSchema(many=True).dumps(contracts).data
+	contract_data = json.loads(contract_data)
+	data['contract_data'] = contract_data
+
+	contracts_norm = json_normalize(contract_data) #normalise the JSON for the contracts
+
+	cfy_start, cfy_end, lfy_start, lfy_end, now_string = functions.financial_years() # Only keep the last two financial years
+	#contracts_norm = contracts_norm[contracts_norm['contract_start']>=lfy_start]
+	#cfy = contracts_norm[contracts_norm['contract_start']>=cfy_start]
+	#cfy = cfy[cfy['contract_start']<=cfy_end]
+	#lfy = contracts_norm[contracts_norm['contract_start']>=lfy_start]
+	#lfy = lfy[lfy['contract_start']<=lfy_end]
+
+	#insights['sum_contracts_prev_fy'] = functions.format_currency(lfy[lfy['agency.id']==data['agency']['id']]['contract_value'].sum())
+	#insights['sum_contracts_current_fy'] = functions.format_currency(cfy[cfy['agency.id']==data['agency']['id']]['contract_value'].sum()) #functions.format_currency(
+	
+
+	#return data
+
+	return render_template('agency.html', data=data)
 
 
 
@@ -804,9 +897,9 @@ def branch_add():
 # ---------------------------------------------------------------------------------
 @app.route("/suppliers")
 def suppliers():
-    suppliers=Supplier.query.all()
-    result = SupplierSchema(many=True).dump(suppliers).data
-    return render_template('suppliers.html', data=result)
+	suppliers=Supplier.query.all()
+	result = SupplierSchema(many=True).dump(suppliers).data
+	return render_template('suppliers.html', data=result, data_json= json.dumps(result))
 
 
 @app.route("/supplier/<supplier_id>", methods=['GET'])
@@ -948,9 +1041,15 @@ def suppliers_add():
 
 @app.route("/staff")
 def staff():
-    aps=Employee.query.all()
-    result = EmployeeSchema(many=True).dump(aps).data
-    return render_template('aps.html', data=result)
+	data={}
+	aps=Employee.query.all()
+	aps_staff = EmployeeSchema(many=True).dump(aps).data
+	data['aps_staff'] = aps_staff
+
+	for item in data['aps_staff']:
+		item['latest_notice'] = max(item['notices'], key=lambda x:x['notice_no'])
+
+	return render_template('aps.html', data=data)
 
 
 @app.route("/employee/add", methods=['POST'])
