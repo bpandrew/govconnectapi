@@ -498,8 +498,55 @@ def contract_add():
 
 
 
+
+@app.route("/contract/unspsc")
+def contract_unspsc():
+    # Shows all of the contracts that need to have the UNSPSC linked by the spider.
+    try:  
+        # reload and only show the ones that need scraping form the unspsc site.
+        contract_unspsc = Contract.query.filter_by(unspsc_id = None).all()
+        result = ContractSchema(many=True).dump(contract_unspsc).data 
+
+        results_distinct = []
+        searched_text = []
+        for item in result:
+            if item['category_temp_title'] in searched_text:
+                pass
+            else:
+                searched_text.append(item['category_temp_title'])
+                results_distinct.append({"category_temp_title":item['category_temp_title'], "id":item['id']})
+
+
+        return jsonify(results_distinct)
+    except Exception as e:
+	    return(str(e))
+
+
 # ------------------------------------------- UNSPSC -----------------------------------------
 # --------------------------------------------------------------------------------------------
+
+
+@app.route("/unspsc")
+def unspsc():
+    try:
+        filter_null = bool(request.args.get('filter_scraped'))
+        filter_ = request.args.get('filter')
+        if filter_null==True:
+            # only show results that have a null title
+            unspsc=Unspsc.query.filter_by(scraped=0).all()
+        else:
+            if filter_=="segment":
+                unspsc = Unspsc.query.filter_by(level=filter_).order_by(Unspsc.title).all()
+            else:
+                unspsc = Unspsc.query.all()
+
+        result = UnspscSchema(many=True).dump(unspsc).data  # THIS SHOWS ALL OF THE Ops FOR THE UNSPSCs
+        #result = unspscs_simple_schema.dump(unspsc).data
+        return json.dumps(result)
+        #return jsonify(result)
+    except Exception as e:
+	    return(str(e))
+
 
 
 @app.route("/unspsc/add/<unspsc>/<title_>")
