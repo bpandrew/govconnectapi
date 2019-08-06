@@ -43,11 +43,9 @@ $(document).ready(function() {
 		"info": true
 	});
 
-	//alert(Date.now());
-	//1565089793302
-	//1565089802738
+	cache_timeout = 600000 // (10 minutes) milliseconds
 
-	if ( (localStorage.getItem("supplier_cache_time") === null) || (localStorage.getItem("supplier_cache_time") < Date.now()-30000 )) {
+	if ( (localStorage.getItem("supplier_cache_time") === null) || (localStorage.getItem("supplier_cache_time") < Date.now()-cache_timeout )) {
 		localStorage.setItem("supplier_cache_time", Date.now());
 		//alert("cache timeout");
 		localStorage.setItem("supplier_page", 1);
