@@ -1059,12 +1059,16 @@ def suppliers_add():
 @app.route("/staff")
 def staff():
 	data={}
-	aps=Employee.query.all()
+	aps=Employee.query.all() #.limit(2000)
 	aps_staff = EmployeeSchema(many=True).dump(aps).data
 	data['aps_staff'] = aps_staff
 
 	for item in data['aps_staff']:
-		item['latest_notice'] = max(item['notices'], key=lambda x:x['notice_no'])
+		try:
+			item['latest_notice'] = max(item['notices'], key=lambda x:x['notice_no'])
+		except:
+			item['latest_notice'] = None
+
 
 	return render_template('aps.html', data=data)
 
