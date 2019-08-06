@@ -32,8 +32,40 @@ ma = Marshmallow(app)
 from models import User, UserSchema, Comment, CommentSchema, Op, OpSchema, OpSimpleSchema, Unspsc, UnspscSchema, UnspscSchemaSimple, Agency, AgencySchema, Addenda, AddendaSchema, Contract, ContractSchema, Supplier, SupplierSchema, FilterUnspsc, FilterUnspscSchema, Page, Tag, Son, SonSchema, Employee, EmployeeSchema, Notice, NoticeSchema, Division, DivisionSchema, Branch, BranchSchema
 
 
+# ------------------------------------ TEMP ------------------------------------
+# ----------------------------------------------------------------------------------------
+
+@app.route('/index_get_data')
+def stuff():
+  # Assume data comes from somewhere else
+  data = {
+    "data": [
+      {
+        "id": "1",
+        "name": "John Q Public",
+        "position": "System Architect",
+        "salary": "$320,800",
+        "start_date": "2011/04/25",
+        "office": "Edinburgh",
+        "extn": "5421"
+      },
+      {
+        "id": "2",
+        "name": "Larry Bird",
+        "position": "Accountant",
+        "salary": "$170,750",
+        "start_date": "2011/07/25",
+        "office": "Tokyo",
+        "extn": "8422"
+      }]
+  }
+  return jsonify(data)
+
+
 # ------------------------------------ LOGIN / LOGOUT ------------------------------------
 # ----------------------------------------------------------------------------------------
+
+
 
 @app.route("/cache")
 def cache():
@@ -899,9 +931,23 @@ def branch_add():
 # ---------------------------------------------------------------------------------
 @app.route("/suppliers")
 def suppliers():
-	suppliers=Supplier.query.all()
+	#suppliers=Supplier.query.all()
+	#result = SupplierSchema(many=True).dump(suppliers).data
+	#, data=result, data_json= json.dumps(result)
+	return render_template('suppliers.html')
+
+@app.route("/suppliers_data", methods=['GET', 'POST'])
+def suppliers_data():
+	page=int(request.args.get('page'))
+	query = Supplier.query.paginate(page, 100, False)
+	suppliers=query.items
+	
 	result = SupplierSchema(many=True).dump(suppliers).data
-	return render_template('suppliers.html', data=result, data_json= json.dumps(result))
+	for item in result:
+		item['link']="<a href='/supplier/"+ str(item['id']) +"'>"+ item['name'] +"</a>"
+	data = {"data": result, "pages": query.page}
+
+	return jsonify(data)
 
 
 @app.route("/supplier/<supplier_id>", methods=['GET'])

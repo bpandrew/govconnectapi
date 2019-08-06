@@ -13,24 +13,16 @@
     <!-- DataTable within card -->
     <div class="card">
         <div class="card-datatable table-responsive">
-            <table id="myTable" class="table table-hover card-table" style="">
-                <thead style="font-size:small">
-                    <tr>
-                        <th>Name</th>
-						<th>ABN</th>
-                    </tr>
-                </thead>
-                <tbody style="font-size:small">
-                    {% for supplier in data %}
-                    <tr>
-                        <td><a href="/supplier/{{ supplier.id }}">{{ supplier.name }}</a></td>
-						<td>{{ supplier.abn }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+		<table id="ajaxTable" class="table table-hover card-table">
+			<thead style="font-size:small">
+				<tr>
+					<th>Name</th>
+					<th>ABN</th>
+				</tr>
+			</thead>
+		</table>
         </div>
-    </div>
+	</div>
 
 </div>
 <!-- [ content ] End -->
@@ -39,6 +31,66 @@
 
 
 {% include "footer.html" %}
+
+<script>
+var myTable;
+$(document).ready(function() {
+	myTable = $("#ajaxTable").DataTable({
+		"paging": true,
+		"lengthChange": false,
+		"searching": true,
+		"ordering": true,
+		"info": true
+	});
+
+	localStorage.setItem("supplier_page", 1);
+
+	$.ajax({
+		type: "POST",
+		url: "/suppliers_data?page=1",
+		contentType: "application/json; charset=utf-8",
+		dataType: "json",
+		success: function (response) {
+			//var jsonObject = JSON.parse(response.data);
+			var totalPages = response.pages;
+			for (i = 0; i < totalPages; i++) {
+				PopulateItemsTable();
+				page = localStorage.getItem("supplier_page");
+				page++
+				localStorage.setItem("supplier_page", page);
+			}
+		}
+	});
+});
+
+function PopulateItemsTable() {
+	$.ajax({
+		type: "POST",
+		url: "/suppliers_data?page="+localStorage.getItem("supplier_page"),
+		contentType: "application/json; charset=utf-8",
+		dataType: "json",
+		success: function (response) {
+		//var jsonObject = JSON.parse(response.data);
+		var totalPages = response.pages;
+
+		var jsonObject = response.data;
+		var result = jsonObject.map(function(item){
+			var result = [];
+			result.push(item.link); 
+			result.push(item.abn); 
+			// .... add all the values required
+			return result;
+		});
+		myTable.rows.add(result); // add to DataTable instance
+		myTable.draw(); // always redraw
+		}
+	});
+}
+</script>
+
+
+
+
 
 <script>
     $(document).ready(function() {
@@ -53,10 +105,10 @@
 
 <script>
 	window.addEventListener('DOMContentLoaded', function(){
-		localStorage.setItem("cache_time", Date.now() );
-		localStorage.setItem("supplier_data", JSON.stringify({{ data_json|safe }}) );
-		_var = JSON.parse(localStorage.getItem("supplier_data"));
-		_var_date = localStorage.getItem("cache_time");
+		//localStorage.setItem("cache_time", Date.now() );
+		//localStorage.setItem("supplier_data", JSON.stringify({{ data_json|safe }}) );
+		//_var = JSON.parse(localStorage.getItem("supplier_data"));
+		//_var_date = localStorage.getItem("cache_time");
 		//alert(_var[0]['id']);
 		//alert(_var_date);
 	});
