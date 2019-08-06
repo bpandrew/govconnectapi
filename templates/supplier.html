@@ -305,10 +305,6 @@
             "order": [
                 [4, "desc"]
             ],
-            "columnDefs": [{
-                className: "dt-nowrap",
-                "targets": [4]
-            }],
             "footerCallback": function(row, data, start, end, display) {
                 var api = this.api(),
                     data;
@@ -392,7 +388,7 @@
         $('#myTable thead tr').clone(true).appendTo('#myTable thead');
         $('#myTable thead tr:eq(1) th').each(function(i) {
             var title = $(this).text();
-            $(this).html('<input type="text" placeholder="Filter ' + title + '" />');
+            $(this).html('<input type="text" size="14" placeholder="Filter ' + title + '" />');
 
             $('input', this).on('keyup change', function() {
                 if (table.column(i).search() !== this.value) {
