@@ -53,14 +53,17 @@
 
 <script>
 	window.addEventListener('DOMContentLoaded', function(){
-		localStorage.setItem("cache_time", JSON.stringify({{ data_json|safe }}) );
-		_var = JSON.parse(localStorage.getItem("cache_time"));
-		//alert(_var[0]['id']);
+		localStorage.setItem("cache_time", Date.now() );
+		localStorage.setItem("supplier_data", JSON.stringify({{ data_json|safe }}) );
+		_var = JSON.parse(localStorage.getItem("supplier_data"));
+		_var_date = localStorage.getItem("cache_time");
+		alert(_var[0]['id']);
+		alert(_var_date);
 	});
 </script>
 
 <script>
-	table.rows.add( [ {
+	tablenamehere.rows.add( [ {
         "name":       "Tiger Nixon",
         "position":   "System Architect",
         "salary":     "$3,120",

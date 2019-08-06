@@ -671,7 +671,7 @@ def unspsc_children(unspsc_id):
 # updates all of the UNSPSCs for each contract
 @app.route("/unspsc/update")
 def unspsc_update():
-    contract_unspsc = Contract.query.filter_by(unspsc_id = None).order_by(desc(Contract.id)).limit(10).all()
+    contract_unspsc = Contract.query.filter_by(unspsc_id = None).order_by(desc(Contract.id)).limit(5).all()
     result = ContractSchema(many=True).dump(contract_unspsc).data  
 
     # Loop through and update from the UNSPSC database
