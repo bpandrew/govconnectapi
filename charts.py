@@ -8,73 +8,76 @@ import numpy as np
 
 # Bhuilds the chart data using dataframes for the current and previous financial year
 def chart_revenue(df, lfy_start, lfy_end, cfy_start, cfy_end):
-    # find the daily value for all of the contracts the supplier has
-    date_list = []
-    value_list = []
+	# find the daily value for all of the contracts the supplier has
+	date_list = []
+	value_list = []
 
-    #generate place holder zero values in each day.
-    fy_start = datetime.strptime(lfy_start, '%Y-%m-%d')
-    for x in range(730): # two years
-        insert_date = fy_start + timedelta(days=x)
-        date_list.append(insert_date)
-        value_list.append(0)
+	#generate place holder zero values in each day.
+	fy_start = datetime.strptime(lfy_start, '%Y-%m-%d')
+	for x in range(730): # two years
+		insert_date = fy_start + timedelta(days=x)
+		date_list.append(insert_date)
+		value_list.append(0)
         
-    # Loop over each of the rows in the dataframe
-    for index, row in df.iterrows():
+	# Loop over each of the rows in the dataframe
+	for index, row in df.iterrows():
 
-        contract_duration = row['contract_duration']
-        contract_value = row['contract_value']
-        daily_rate = contract_value/contract_duration
-        start_date = datetime.strptime(row['contract_start'], '%Y-%m-%d')
+		contract_duration = row['contract_duration']
+		contract_value = row['contract_value']
+		try:
+			daily_rate = contract_value/contract_duration
+		except:
+			daily_rate = 0
+			
+		start_date = datetime.strptime(row['contract_start'], '%Y-%m-%d')
         
-        for i in range(contract_duration):
-            insert_date = start_date + timedelta(days=i)
-            date_list.append(insert_date)
-            value_list.append(daily_rate)
+		for i in range(contract_duration):
+			insert_date = start_date + timedelta(days=i)
+			date_list.append(insert_date)
+			value_list.append(daily_rate)
 
+	# Create an empty dataframe
+	df_revenue = pd.DataFrame()
 
-    # Create an empty dataframe
-    df_revenue = pd.DataFrame()
-
-    # Create a column from the datetime variable
-    df_revenue['datetime'] = date_list
-    # Convert that column into a datetime datatype
-    df_revenue['datetime'] = pd.to_datetime(df_revenue['datetime'])
-    # Set the datetime column as the index
-    df_revenue.index = df_revenue['datetime'] 
-    # Create a column from the numeric score variable
-    df_revenue['value'] = value_list
+	# Create a column from the datetime variable
+	df_revenue['datetime'] = date_list
+	# Convert that column into a datetime datatype
+	df_revenue['datetime'] = pd.to_datetime(df_revenue['datetime'])
+	# Set the datetime column as the index
+	df_revenue.index = df_revenue['datetime'] 
+	# Create a column from the numeric score variable
+	df_revenue['value'] = value_list
     
-    df_revenue_lfy = df_revenue[df_revenue['datetime']<=lfy_end]
-    df_revenue_lfy = df_revenue_lfy[df_revenue_lfy['datetime']>=lfy_start]
-    # Group it monthly
-    df_monthly_lfy = df_revenue_lfy.resample('M').sum()
-    
-    df_revenue_cfy = df_revenue[df_revenue['datetime']<=cfy_end]
-    df_revenue_cfy = df_revenue_cfy[df_revenue_cfy['datetime']>=cfy_start]
-    # Group it monthly
-    df_monthly_cfy = df_revenue_cfy.resample('M').sum()
-    #return df_monthly_cfy
+	df_revenue_lfy = df_revenue[df_revenue['datetime']<=lfy_end]
+	df_revenue_lfy = df_revenue_lfy[df_revenue_lfy['datetime']>=lfy_start]
+	# Group it monthly
+	df_monthly_lfy = df_revenue_lfy.resample('M').sum()
 
-    # Create the data arrays for the graph
-    lfy_graph_x = []
-    lfy_graph_y = []
-    cfy_graph_x = []
-    cfy_graph_y = []
+	df_revenue_cfy = df_revenue[df_revenue['datetime']<=cfy_end]
+	df_revenue_cfy = df_revenue_cfy[df_revenue_cfy['datetime']>=cfy_start]
+	# Group it monthly
+	df_monthly_cfy = df_revenue_cfy.resample('M').sum()
+	#return df_monthly_cfy
+
+	# Create the data arrays for the graph
+	lfy_graph_x = []
+	lfy_graph_y = []
+	cfy_graph_x = []
+	cfy_graph_y = []
     
-    for index, row in df_monthly_lfy.iterrows():
-        month = datetime.strptime(str(index)[:10], '%Y-%m-%d')
-        lfy_graph_x.append(month.strftime("%B"))
-        lfy_graph_y.append(round(row['value'], 2))
+	for index, row in df_monthly_lfy.iterrows():
+		month = datetime.strptime(str(index)[:10], '%Y-%m-%d')
+		lfy_graph_x.append(month.strftime("%B"))
+		lfy_graph_y.append(round(row['value'], 2))
         
-    for index, row in df_monthly_cfy.iterrows():
-        month = datetime.strptime(str(index)[:10], '%Y-%m-%d')
-        cfy_graph_x.append(month.strftime("%B"))
-        cfy_graph_y.append(round(row['value'], 2))
+	for index, row in df_monthly_cfy.iterrows():
+		month = datetime.strptime(str(index)[:10], '%Y-%m-%d')
+		cfy_graph_x.append(month.strftime("%B"))
+		cfy_graph_y.append(round(row['value'], 2))
         
-    #print(df_monthly_lfy)
+	#print(df_monthly_lfy)
         
-    return lfy_graph_x, lfy_graph_y, cfy_graph_x, cfy_graph_y
+	return lfy_graph_x, lfy_graph_y, cfy_graph_x, cfy_graph_y
 
 
 def chart_agency_revenue(df, lfy_start, lfy_end, cfy_start, cfy_end):

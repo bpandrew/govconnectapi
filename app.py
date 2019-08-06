@@ -928,9 +928,12 @@ def supplier_detail(supplier_id):
 	df = json_normalize(result)
 	if len(df)>0:
 		try:
+			# FIX THIS TO BE ABLE TO RECOGNISE THE UPDATED CONTRACT VALUEs
+			# could not convert string to float: '150040.00                            Original:                121000.00'
 			df['contract_value'] = df['contract_value'].astype(float)
 		except:
 			pass
+
 		cfy_start, cfy_end, lfy_start, lfy_end, now_string = functions.financial_years()
 
 		cfy = df[df['contract_start']>=cfy_start]
