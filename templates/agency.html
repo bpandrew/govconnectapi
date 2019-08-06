@@ -164,8 +164,8 @@
         }, );
 
 
-        $('#currentContractsTable').DataTable({
-			"orderCellsTop": true,
+        table = $('#currentContractsTable').DataTable({
+            "orderCellsTop": true,
             "fixedHeader": true,
             "order": [
                 [4, "desc"]
@@ -188,7 +188,7 @@
 
                 // Total over all pages
                 total = api
-                    .column(5)
+                    .column(4)
                     .data()
                     .reduce(function(a, b) {
                         return intVal(a) + intVal(b);
@@ -196,7 +196,7 @@
 
                 // Total over this page
                 pageTotal = api
-                    .column(5, {
+                    .column(4, {
                         page: 'current'
                     })
                     .data()
@@ -205,18 +205,17 @@
                     }, 0);
 
                 // Update footer
-                $(api.column(5).footer()).html(
+                $(api.column(4).footer()).html(
                     '$' + pageTotal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + ' <br><small>( $' + total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + ' total)</small>'
                 );
             }
-		}, );
+        });
 		
 
-	// Setup - add a text input to each footer cell
-	$('#currentContractsTable thead tr').clone(true).appendTo('#currentContractsTable thead');
-        $('#currentContractsTable thead tr:eq(1) th').each(function(i) {
+		// Setup - add a text input to each footer cell
+		$('#currentContractsTable thead tr').clone(true).appendTo('#currentContractsTable thead');
+		$('#currentContractsTable thead tr:eq(1) th').each(function(i) {
 			var title = $(this).text();
-			if (title!="Value" && title!="Published") {
 
 				$(this).html('<input type="text" size="15" placeholder="Filter ' + title + '" />');
 
@@ -229,9 +228,7 @@
 					}
 				});
 			
-			} else {$(this).html("");
-				}
-        });
+		});
 
 
     });
