@@ -70,27 +70,31 @@
 									<th>Title</th>
 									<th>Supplier</th>
 									<th>Category</th>
-									<th>Agency</th>
 									<th>Division</th>
 									<th>Branch</th>
 									<th>Value</th>
 									<th>Published</th>
                                 </tr>
                             </thead>
-							<tbody style="font-size:small">		
+							<tbody style="font-size:smaller">		
 								{% for contract in data.contract_data: %}
 								<tr>
 									<td><a href="/contract/{{ contract.id }}" class="showload">{{ contract.title }}</a></td>
 									<td>{{ contract.supplier.name }}</td>
 									<td>{{ contract.category_temp_title }}</td>
-									<td>{{ contract.agency.title }}</td>
 									<td>{{ contract.division.title }}</td>
 									<td>{{ contract.branch.title }}</td>
 									<td>${{ contract.contract_value }}</td>
 									<td nowrap>{{ contract.publish_date }}</td>
 								</tr>
 								{% endfor %}
-                            </tbody>
+							</tbody>
+							<tfoot>
+								<tr>
+									<th colspan="6" style="text-align:right">Total:</th>
+									<th></th>
+								</tr>
+							</tfoot>
                         </table>
                     </div>
 
@@ -101,7 +105,7 @@
 
 
         </div>
-        <div class="col-xl-4">
+        <div class="col-xl-3">
 
             <!-- Side info -->
             <div class="card mb-4">
@@ -161,13 +165,74 @@
 
 
         $('#currentContractsTable').DataTable({
-            "info": false,
-            "lengthChange": false,
-            "scrollX": false,
+			"orderCellsTop": true,
+            "fixedHeader": true,
             "order": [
-                [0, "asc"]
+                [4, "desc"]
             ],
-        }, );
+            "columnDefs": [{
+                className: "dt-nowrap",
+                "targets": [4]
+            }],
+            "footerCallback": function(row, data, start, end, display) {
+                var api = this.api(),
+                    data;
+
+                // Remove the formatting to get integer data for summation
+                var intVal = function(i) {
+                    return typeof i === 'string' ?
+                        i.replace(/[\$,]/g, '') * 1 :
+                        typeof i === 'number' ?
+                        i : 0;
+                };
+
+                // Total over all pages
+                total = api
+                    .column(5)
+                    .data()
+                    .reduce(function(a, b) {
+                        return intVal(a) + intVal(b);
+                    }, 0);
+
+                // Total over this page
+                pageTotal = api
+                    .column(5, {
+                        page: 'current'
+                    })
+                    .data()
+                    .reduce(function(a, b) {
+                        return intVal(a) + intVal(b);
+                    }, 0);
+
+                // Update footer
+                $(api.column(5).footer()).html(
+                    '$' + pageTotal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + ' <br><small>( $' + total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + ' total)</small>'
+                );
+            }
+		}, );
+		
+
+	// Setup - add a text input to each footer cell
+	$('#currentContractsTable thead tr').clone(true).appendTo('#currentContractsTable thead');
+        $('#currentContractsTable thead tr:eq(1) th').each(function(i) {
+			var title = $(this).text();
+			if (title!="Value" && title!="Published") {
+
+				$(this).html('<input type="text" size="12" placeholder="Filter ' + title + '" />');
+
+				$('input', this).on('keyup change', function() {
+					if (table.column(i).search() !== this.value) {
+						table
+							.column(i)
+							.search(this.value)
+							.draw();
+					}
+				});
+			
+			} else {$(this).html("");
+				}
+        });
+
 
     });
 </script>

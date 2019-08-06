@@ -121,7 +121,13 @@
 									<td>{{ contract.contract_end }}</td>
 								</tr>
                                 {% endfor %}
-                            </tbody>
+							</tbody>
+							<tfoot>
+								<tr>
+									<th colspan="6" style="text-align:right">Total:</th>
+									<th></th>
+								</tr>
+							</tfoot>
                         </table>
                     </div>
 
@@ -332,7 +338,6 @@
 
                 // Update footer
                 $(api.column(4).footer()).html(
-
                     '$' + pageTotal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + ' <br><small>( $' + total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + ' total)</small>'
                 );
             }
