@@ -188,7 +188,7 @@
 
                 // Total over all pages
                 total = api
-                    .column(4)
+                    .column(5)
                     .data()
                     .reduce(function(a, b) {
                         return intVal(a) + intVal(b);
@@ -196,7 +196,7 @@
 
                 // Total over this page
                 pageTotal = api
-                    .column(4, {
+                    .column(5, {
                         page: 'current'
                     })
                     .data()
@@ -205,7 +205,7 @@
                     }, 0);
 
                 // Update footer
-                $(api.column(4).footer()).html(
+                $(api.column(5).footer()).html(
                     '$' + pageTotal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + ' <br><small>( $' + total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + ' total)</small>'
                 );
             }
