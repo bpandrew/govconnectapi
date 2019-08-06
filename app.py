@@ -939,13 +939,13 @@ def suppliers():
 @app.route("/suppliers_data", methods=['GET', 'POST'])
 def suppliers_data():
 	page=int(request.args.get('page'))
-	query = Supplier.query.paginate(page, 100, False)
+	query = Supplier.query.paginate(page, 200, False)
 	suppliers=query.items
 	
 	result = SupplierSchema(many=True).dump(suppliers).data
 	for item in result:
 		item['link']="<a href='/supplier/"+ str(item['id']) +"'>"+ item['name'] +"</a>"
-	data = {"data": result, "pages": query.page}
+	data = {"data": result, "pages": query.pages}
 
 	return jsonify(data)
 
