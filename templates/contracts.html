@@ -13,19 +13,38 @@
 
     <!-- DataTable within card -->
     <div class="card">
+		<div class="card-header with-elements pb-0">
+			<h6 class="card-header-title mb-0">Awarded Contracts</h6> 
+			<div class="card-header-elements ml-auto p-0">
+				<ul class="nav nav-tabs">
+					<li class="nav-item">
+						<a class="nav-link show active" href="{{ data.pagination['next_url'] }}" class="showload">Filtered</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link show" href="{{ data.pagination['prev_url'] }}" class="showload">All</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<div class="card-header with-elements pb-0">
+			<h6 class="card-header-title mb-0">{{data.data['oldest_contract']}} - {{data.data['newest_contract']}}</h6> 
+			<div class="card-header-elements ml-auto p-0">
+				<ul class="nav nav-tabs">
+					{% if data.pagination['next_url'] %}
+					<li class="nav-item">
+						<a class="nav-link show" href="{{ data.pagination['next_url'] }}" class="showload"><small>Show Previous Week</small></a>
+					</li>
+					{% endif %}
+					{% if (data.pagination['prev_url']) and (data.pagination['current']>0) %}
+					<li class="nav-item">
+						<a class="nav-link show" href="{{ data.pagination['prev_url'] }}" class="showload"><small>Show Next Week</small></a>
+					</li>
+					{% endif %}
+				</ul>
+			</div>
+		</div>
+		
         <div class="card-body">
-            <div class="card-title with-elements">
-                <h5 class="m-0 mr-2">Showing contracts published this week</h5>
-                <div class="card-title-elements">
-                    ({{data.data['oldest_contract']}} - {{data.data['newest_contract']}})
-                </div>
-                <div class="card-title-elements ml-md-auto">
-                    {% if data.pagination['next_url'] %}<button type="button" class="btn btn-xs btn-outline-primary showload"><a href="{{ data.pagination['next_url'] }}" class="showload">Previous week</a></button>{% endif%} {% if (data.pagination['prev_url'])
-                    and (data.pagination['current']>0) %}
-                    <button type="button" class="btn btn-xs btn-outline-primary showload"><a href="{{ data.pagination['prev_url'] }}" class="showload">Next week</a></button>{% endif%}
-                </div>
-            </div>
-
             <div class="card-datatable table-responsive">
                 <table id="myTable" class="table table-hover card-table">
                     <thead style="font-size:small">

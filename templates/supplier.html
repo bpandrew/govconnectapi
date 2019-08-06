@@ -82,20 +82,23 @@
     <div class="row">
         <div class="col">
 			<div class="card mb-4">
-                <div class="card-body">
-					
-					<div class="card-title with-elements">
-						<h5 class="m-0 mr-2">Supplier Contracts</h5>
-						<div class="card-title-elements">
-						</div>
-						<div class="card-title-elements ml-md-auto">
-							<button type="button" id="ongoing" class="btn btn-xs btn-outline-primary active">Ongoining Contracts</button>
-							<button type="button" id="cfy" class="btn btn-xs btn-outline-primary">This Financial Year to date</button>
-							<button type="button" id="lfy" class="btn btn-xs btn-outline-primary">Last Financial Year</button>
-						</div>
+				<div class="card-header with-elements pb-0">
+					<h6 class="card-header-title mb-0">{{ data.supplier_details['name'] }} Contracts</h6> 
+					<div class="card-header-elements ml-auto p-0">
+						<ul class="nav nav-tabs">
+							<li class="nav-item">
+								<a class="nav-link show active" data-toggle="tab" class="showload" id="ongoing">Ongoing Contracts</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link show" data-toggle="tab" class="showload" id="cfy">Current Financial Year</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link show" data-toggle="tab" class="showload" id="lfy">Previous Financial Year</a>
+							</li>
+						</ul>
 					</div>
-
-
+				</div>
+                <div class="card-body">
                     <div class="card-datatable table-responsive" style="margin-top: -25px">
                         <table id="myTable" class="table table-hover card-table">
                             <thead style="font-size:small">
@@ -402,3 +405,4 @@
 
     });
 </script>
+

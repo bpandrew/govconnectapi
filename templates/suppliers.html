@@ -2,16 +2,17 @@
 
 <!-- [ content ] Start -->
 <div class="container-fluid flex-grow-1 container-p-y" style="width: 98% !important;">
-    <h4 class="font-weight-bold py-3 mb-0">Suppliers</h4>
+    <h4 class="font-weight-bold py-3 mb-0">Suppliers</h4> 
     <div class="text-muted small mt-0 mb-4 d-block breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="#"><i class="feather icon-home"></i></a></li>
             <li class="breadcrumb-item active">Suppliers</li>
         </ol>
-    </div>
+	</div>
 
     <!-- DataTable within card -->
     <div class="card">
+		<div id="loading_table" style="text-align: center; margin-top: -5px; margin-bottom: -30px;"><img src="https://loading.io/spinners/flickr/index.orbit-balls-loading-gif.svg"></div>
         <div class="card-datatable table-responsive">
 		<table id="ajaxTable" class="table table-hover card-table">
 			<thead style="font-size:small">
@@ -37,7 +38,7 @@ var myTable;
 $(document).ready(function() {
 	myTable = $("#ajaxTable").DataTable({
 		"paging": true,
-		"lengthChange": false,
+		"lengthChange": true,
 		"searching": true,
 		"ordering": true,
 		"info": true
@@ -45,14 +46,12 @@ $(document).ready(function() {
 
 	cache_timeout = 600000 // (10 minutes) milliseconds
 
+	// if local cache has not been set, or not all the pages were loaded last time..
 	if ( (localStorage.getItem("supplier_cache_time") === null) || (localStorage.getItem("supplier_cache_time") < Date.now()-cache_timeout )) {
 		localStorage.setItem("supplier_cache_time", Date.now());
-		//alert("cache timeout");
 		localStorage.setItem("supplier_page", 1);
 		localStorage.setItem("supplier_data", JSON.stringify({"data":[]}));
-	} else {
-		
-	}
+	} 
 
 	$.ajax({
 		type: "POST",
@@ -65,27 +64,25 @@ $(document).ready(function() {
 			// If there is still pages to cache
 			if (localStorage.getItem("supplier_page")<totalPages){
 				console.log("Fetching new data");
-				//alert("Fetching new data");
 				for (i = 0; i < totalPages; i++) {
 					PopulateItemsTable();
 					page = localStorage.getItem("supplier_page");
 					page++
 					localStorage.setItem("supplier_page", page);
 				}
+				$("div#loading_table").hide();
 			} else {
-				//alert("Using old data");
 				console.log("Using cached data");
 				cached_data = JSON.parse(localStorage.getItem("supplier_data"));
 				cached_data = cached_data.data
-				//alert(cached_data[1]['link']);
 				table_data = []
 				var i;
 				for (i = 0; i < cached_data.length; i++) { 
 					table_data.push( [cached_data[i]['link'], cached_data[i]['abn']] )
-					//myTable.rows.add(cached_data[i]); // add to DataTable instance
 				}
 				myTable.rows.add(table_data)
 				myTable.draw();
+				$("div#loading_table").hide();
 			}
 
 		}
@@ -128,18 +125,4 @@ function PopulateItemsTable() {
 		}
 	});
 }
-</script>
-
-
-<script>
-	window.addEventListener('DOMContentLoaded', function(){
-		//localStorage.setItem("cache_time", Date.now() );
-		//localStorage.setItem("supplier_data", JSON.stringify({{ data_json|safe }}) );
-		//_var = JSON.parse(localStorage.getItem("supplier_data"));
-		//_var_date = localStorage.getItem("cache_time");
-		//alert(_var[0]['id']);
-		//alert(_var_date);
-	});
-</script>
-
-	
+</script>	
