@@ -439,82 +439,84 @@ def contract_detail(contract_id):
 
 @app.route("/contract/add", methods=["POST"])
 def contract_add():
+	data = request.form.to_dict()
+	#print(data)
+	title = data['title']
+	cn_id = data['cn_id']
+	contract_start =  data['contract_start']
+	contract_end =  data['contract_end']
+	contract_duration =  data['contract_duration']
 
-    data = request.form.to_dict()
-    #print(data)
-    title = data['title']
-    cn_id = data['cn_id']
-    contract_start =  data['contract_start']
-    contract_end =  data['contract_end']
-    contract_duration =  data['contract_duration']
+	if 'confidentiality_contract' in data:
+		confidentiality_contract = data['confidentiality_contract']
+	else:
+		confidentiality_contract = "No"
 
-    if 'confidentiality_contract' in data:
-        confidentiality_contract = data['confidentiality_contract']
-    else:
-        confidentiality_contract = "No"
+	if 'agency_reference_id' in data:
+		agency_reference_id = data['agency_reference_id']
+	else:
+		agency_reference_id = None
 
-    if 'agency_reference_id' in data:
-        agency_reference_id = data['agency_reference_id']
-    else:
-        agency_reference_id = None
+	if 'confidentiality_outputs' in data:
+		confidentiality_outputs = data['confidentiality_outputs']
+	else:
+		confidentiality_outputs = "No"
 
-    if 'confidentiality_outputs' in data:
-        confidentiality_outputs = data['confidentiality_outputs']
-    else:
-        confidentiality_outputs = "No"
+	contract_value = data['contract_value']
+	original_contract_value = data['original_contract_value']
+	procurement_method = data['procurement_method']
+	description = data['description']
+	publish_date = data['publish_date']
+	category_temp_title = data['category']
+	agency_id = data['agency_id']
+	supplier_id = data['supplier_id']
 
-    contract_value = data['contract_value']
-    procurement_method = data['procurement_method']
-    description = data['description']
-    publish_date = data['publish_date']
-    category_temp_title = data['category']
-    agency_id = data['agency_id']
-    supplier_id = data['supplier_id']
+	if 'son_id_actual' in data:
+		son_id = data['son_id_actual']
+	else:
+		son_id = None
 
-    if 'son_id_actual' in data:
-        son_id = data['son_id_actual']
-    else:
-        son_id = None
+	if 'atm_id' in data:
+		atm_id = data['atm_id']
+	else:
+		atm_id = None	
 
-    if 'atm_id' in data:
-        atm_id = data['atm_id']
-    else:
-        atm_id = None
+	if 'division_id' in data:
+		division_id = data['division_id']
+	else:
+		division_id = None		
 
-    if 'division_id' in data:
-        division_id = data['division_id']
-    else:
-        division_id = None
+	if 'branch_id' in data:
+		branch_id = data['branch_id']
+	else:
+		branch_id = None	
 
-    if 'branch_id' in data:
-        branch_id = data['branch_id']
-    else:
-        branch_id = None
+	if 'contact_name' in data:
+		contact_name = data['contact_name']
+		if contact_name.lower()=="none":
+			data['contact_name'] = None
+	else:
+		contact_name = None	
 
-    if 'contact_name' in data:
-        contact_name = data['contact_name']
-        if contact_name.lower()=="none":
-            data['contact_name'] = None
-    else:
-        contact_name = None
+	contract=Contract.query.filter_by(cn_id=cn_id).first()
+	if contract==None:
+		db.create_all()
+		contract = Contract(original_contract_value=original_contract_value, contact_name=contact_name, branch_id=branch_id, division_id=division_id, title=title, cn_id=cn_id, son_id=son_id, atm_austender_id=atm_id, contract_start=contract_start, contract_end=contract_end, contract_duration=contract_duration, category_temp_title=category_temp_title, agency_id=agency_id, confidentiality_contract=confidentiality_contract, agency_reference_id=agency_reference_id, confidentiality_outputs=confidentiality_outputs, contract_value=contract_value, procurement_method=procurement_method, description=description, publish_date=publish_date, supplier_id=supplier_id)
+		db.session.add(contract)
+		db.session.commit()
+	else:
+		# UPDATE ANY CHANGES TO THE OPPORTUNITY
+		contract.son_id = son_id
+		contract.atm_austender_id = atm_id
+		contract.contact_name = contact_name
+		contract.branch_id = branch_id
+		contract.division_id = division_id
+		contract.contract_value = contract_value
+		contract.original_contract_value = original_contract_value
+		db.session.commit()
 
-    contract=Contract.query.filter_by(cn_id=cn_id).first()
-    if contract==None:
-        db.create_all()
-        contract = Contract(contact_name=contact_name, branch_id=branch_id, division_id=division_id, title=title, cn_id=cn_id, son_id=son_id, atm_austender_id=atm_id, contract_start=contract_start, contract_end=contract_end, contract_duration=contract_duration, category_temp_title=category_temp_title, agency_id=agency_id, confidentiality_contract=confidentiality_contract, agency_reference_id=agency_reference_id, confidentiality_outputs=confidentiality_outputs, contract_value=contract_value, procurement_method=procurement_method, description=description, publish_date=publish_date, supplier_id=supplier_id)
-        db.session.add(contract)
-        db.session.commit()
-    else:
-        # UPDATE ANY CHANGES TO THE OPPORTUNITY
-        contract.son_id = son_id
-        contract.atm_austender_id = atm_id
-        contract.contact_name = contact_name
-        contract.branch_id = branch_id
-        contract.division_id = division_id
-        db.session.commit()
-
-    response = ContractSchema().dump(contract).data
-    return response
+	response = ContractSchema().dump(contract).data
+	return response
 
 
 
@@ -907,32 +909,41 @@ def supplier_detail(supplier_id):
 	supplier = Supplier.query.filter_by(id=supplier_id).first()
 	result = SupplierSchema().dumps(supplier).data
 	result = json.loads(result)
-	
+
 	data = {}
 		
 	data['supplier_details'] = result
 
     # --------------------  ANALYSIS  ------------------------
 
-    #QUERY_ENDPOINT = session['endpoint']+"contracts?paginate=no&supplier_id="+ str(supplier_id)
-    #uResponse = requests.get(url = QUERY_ENDPOINT)
-    #query_data = json.loads(uResponse.text)
+	#QUERY_ENDPOINT = session['endpoint']+"contracts?paginate=no&supplier_id="+ str(supplier_id)
+	#uResponse = requests.get(url = QUERY_ENDPOINT)
+	#query_data = json.loads(uResponse.text)
 
 	supplier_contracts = Contract.query.filter_by(supplier_id=supplier_id)
 	result = ContractSchema(many=True).dumps(supplier_contracts).data
 	result = json.loads(result)
 
-	print(result)
+	print(result)	
 
-    #df = result['results']
+	#df = result['results']
 	df = json_normalize(result)
 	if len(df)>0:
-		try:
-			# FIX THIS TO BE ABLE TO RECOGNISE THE UPDATED CONTRACT VALUEs
-			# could not convert string to float: '150040.00                            Original:                121000.00'
-			df['contract_value'] = df['contract_value'].astype(float)
-		except:
-			pass
+
+		# TEMP FIX ***********************************
+		for index, row in df.iterrows():
+			try:
+				int(row['contract_value'])
+			except:
+				new_value = row['contract_value'][:row['contract_value'].find("Original:")].strip()
+				original_value = row['contract_value'][row['contract_value'].find("Original:")+9:].strip()
+				df.at[index,'contract_value'] = new_value
+		# TEMP ***********************************
+
+		# FIX THIS TO BE ABLE TO RECOGNISE THE UPDATED CONTRACT VALUEs
+		# could not convert string to float: '150040.00                            Original:                121000.00'
+		df['contract_value'] = df['contract_value'].astype(float)
+
 
 		cfy_start, cfy_end, lfy_start, lfy_end, now_string = functions.financial_years()
 
@@ -945,21 +956,21 @@ def supplier_detail(supplier_id):
 		analysis_json['sum_contracts_prev_fy'] = functions.format_currency(lfy['contract_value'].sum())
 		analysis_json['sum_contracts_current_fy'] = functions.format_currency(cfy['contract_value'].sum())
 
-    	# Find the highest revenue agencies for this and last year
+		# Find the highest revenue agencies for this and last year
 		df_temp = cfy.groupby(['agency.title']).sum().reset_index()
 		analysis_json['highest_revenue_current_fy'] = df_temp['agency.title'][:1].values
 
 		df_temp = lfy.groupby(['agency.title']).sum().reset_index()
 		analysis_json['highest_revenue_prev_fy'] = df_temp['agency.title'][:1].values
 
-    	# Find all of the open contracts in this agency
+		# Find all of the open contracts in this agency
 		df_temp = df.copy()
 		df_temp = df_temp[df_temp['contract_end']>lfy_start]
 
 		analysis_json['open_contracts'] = []
 		for index, row in df_temp.iterrows():
 			temp_dict = {}
-            # is this project ongoing?
+			# is this project ongoing?
 			if row['contract_end']>now_string:
 				temp_dict['ongoing'] = 1
 			else:
