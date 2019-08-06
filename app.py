@@ -1059,7 +1059,7 @@ def suppliers_add():
 @app.route("/staff")
 def staff():
 	data={}
-	aps=Employee.query.all() #.limit(2000)
+	aps=Employee.query.limit(2000).all() #.limit(2000)
 	aps_staff = EmployeeSchema(many=True).dump(aps).data
 	data['aps_staff'] = aps_staff
 

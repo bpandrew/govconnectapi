@@ -32,10 +32,10 @@
                     	<td><a href="/aps/{{ employee.id }}">{{ employee.employee_no }}</a></td>
 						<td nowrap>{% if (employee.first_name|length<2) or (employee.first_name.lower()=="name"): %}<div style="color: #cccccc">Protected</div>{%else%}{{employee.first_name}}{%endif%}</td>
 						<td nowrap>{% if (employee.last_name|length<2) or (employee.last_name.lower()=="witheld"): %}<div style="color: #cccccc">Identity</div>{%else%}{{employee.last_name}}{%endif%}</td>
-						<td nowrap>{{employee['latest_notice']['classification']}}</td>
-						<td>{{employee['latest_notice']['agency']['title']}}</td>
-						<td>{{employee['latest_notice']['position_details']}}</td>
-						<td nowrap>{{employee['latest_notice']['publish_date']}}</td>
+						<td nowrap>{% if employee['latest_notice']!=None: %}  {{employee['latest_notice']['classification']}}{% endif %}</td>
+						<td>{% if employee['latest_notice']!=None: %}{{employee['latest_notice']['agency']['title']}}{% endif %}</td>
+						<td>{% if employee['latest_notice']!=None: %}{{employee['latest_notice']['position_details']}}{% endif %}</td>
+						<td nowrap>{% if employee['latest_notice']!=None: %}{{employee['latest_notice']['publish_date']}}{% endif %}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
