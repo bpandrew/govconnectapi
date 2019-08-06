@@ -49,7 +49,7 @@ $(document).ready(function() {
 
 	if ( (localStorage.getItem("supplier_cache_time") === null) || (localStorage.getItem("supplier_cache_time") < Date.now()-30000 )) {
 		localStorage.setItem("supplier_cache_time", Date.now());
-		alert("cache timeout");
+		//alert("cache timeout");
 		localStorage.setItem("supplier_page", 1);
 		localStorage.setItem("supplier_data", JSON.stringify({"data":[]}));
 	} else {
@@ -66,7 +66,8 @@ $(document).ready(function() {
 			var totalPages = response.pages;
 			// If there is still pages to cache
 			if (localStorage.getItem("supplier_page")<totalPages){
-				alert("Fetching new data");
+				console.log("Fetching new data");
+				//alert("Fetching new data");
 				for (i = 0; i < totalPages; i++) {
 					PopulateItemsTable();
 					page = localStorage.getItem("supplier_page");
@@ -74,7 +75,8 @@ $(document).ready(function() {
 					localStorage.setItem("supplier_page", page);
 				}
 			} else {
-				alert("Using old data");
+				//alert("Using old data");
+				console.log("Using cached data");
 				cached_data = JSON.parse(localStorage.getItem("supplier_data"));
 				cached_data = cached_data.data
 				//alert(cached_data[1]['link']);
@@ -122,7 +124,7 @@ function PopulateItemsTable() {
 			// .... add all the values required
 			return result;
 		});
-		console.log(result);
+		//console.log(result);
 		myTable.rows.add(result); // add to DataTable instance
 		myTable.draw(); // always redraw
 		}
