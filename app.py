@@ -29,7 +29,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 # import all of the database models and schemas
-from models import User, UserSchema, Comment, CommentSchema, Op, OpSchema, OpSimpleSchema, Unspsc, UnspscSchema, UnspscSchemaSimple, Agency, AgencySchema, Addenda, AddendaSchema, Contract, ContractSchema, Supplier, SupplierSchema, FilterUnspsc, FilterUnspscSchema, Page, Tag, Son, SonSchema, Employee, EmployeeSchema, Notice, NoticeSchema, Division, DivisionSchema, Branch, BranchSchema
+from models import User, UserSchema, Comment, CommentSchema, Op, OpSchema, OpSimpleSchema, Unspsc, UnspscSchema, UnspscSchemaSimple, Agency, AgencySchema, Addenda, AddendaSchema, Contract, ContractSchema, Supplier, SupplierSchema, FilterUnspsc, FilterUnspscSchema, Page, Tag, Son, SonSchema, Employee, EmployeeSchema, Notice, NoticeSchema, Division, DivisionSchema, Branch, BranchSchema, ContractCount, ContractCountSchema
 
 
 # ------------------------------------ TEMP ------------------------------------
@@ -469,13 +469,28 @@ def contract_detail(contract_id):
 
 
 # returns the latest contract, for the contract scraping bot
-@app.route("/latest_contract", methods=['GET', 'POST'])
+@app.route("/latest_contract")
 def latest_contract():
-	query = Contract.query.order_by(Contract.publish_date).first()
-	result = ContractSchema().dump(query).data
-	data = {"publish_date": result['publish_date']}
+	query = ContractCount.query.first()
+	result = ContractCountSchema().dump(query).data
+	data = {"scrape_date": result['scrape_date']}
 	return jsonify(data)
 
+
+@app.route("/latest_contract_update", methods=['GET', 'POST'])
+def latest_contract_update():
+
+	latest_scrape = request.args.get('latest_scrape')
+	query = ContractCount.query.first()
+	if query==None:
+		db.create_all()
+		query = ContractCount(scrape_date=datetime.now())
+		db.session.add(query)
+		db.session.commit()
+	query.scrape_date = latest_scrape
+	db.session.commit()
+	data = {"result": True }
+	return jsonify(data)
 
 
 

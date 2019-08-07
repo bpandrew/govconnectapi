@@ -18,10 +18,10 @@
 			<div class="card-header-elements ml-auto p-0">
 				<ul class="nav nav-tabs">
 					<li class="nav-item">
-						<a class="nav-link show active" href="{{ data.pagination['next_url'] }}" class="showload">Filtered</a>
+						<a class="nav-link show active showload" href="">Filtered</a>
 					</li>
 					<li class="nav-item">
-						<a class="nav-link show" href="{{ data.pagination['prev_url'] }}" class="showload">All</a>
+						<a class="nav-link show showload" href="">All</a>
 					</li>
 				</ul>
 			</div>
@@ -32,12 +32,12 @@
 				<ul class="nav nav-tabs">
 					{% if data.pagination['next_url'] %}
 					<li class="nav-item">
-						<a class="nav-link show" href="{{ data.pagination['next_url'] }}" class="showload"><small>Show Previous Week</small></a>
+						<a class="nav-link show showload" href="{{ data.pagination['next_url'] }}"><small>Show Previous Week</small></a>
 					</li>
 					{% endif %}
 					{% if (data.pagination['prev_url']) and (data.pagination['current']>0) %}
 					<li class="nav-item">
-						<a class="nav-link show" href="{{ data.pagination['prev_url'] }}" class="showload"><small>Show Next Week</small></a>
+						<a class="nav-link show showload" href="{{ data.pagination['prev_url'] }}" ><small>Show Next Week</small></a>
 					</li>
 					{% endif %}
 				</ul>

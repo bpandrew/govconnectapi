@@ -172,6 +172,17 @@ class SonSchema(ma.ModelSchema):
        model = Supplier
 
 
+#----------  APSJOBS ----------
+
+class ContractCount(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+	scrape_date = db.Column(db.Date())
+
+
+class ContractCountSchema(ma.ModelSchema):
+	class Meta:
+		model = ContractCount
+
 
 #----------  CONTRACTS ----------
 
