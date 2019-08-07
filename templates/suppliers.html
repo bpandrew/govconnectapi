@@ -30,99 +30,10 @@
 
 
 
-
 {% include "footer.html" %}
-
 <script>
-var myTable;
 $(document).ready(function() {
-	myTable = $("#ajaxTable").DataTable({
-		"paging": true,
-		"lengthChange": true,
-		"searching": true,
-		"ordering": true,
-		"info": true
-	});
-
-	cache_timeout = 600000 // (10 minutes) milliseconds
-
-	// if local cache has not been set, or not all the pages were loaded last time..
-	if ( (localStorage.getItem("supplier_cache_time") === null) || (localStorage.getItem("supplier_cache_time") < Date.now()-cache_timeout )) {
-		localStorage.setItem("supplier_cache_time", Date.now());
-		localStorage.setItem("supplier_page", 1);
-		localStorage.setItem("supplier_data", JSON.stringify({"data":[]}));
-	} 
-
-	$.ajax({
-		type: "POST",
-		url: "/suppliers_data?page=1",
-		contentType: "application/json; charset=utf-8",
-		dataType: "json",
-		success: function (response) {
-			//var jsonObject = JSON.parse(response.data);
-			var totalPages = response.pages;
-			// If there is still pages to cache
-			if (localStorage.getItem("supplier_page")<totalPages){
-				console.log("Fetching new data");
-				for (i = 0; i < totalPages; i++) {
-					PopulateItemsTable();
-					page = localStorage.getItem("supplier_page");
-					page++
-					localStorage.setItem("supplier_page", page);
-				}
-				$("div#loading_table").hide();
-			} else {
-				console.log("Using cached data");
-				cached_data = JSON.parse(localStorage.getItem("supplier_data"));
-				cached_data = cached_data.data
-				table_data = []
-				var i;
-				for (i = 0; i < cached_data.length; i++) { 
-					table_data.push( [cached_data[i]['link'], cached_data[i]['abn']] )
-				}
-				myTable.rows.add(table_data)
-				myTable.draw();
-				$("div#loading_table").hide();
-			}
-
-		}
-	});
+	//BuildTable(table_name, timeout(minutes), rows(array), _orderby(column number))
+	BuildTable("ajaxTable", 60, "suppliers_data", ["link", "abn"], 0, false);
 });
-
-
-function PopulateItemsTable() {
-	$.ajax({
-		type: "POST",
-		url: "/suppliers_data?page="+localStorage.getItem("supplier_page"),
-		contentType: "application/json; charset=utf-8",
-		dataType: "json",
-		success: function (response) {
-		//var jsonObject = JSON.parse(response.data);
-		var totalPages = response.pages;
-		var jsonObject = response.data;
-		existing_storage = JSON.parse(localStorage.getItem("supplier_data"));
-		
-		//alert(existing_storage.data);
-		//alert(jsonObject.length);
-		index = 0;
-		while (index < jsonObject.length) { 
-			existing_storage['data'].push(jsonObject[index]);
-			index++;
-		}
-
-		localStorage.setItem("supplier_data", JSON.stringify(existing_storage));
-		//alert(localStorage.getItem("supplier_data"));
-		var result = jsonObject.map(function(item){
-			var result = [];
-			result.push(item.link); 
-			result.push(item.abn); 
-			// .... add all the values required
-			return result;
-		});
-		//console.log(result);
-		myTable.rows.add(result); // add to DataTable instance
-		myTable.draw(); // always redraw
-		}
-	});
-}
-</script>	
+</script>

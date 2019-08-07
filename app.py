@@ -1115,8 +1115,36 @@ def staff():
 		except:
 			item['latest_notice'] = None
 
-
 	return render_template('aps.html', data=data)
+
+
+@app.route("/staff_data", methods=['GET', 'POST'])
+def staff_data():
+	page=int(request.args.get('page'))
+	query = Employee.query.paginate(page, 200, False)
+	aps_staff=query.items
+	result = EmployeeSchema(many=True).dump(aps_staff).data
+	for item in result:
+		# fetch the latest notice available for the employee
+		try:
+			item['latest_notice'] = max(item['notices'], key=lambda x:x['notice_no'])
+			item['classification'] = item['latest_notice']['classification']
+			item['agency'] = item['latest_notice']['agency']['title']
+			item['position_details'] = item['latest_notice']['position_details']
+			item['publish_date'] = item['latest_notice']['publish_date']
+		except:
+			item['latest_notice'] = None
+			item['classification'] = None
+			item['agency'] = None
+			item['position_details'] = None
+			item['publish_date'] = None
+
+
+		item['link']="<a href='/staff/"+ str(item['id']) +"'>"+ item['employee_no'] +"</a>"
+
+	data = {"data": result, "pages": query.pages}
+
+	return jsonify(data)
 
 
 @app.route("/employee/add", methods=['POST'])

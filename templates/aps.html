@@ -14,33 +14,23 @@
     <!-- DataTable within card -->
     <div class="card">
         <div class="card-datatable table-responsive">
-            <table id="myTable" class="table table-hover card-table" style="">
+            <table id="staff_data_table" class="table table-hover card-table" style="">
                 <thead style="font-size:small">
                     <tr>
-                        <th>Employee No.</th> 
-                    <th>First Name</th> 
-                    <th>Last Name</th>
-                    <th>Level</th>
-                    <th>Agency</th>
-                    <th>Role</th>
-                    <th>Updated</th>
+                    <th>Employee No.</th> 
+					<th>First Name</th> 
+					<th>Last Name</th> 
+					<th>Classification</th>
+					<th>Agency</th>
+					<th>Position</th>
+					<th>Last Update</th>
                     </tr>
                 </thead>
-                <tbody style="font-size:small">
-                    {% for employee in data['aps_staff'] %}
-                    <tr>
-                    	<td><a href="/aps/{{ employee.id }}">{{ employee.employee_no }}</a></td>
-						<td nowrap>{% if (employee.first_name|length<2) or (employee.first_name.lower()=="name"): %}<div style="color: #cccccc">Protected</div>{%else%}{{employee.first_name}}{%endif%}</td>
-						<td nowrap>{% if (employee.last_name|length<2) or (employee.last_name.lower()=="witheld"): %}<div style="color: #cccccc">Identity</div>{%else%}{{employee.last_name}}{%endif%}</td>
-						<td nowrap>{% if employee['latest_notice']!=None: %}  {{employee['latest_notice']['classification']}}{% endif %}</td>
-						<td>{% if employee['latest_notice']!=None: %}{{employee['latest_notice']['agency']['title']}}{% endif %}</td>
-						<td>{% if employee['latest_notice']!=None: %}{{employee['latest_notice']['position_details']}}{% endif %}</td>
-						<td nowrap>{% if employee['latest_notice']!=None: %}{{employee['latest_notice']['publish_date']}}{% endif %}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
             </table>
-        </div>
+		</div>
+		<div class="card-footer text-muted" id="data_source">
+			
+		</div>
 	</div>
 
 </div>
@@ -50,14 +40,9 @@
 
 
 {% include "footer.html" %}
-
 <script>
-    $(document).ready(function() {
-        $('#myTable').DataTable({
-            "scrollX": false,
-            "order": [
-                [0, "asc"]
-            ],
-        }, );
-    });
+$(document).ready(function() {
+	//BuildTable(table_name, timeout(minutes), rows(array), _orderby(column number))
+	BuildTable("staff_data_table", 10, "staff_data", ["link", "first_name", "last_name", "classification", "agency", "position_details", "publish_date"], 6, true);
+});
 </script>
