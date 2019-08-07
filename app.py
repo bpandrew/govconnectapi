@@ -481,12 +481,14 @@ def latest_contract():
 def latest_contract_update():
 
 	latest_scrape = request.args.get('latest_scrape')
+	latest_scrape = datetime.strptime(latest_scrape, '%Y-%m-%d')
 	query = ContractCount.query.first()
 	if query==None:
 		db.create_all()
 		query = ContractCount(scrape_date=datetime.now())
 		db.session.add(query)
 		db.session.commit()
+		
 	query.scrape_date = latest_scrape
 	db.session.commit()
 	data = {"result": True }
