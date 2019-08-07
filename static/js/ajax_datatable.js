@@ -70,7 +70,7 @@ function BuildTable(table_name, timeout, base_url, rows, _orderby, _filter) {
 					page++
 					localStorage.setItem(_page, page);
 				}
-				$("div#loading_table").hide();
+				//$("div#loading_table").hide();
 			} else {
 				$("#data_source").html("Cached Data");
 				console.log("Using cached data");
@@ -88,9 +88,12 @@ function BuildTable(table_name, timeout, base_url, rows, _orderby, _filter) {
 				}
 				myTable.rows.add(table_data)
 				myTable.draw();
-				$("div#loading_table").hide();
+				//$("div#loading_table").hide();
 			}
-
+			
+		},
+		complete: function (response) {
+			$("div#loading_table").hide();
 		}
 	});
 };
