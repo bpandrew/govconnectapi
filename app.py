@@ -468,6 +468,16 @@ def contract_detail(contract_id):
 	return render_template('contract.html', data=data)
 
 
+# returns the latest contract, for the contract scraping bot
+@app.route("/latest_contract", methods=['GET', 'POST'])
+def latest_contract():
+	query = Contract.query.order_by(Contract.publish_date).first()
+	result = ContractSchema().dump(query).data
+	data = {"publish_date": result['publish_date']}
+	return jsonify(data)
+
+
+
 
 @app.route("/contract/add", methods=["POST"])
 def contract_add():
@@ -929,6 +939,8 @@ def branch_add():
 
 # ------------------------------------ SUPPLIERS ------------------------------------
 # ---------------------------------------------------------------------------------
+
+
 @app.route("/suppliers")
 def suppliers():
 	#suppliers=Supplier.query.all()
