@@ -61,6 +61,11 @@ function BuildTable(table_name, timeout, base_url, rows, _orderby, _filter) {
 			//var jsonObject = JSON.parse(response.data);
 			var totalPages = response.pages;
 			// If there is still pages to cache
+
+			if ( localStorage.getItem(_page)===totalPages ){
+				$("div#loading_table").hide();
+			} 
+			
 			if ( (localStorage.getItem(_page)<=totalPages) || (cache_timeout<1) ){
 				$("#data_source").html("Cloud Data");
 				console.log("Fetching new data");
@@ -88,12 +93,9 @@ function BuildTable(table_name, timeout, base_url, rows, _orderby, _filter) {
 				}
 				myTable.rows.add(table_data)
 				myTable.draw();
-				//$("div#loading_table").hide();
+				$("div#loading_table").hide();
 			}
 			
-		},
-		complete: function (response) {
-			$("div#loading_table").hide();
 		}
 	});
 };
