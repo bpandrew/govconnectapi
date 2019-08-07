@@ -1,0 +1,38 @@
+{% include "header_simple.html" %}
+
+<!-- [ content ] Start -->
+<div class="authentication-wrapper authentication-1 px-4">
+    <div class="authentication-inner py-5">
+
+        <!-- [ Logo ] Start -->
+        <div class="d-flex justify-content-center align-items-center">
+			<h4>SUPPLIER ADMIN</h4>
+		</div>
+		<div class="d-flex justify-content-center align-items-center">
+			<h6>{{data['name']}}</h6>
+		</div>
+        <!-- [ Logo ] End -->
+
+        <!-- [ Form ] Start -->
+
+        <form action="" method="post" enctype="multipart/form-data" novalidate class="my-5" id="form1">
+            {{ form.hidden_tag() }}
+
+            <div class="form-group">
+                <label class="form-label">Supplier Logo</label> {{ form.image(class_="form-control", value="") }}
+                <div class="clearfix">{% for error in form.image.errors %}<span class="error_text">{{ error }}</span>{% endfor %}</div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center m-0">
+                <button type="submit" form="form1" value="Submit" class="btn btn-primary btn-block mt-4">Save Changes</button>
+            </div>
+
+        </form>
+        <!-- [ Form ] End -->
+
+
+
+    </div>
+</div>
+<!-- [ content ] End -->
+
+{% include "footer_simple.html" %}

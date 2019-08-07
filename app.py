@@ -14,6 +14,7 @@ import numpy as np
 from pandas.io.json import json_normalize
 import functions # import all of the custom written functions
 import charts
+from werkzeug.utils import secure_filename
 
 
 app = Flask(__name__)
@@ -35,31 +36,7 @@ from models import User, UserSchema, Comment, CommentSchema, Op, OpSchema, OpSim
 # ------------------------------------ TEMP ------------------------------------
 # ----------------------------------------------------------------------------------------
 
-@app.route('/index_get_data')
-def stuff():
-  # Assume data comes from somewhere else
-  data = {
-    "data": [
-      {
-        "id": "1",
-        "name": "John Q Public",
-        "position": "System Architect",
-        "salary": "$320,800",
-        "start_date": "2011/04/25",
-        "office": "Edinburgh",
-        "extn": "5421"
-      },
-      {
-        "id": "2",
-        "name": "Larry Bird",
-        "position": "Accountant",
-        "salary": "$170,750",
-        "start_date": "2011/07/25",
-        "office": "Tokyo",
-        "extn": "8422"
-      }]
-  }
-  return jsonify(data)
+
 
 
 # ------------------------------------ LOGIN / LOGOUT ------------------------------------
@@ -488,7 +465,7 @@ def latest_contract_update():
 		query = ContractCount(scrape_date=datetime.now())
 		db.session.add(query)
 		db.session.commit()
-		
+
 	query.scrape_date = latest_scrape
 	db.session.commit()
 	data = {"result": True }
@@ -1157,12 +1134,32 @@ def staff_data():
 			item['position_details'] = None
 			item['publish_date'] = None
 
-
 		item['link']="<a href='/staff/"+ str(item['id']) +"'>"+ item['employee_no'] +"</a>"
-
 	data = {"data": result, "pages": query.pages}
-
 	return jsonify(data)
+
+
+@app.route("/staff/<staff_id>")
+def staff_detail(staff_id):
+	query=Employee.query.filter_by(id=staff_id).first()
+	result = EmployeeSchema().dump(query).data
+	# Find the latest of the contract notices
+	try:
+		result['latest_notice'] = max(result['notices'], key=lambda x:x['notice_no'])
+		result['classification'] = result['latest_notice']['classification']
+		result['agency'] = result['latest_notice']['agency']['title']
+		result['position_details'] = result['latest_notice']['position_details']
+		result['publish_date'] = result['latest_notice']['publish_date']
+	except:
+		result['latest_notice'] = None
+		result['classification'] = None
+		result['agency'] = None
+		result['position_details'] = None
+		result['publish_date'] = None
+
+	data = {"employee_data": result}
+	return render_template('staff_member.html', data=data)
+
 
 
 @app.route("/employee/add", methods=['POST'])
@@ -1270,6 +1267,37 @@ def notice_add():
         response = NoticeSchema().dump(notice).data
         return functions.json_response('Success', response)
 
+
+
+
+# ------------------------------------ ADMIN ------------------------------------
+# ---------------------------------------------------------------------------------
+
+from forms import SupplierAdmin
+
+@app.route("/admin/supplier/<supplier_id>", methods=['GET', 'POST'])
+def admin_supplier(supplier_id):
+	form = SupplierAdmin()
+	query=Supplier.query.filter_by(id=supplier_id).first()
+	result = SupplierSchema().dump(query).data
+
+	if form.validate_on_submit():
+		f = form.image.data
+		filename = ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(16)) + secure_filename(f.filename)
+
+		f.save(os.path.join(
+			'static/uploads', filename
+		))
+
+		# update the Supplier image path record
+		query = Supplier.query.filter_by(id=supplier_id).first()
+		if query!=None:
+			query.image_url = filename
+			db.session.commit()
+
+		return redirect('/supplier/'+supplier_id)
+
+	return render_template('admin_supplier.html', data=result, form=form)
 
 
 

@@ -7,9 +7,10 @@ from app import ma
 
 
 class Agency(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String)
-    portfolio = db.Column(db.String(), nullable=True)
+	id = db.Column(db.Integer, primary_key=True)
+	title = db.Column(db.String)
+	portfolio = db.Column(db.String(), nullable=True)
+
 
 class AgencySchema(ma.ModelSchema):
     class Meta:
@@ -148,15 +149,16 @@ class UnspscSchemaSimple(ma.ModelSchema):
 #----------  SUPPLIERS ----------
 
 class Supplier(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    abn = db.Column(db.String())
-    name = db.Column(db.String())
-    country = db.Column(db.String())
+	id = db.Column(db.Integer, primary_key=True)
+	abn = db.Column(db.String())
+	name = db.Column(db.String())
+	country = db.Column(db.String())
+	image_url = db.Column(db.String(), nullable=True)
 
 class SupplierSchema(ma.ModelSchema):
 	class Meta:	
 		model = Supplier
-		fields = ("id", "name", "abn")
+		fields = ("id", "name", "abn", "image_url")
 
 
 

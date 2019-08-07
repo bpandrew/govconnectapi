@@ -19,10 +19,14 @@
 				<div class="card-body">
 					<div class="row">
 						<div class="col-md-auto col-sm-12">
-							<img src="https://designshack.net/wp-content/uploads/placeholder-image.png" alt="" class="d-block ui-w-100 mb-3">
+							{% if data.supplier_details['image_url']==None:%}
+							<img src="https://designshack.net/wp-content/uploads/placeholder-image.png" alt="" class="d-block ui-w-120 mb-3">
+							{% else %}
+							<img src="{{ url_for('static',filename='uploads/'+ data.supplier_details['image_url']) }}" alt="" class="d-block ui-w-120 mb-3">
+							{% endif %}
 						</div>
 						<div class="col">
-							<h4 class="font-weight-bold mb-4">{{ data.supplier_details['name'] }}</h4>
+							<h4 class="font-weight-bold mb-4">{{ data.supplier_details['name'] }} <a href="/admin/supplier/{{ data.supplier_details['id'] }}"><i class="fas fa-edit"></i></a></h4>
 							<div class="text-muted mb-4">
 								{% if data.analysis_json|length >0 %} 
 								<p>{{data.supplier_details['name']}} earned {{data.analysis_json['sum_contracts_prev_fy']}} in government revenue last financial year. 
@@ -163,6 +167,7 @@
 		</div>
 	</div>
 	{% endif %}
+
 </div>
 
 <!-- [ content ] End -->
@@ -192,12 +197,14 @@
             datasets: [{
                 data: {{data.chart_data['cfy_y']}},
                 label: "This Financial Year",
-                borderColor: "#3e95cd",
-                fill: true
+				borderColor: "#6F69BC",
+				borderWidth: "4",
+                fill: false
             }, {
                 data: {{data.chart_data['lfy_y']}},
                 label: "Last Financial Year",
-                borderColor: "#8e5ea2",
+				borderColor: "#C4C4C4",
+				borderDash: [10,5],
                 fill: false
             }]
         },
@@ -255,11 +262,11 @@
             labels: {{data.agency_chart_data['agency_list'] | safe}},
             datasets: [{
                 label: "This Financial Year",
-                backgroundColor: "#3e95cd",
+                backgroundColor: "#6F69BC",
                 data: {{data.agency_chart_data['cfy_values'] | safe}}
             }, {
                 label: "Last Financial Year",
-                backgroundColor: "#8e5ea2",
+                backgroundColor: "#C4C4C4",
                 data: {{data.agency_chart_data['lfy_values'] | safe}}
             }]
         },

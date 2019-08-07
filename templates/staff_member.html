@@ -1,0 +1,58 @@
+{% include "header.html" %}
+
+<!-- [ content ] Start -->
+
+
+<div class="container-fluid flex-grow-1 container-p-y">
+    <h4 class="font-weight-bold py-3 mb-0">APS Staff Details</h4>
+    <div class="text-muted small mt-0 mb-4 d-block breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#"><i class="feather icon-home"></i></a></li>
+            <li class="breadcrumb-item"><a href="/staff">APS Staff</a></li>
+            <li class="breadcrumb-item active">{{data.employee_data['first_name']}} {{data.employee_data['last_name'].upper()}}</li>
+        </ol>
+    </div>
+
+	<div class="row">
+        <div class="col-xl-6">
+			<div class="card mb-4">
+				<div class="card-body">
+					<div class="row">
+						<div class="col">
+							<h4 class="font-weight-bold mb-4">{{data.employee_data['first_name']}}  {{data.employee_data['last_name'].upper()}}</h4>
+							<p><b>{{ data.employee_data['classification'] }}</b> at the <b>{{ data.employee_data['agency'] }}</b>;<br>{{ data.employee_data['position_details'] }}</p>
+							<div class="text-muted mb-4"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-xl-6">
+				<div class="card mb-4">
+						<h6 class="card-header">Work History</h6>
+					<div class="card-body">
+						<div class="row">
+							<div class="col">
+								{% for notice in data.employee_data['notices'] %}
+								
+								<div class="text-muted">{{ notice['notice_type'] }} | {{ notice['publish_date'] }}</div>
+								<h4 class="font-weight-bold" style="margin-bottom: 0px">{{ notice['agency']['title'] }}</h4>
+								<p>{{ notice['suburb'].capitalize() }}, {{ notice['state'].upper() }}</p>
+								<p><b>{{ notice['classification'] }}</b> from <b>{{ notice['classification_from'] }}</b><br>
+									{{ notice['position_details'] }}</p>
+								
+								{% endfor %}
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+	</div>
+
+</div>
+
+<!-- [ content ] End -->
+
+{% include "footer.html" %}
+
+<script src="{{ url_for('static',filename='js/pages/dashboards_project.js') }}"></script>

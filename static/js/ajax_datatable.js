@@ -62,9 +62,7 @@ function BuildTable(table_name, timeout, base_url, rows, _orderby, _filter) {
 			var totalPages = response.pages;
 			// If there is still pages to cache
 
-			if ( localStorage.getItem(_page)===totalPages ){
-				$("div#loading_table").hide();
-			} 
+			
 			
 			if ( (localStorage.getItem(_page)<=totalPages) || (cache_timeout<1) ){
 				$("#data_source").html("Cloud Data");
@@ -74,6 +72,9 @@ function BuildTable(table_name, timeout, base_url, rows, _orderby, _filter) {
 					page = localStorage.getItem(_page);
 					page++
 					localStorage.setItem(_page, page);
+					if ( page===totalPages ){
+						$("div#loading_table").hide();
+					} 
 				}
 				//$("div#loading_table").hide();
 			} else {
