@@ -10,6 +10,7 @@ class Agency(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	title = db.Column(db.String)
 	portfolio = db.Column(db.String(), nullable=True)
+	image_url = db.Column(db.String(), nullable=True)
 
 
 class AgencySchema(ma.ModelSchema):
@@ -249,12 +250,12 @@ class ContractSchema(ma.ModelSchema):
 #----------  APSJOBS ----------
 
 class Employee(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    first_name = db.Column(db.String())
-    last_name = db.Column(db.String())
-    employee_no = db.Column(db.String())
-    gender = db.Column(db.String()) 
-
+	id = db.Column(db.Integer, primary_key=True)
+	first_name = db.Column(db.String())
+	last_name = db.Column(db.String())
+	employee_no = db.Column(db.String())
+	gender = db.Column(db.String()) 
+	linkedin = db.Column(db.String, nullable=True)
 
 class EmployeeSchema(ma.ModelSchema):
     class Meta:
@@ -294,18 +295,19 @@ class NoticeSchema(ma.ModelSchema):
 
 
 class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    first_name = db.Column(db.String(64))
-    last_name = db.Column(db.String(64))
-    email = db.Column(db.String(120))
-    password = db.Column(db.String())
-    token = db.Column(db.String())
+	id = db.Column(db.Integer, primary_key=True)
+	first_name = db.Column(db.String(64))
+	last_name = db.Column(db.String(64))
+	email = db.Column(db.String(120))
+	password = db.Column(db.String())
+	token = db.Column(db.String())
+	admin = db.Column(db.Integer, nullable=True)
 
 class UserSchema(ma.ModelSchema):
-    class Meta:
-       model = User
-       fields = ('id', 'first_name', 'last_name', 'email', 'token')
-    comments = ma.Nested("CommentSchema", many=True, exclude=("email",))
+	class Meta:
+		model = User
+		fields = ('id', 'first_name', 'last_name', 'email', 'token', 'admin')
+	comments = ma.Nested("CommentSchema", many=True, exclude=("email",))
 
 
 

@@ -21,7 +21,7 @@
 						<div class="col">
 							<h4 class="font-weight-bold mb-4">{{data.employee_data['first_name']}}  {{data.employee_data['last_name'].upper()}}</h4>
 							<p><b>{{ data.employee_data['classification'] }}</b> at the <b>{{ data.employee_data['agency'] }}</b>;<br>{{ data.employee_data['position_details'] }}</p>
-							<div class="text-muted mb-4"></div>
+							{% if data.employee_data['linkedin']!=None %}<a href="{{data.employee_data['linkedin']}}" target="blank"><img src="{{ url_for('static',filename='img/linkedin.png') }}" class="d-block ui-w-120 mb-3"></a>{% endif %}
 						</div>
 					</div>
 				</div>
@@ -29,7 +29,7 @@
 		</div>
 		<div class="col-xl-6">
 				<div class="card mb-4">
-						<h6 class="card-header">Work History</h6>
+						<h6 class="card-header">Australian Public Service Work History</h6>
 					<div class="card-body">
 						<div class="row">
 							<div class="col">

@@ -51,7 +51,14 @@ def cache():
 
 # --- LANDING PAGE ---
 @app.route("/")
-def hello():
+def landing():
+    return render_template('index.html')
+
+
+
+# --- LANDING PAGE ---
+@app.route("/dashboard")
+def dashboard():
     return render_template('index.html')
 
 
