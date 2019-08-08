@@ -256,7 +256,7 @@ class ContractSchema(ma.ModelSchema):
 		model = Contract
 	agency = ma.Nested(AgencySchema, only=("id", "title", "display_title"))
 	supplier = ma.Nested(SupplierSchema, only=("id", "name", "abn", "country", "display_name"))
-	unspsc = ma.Nested(SupplierSchema, only=("id", "title", "unspsc", "level", "level_int", "parent_id"))
+	unspsc = ma.Nested(UnspscSchema, only=("id", "title", "unspsc", "level", "level_int", "parent_id"))
 	son = ma.Nested(SonSchema, only=("id", "austender_id"))
 	division = ma.Nested(DivisionSchema, only=("id", "title", "display_title"))
 	branch = ma.Nested(BranchSchema, only=("id", "title", "display_title"))

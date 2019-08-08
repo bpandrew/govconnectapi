@@ -41,6 +41,8 @@ def update_display_name():
 
 	i=0
 
+	# *** UPDATE THE DISPLAY NAMES
+
 	# update agencies
 	agency = Agency.query.filter_by(display_title=None).all()
 	response = AgencySchema(many=True).dump(agency).data
@@ -330,6 +332,21 @@ def op_add():
 
 # ----------------------------------------- CONTRACTS ----------------------------------------
 # --------------------------------------------------------------------------------------------
+
+
+@app.route("/contracts_data", methods=['GET'])
+def contracts_data():
+	page=int(request.args.get('page'))
+	
+	if page==0: # only return the number of pages in the dataset
+		query = Contract.query.order_by(desc(Contract.publish_date)).paginate(1, 1, False)
+		data = {"data": {}, "pages": query.pages}
+	else: # return the dataset
+		query = Contract.query.paginate(page, 200, False)
+		aps_staff=query.items
+		result = ContractSchema(many=True).dump(aps_staff).data
+		data = {"data": result, "pages": query.pages}
+	return jsonify(data)
 
 
 
@@ -783,7 +800,7 @@ def unspsc_children(unspsc_id):
 # updates all of the UNSPSCs for each contract
 @app.route("/unspsc/update")
 def unspsc_update():
-    contract_unspsc = Contract.query.filter_by(unspsc_id = None).order_by(desc(Contract.id)).limit(5).all()
+    contract_unspsc = Contract.query.filter_by(unspsc_id = None).order_by(desc(Contract.id)).limit(500).all()
     result = ContractSchema(many=True).dump(contract_unspsc).data  
 
     # Loop through and update from the UNSPSC database
