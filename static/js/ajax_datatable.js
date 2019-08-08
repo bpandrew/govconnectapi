@@ -9,7 +9,7 @@ function BuildTable(table_name, timeout, base_url, rows, _orderby, _filter) {
 
 	// Set the names for the localStorage variables
 	_cache_time = base_url+"supplier_cache_time" // Stores the last time the page was cached
-	_page = str(storage_count) + base_url+"page" // Stores the last page number loaded,  in case we are interupted mid download of the dataset
+	_page = storage_count + base_url+"page" // Stores the last page number loaded,  in case we are interupted mid download of the dataset
 	_cached_data = base_url+"data" // Stores the data for this particular page
 
 	myTable = $("#"+table_name).DataTable({
