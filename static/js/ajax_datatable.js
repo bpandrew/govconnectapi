@@ -68,9 +68,9 @@ function BuildTable(table_name, timeout, base_url, rows, _orderby, _filter) {
 				console.log("Fetching new data");
 				for (i = 0; i < totalPages; i++) {
 					PopulateItemsTable(base_url, rows, _page, _cached_data);
-					//page = localStorage.getItem(_page);
-					//page++
-					//localStorage.setItem(_page, page);
+					page = localStorage.getItem(_page);
+					page++
+					localStorage.setItem(_page, page);
 					if ( page===totalPages ){
 						$("div#loading_table").hide();
 					} 
@@ -123,9 +123,6 @@ function PopulateItemsTable(base_url, rows, _page, _cached_data) {
 
 		try {
 			localStorage.setItem(_cached_data, JSON.stringify(existing_storage));
-			page = localStorage.getItem(_page);
-			page++
-			localStorage.setItem(_page, page);
 		}
 		catch(err) {
 
