@@ -39,15 +39,20 @@ from models import User, UserSchema, Comment, CommentSchema, Op, OpSchema, OpSim
 @app.route("/update")
 def update_display_name():
 
+	i=0
+
 	# update agencies
 	agency = Agency.query.filter_by(display_title=None).all()
 	response = AgencySchema(many=True).dump(agency).data
 
 	for item in response:
+		if i>100:
+			break
 		display_title = functions.cleanTitle(item['title'].title())
 		query = Agency.query.filter_by(id=item['id']).first()
 		query.display_title = display_title
 		db.session.commit()
+		i++
 
 
 	# update Divisions
@@ -55,10 +60,13 @@ def update_display_name():
 	response = DivisionSchema(many=True).dump(division).data
 
 	for item in response:
+		if i>100:
+			break
 		display_title = functions.cleanTitle(item['title'].title())
 		query = Division.query.filter_by(id=item['id']).first()
 		query.display_title = display_title
 		db.session.commit()
+		i++
 
 
 	# update Branches
@@ -66,10 +74,13 @@ def update_display_name():
 	response = BranchSchema(many=True).dump(branch).data
 
 	for item in response:
+		if i>100:
+			break
 		display_title = functions.cleanTitle(item['title'].title())
 		query = Branch.query.filter_by(id=item['id']).first()
 		query.display_title = display_title
 		db.session.commit()
+		i++
 
 
 	# update Supplier
@@ -77,10 +88,13 @@ def update_display_name():
 	response = SupplierSchema(many=True).dump(supplier).data
 
 	for item in response:
+		if i>100:
+			break
 		display_title = functions.cleanTitle(item['name'].title())
 		query = Supplier.query.filter_by(id=item['id']).first()
 		query.display_name = display_title
 		db.session.commit()
+		i++
 
 
 	return str("Done")
