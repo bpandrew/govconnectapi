@@ -109,3 +109,15 @@ def update_contract_unspsc():
                 update({Contract.unspsc_id: new_unspsc_id}, synchronize_session=False)
             db.session.commit()            
             break
+
+
+def cleanTitle(_title): 
+	display_title = _title
+	display_title = display_title.replace("Of ", "of ")
+	display_title = display_title.replace("To ", "to ")
+	display_title = display_title.replace(" For ", " for ")
+	display_title = display_title.replace("And ", "and ")
+	display_title = display_title.replace(" The", " the")
+	display_title = display_title.replace("'S", "'s")
+
+	return display_title

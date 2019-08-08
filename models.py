@@ -9,8 +9,10 @@ from app import ma
 class Agency(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	title = db.Column(db.String)
+	display_title = db.Column(db.String)
 	portfolio = db.Column(db.String(), nullable=True)
 	image_url = db.Column(db.String(), nullable=True)
+	blurb = db.Column(db.String)
 
 
 class AgencySchema(ma.ModelSchema):
@@ -23,11 +25,12 @@ class AgencySchema(ma.ModelSchema):
 
 
 class Division(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String())
-    agency_id = db.Column(db.Integer, db.ForeignKey("agency.id"))
-    agency = db.relationship("Agency", backref="divisions")
-    
+	id = db.Column(db.Integer, primary_key=True)
+	title = db.Column(db.String())
+	display_title = db.Column(db.String)
+	agency_id = db.Column(db.Integer, db.ForeignKey("agency.id"))
+	agency = db.relationship("Agency", backref="divisions")
+
 
 class DivisionSchema(ma.ModelSchema):
     class Meta:
@@ -37,11 +40,12 @@ class DivisionSchema(ma.ModelSchema):
 
 
 class Branch(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String())
-    division_id = db.Column(db.Integer, db.ForeignKey("division.id"))
-    division = db.relationship("Division", backref="branches")
-    
+	id = db.Column(db.Integer, primary_key=True)
+	title = db.Column(db.String())
+	display_title = db.Column(db.String)
+	division_id = db.Column(db.Integer, db.ForeignKey("division.id"))
+	division = db.relationship("Division", backref="branches")
+
 
 class BranchSchema(ma.ModelSchema):
     class Meta:
@@ -82,26 +86,25 @@ unspsc_op = db.Table('unspsc_op',
 )
 
 class Op(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String())
-    atm_id = db.Column(db.String())
-    conditions_for_participation = db.Column(db.String(), nullable=True)
-    panel_arrangement = db.Column(db.Integer(), nullable=True)
-    timeframe_for_delivery = db.Column(db.String(), nullable=True)
-    close_date = db.Column(db.Date(), nullable=True)  #close_date_&_time
-    multi_stage = db.Column(db.Integer(), nullable=True)
-    description = db.Column(db.String(), nullable=True)
-    address_for_lodgement = db.Column(db.String(), nullable=True)
-    publish_date = db.Column(db.Date())
-    atm_type = db.Column(db.String(), nullable=True)
-    multi_agency_access = db.Column(db.Integer(), nullable=True)
-    document_link = db.Column(db.String(), nullable=True)
-    #addenda_available = db.Column(db.String())
-    #estimated_value = db.Column(db.String()) #estimated_value_(aud)
-    #location = db.Column(db.String()) ## NEEDS WORK act, nsw, vic, sa, wa, qld, nt, tas"
-
-    agency_id = db.Column(db.Integer, db.ForeignKey("agency.id"))
-    agency = db.relationship("Agency", backref="opportunities")
+	id = db.Column(db.Integer, primary_key=True)
+	title = db.Column(db.String())
+	atm_id = db.Column(db.String())
+	conditions_for_participation = db.Column(db.String(), nullable=True)
+	panel_arrangement = db.Column(db.Integer(), nullable=True)
+	timeframe_for_delivery = db.Column(db.String(), nullable=True)
+	close_date = db.Column(db.Date(), nullable=True)  #close_date_&_time
+	multi_stage = db.Column(db.Integer(), nullable=True)
+	description = db.Column(db.String(), nullable=True)
+	address_for_lodgement = db.Column(db.String(), nullable=True)
+	publish_date = db.Column(db.Date())
+	atm_type = db.Column(db.String(), nullable=True)
+	multi_agency_access = db.Column(db.Integer(), nullable=True)
+	document_link = db.Column(db.String(), nullable=True)
+	#addenda_available = db.Column(db.String())
+	#estimated_value = db.Column(db.String()) #estimated_value_(aud)
+	#location = db.Column(db.String()) ## NEEDS WORK act, nsw, vic, sa, wa, qld, nt, tas"	
+	agency_id = db.Column(db.Integer, db.ForeignKey("agency.id"))
+	agency = db.relationship("Agency", backref="opportunities")
 
    
 
@@ -153,14 +156,27 @@ class Supplier(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	abn = db.Column(db.String())
 	name = db.Column(db.String())
+	display_name = db.Column(db.String())
 	country = db.Column(db.String())
 	image_url = db.Column(db.String(), nullable=True)
 
 class SupplierSchema(ma.ModelSchema):
 	class Meta:	
 		model = Supplier
-		fields = ("id", "name", "abn", "image_url")
+		fields = ("id", "name", "abn", "image_url", "display_name")
 
+
+
+#----------  INDIVIDUAL ROLE ----------
+
+class Role(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+	title = db.Column(db.String())
+	level = db.Column(db.String())
+
+class RoleSchema(ma.ModelSchema):
+	class Meta:
+		model = Role
 
 
 #----------  SON ----------
@@ -230,18 +246,21 @@ class Contract(db.Model):
 	branch_id = db.Column(db.Integer, db.ForeignKey("branch.id"), nullable=True)
 	branch = db.relationship("Branch", backref="contracts")
 
+	role_id = db.Column(db.Integer, db.ForeignKey("role.id"), nullable=True)
+	role = db.relationship("Role", backref="contracts")
+
 
 
 class ContractSchema(ma.ModelSchema):
-    class Meta:
-       model = Contract
-    agency = ma.Nested(AgencySchema, only=("id", "title"))
-    supplier = ma.Nested(SupplierSchema, only=("id", "name", "abn", "country"))
-    unspsc = ma.Nested(SupplierSchema, only=("id", "title", "unspsc", "level", "level_int", "parent_id"))
-    son = ma.Nested(SonSchema, only=("id", "austender_id"))
-    division = ma.Nested(DivisionSchema, only=("id", "title"))
-    branch = ma.Nested(BranchSchema, only=("id", "title"))
-
+	class Meta:
+		model = Contract
+	agency = ma.Nested(AgencySchema, only=("id", "title"))
+	supplier = ma.Nested(SupplierSchema, only=("id", "name", "abn", "country"))
+	unspsc = ma.Nested(SupplierSchema, only=("id", "title", "unspsc", "level", "level_int", "parent_id"))
+	son = ma.Nested(SonSchema, only=("id", "austender_id"))
+	division = ma.Nested(DivisionSchema, only=("id", "title"))
+	branch = ma.Nested(BranchSchema, only=("id", "title"))
+	role = ma.Nested(RoleSchema, only=("id", "title", "level"))
 
 
 

@@ -36,7 +36,55 @@ from models import User, UserSchema, Comment, CommentSchema, Op, OpSchema, OpSim
 # ------------------------------------ TEMP ------------------------------------
 # ----------------------------------------------------------------------------------------
 
+@app.route("/update")
+def update_display_name():
 
+	# update agencies
+	agency = Agency.query.all()
+	response = AgencySchema(many=True).dump(agency).data
+
+	for item in response:
+		display_title = functions.cleanTitle(item['title'].title())
+		query = Agency.query.filter_by(id=item['id']).first()
+		query.display_title = display_title
+		db.session.commit()
+
+
+	# update Divisions
+	division = Division.query.all()
+	response = DivisionSchema(many=True).dump(division).data
+
+	for item in response:
+		display_title = functions.cleanTitle(item['title'].title())
+		query = Division.query.filter_by(id=item['id']).first()
+		query.display_title = display_title
+		db.session.commit()
+
+
+
+	# update Branches
+	branch = Branch.query.all()
+	response = BranchSchema(many=True).dump(branch).data
+
+	for item in response:
+		display_title = functions.cleanTitle(item['title'].title())
+		query = Branch.query.filter_by(id=item['id']).first()
+		query.display_title = display_title
+		db.session.commit()
+
+
+	# update Supplier
+	supplier = Supplier.query.all()
+	response = SupplierSchema(many=True).dump(supplier).data
+
+	for item in response:
+		display_title = functions.cleanTitle(item['name'].title())
+		query = Supplier.query.filter_by(id=item['id']).first()
+		query.display_name = display_title
+		db.session.commit()
+
+
+	return str("Done")
 
 
 # ------------------------------------ LOGIN / LOGOUT ------------------------------------
@@ -140,42 +188,50 @@ def user_add():
 
 @app.route("/op", methods=['GET'])
 def op():
-    try:
-        functions.login_required(session['user_token']) # confirm the user is logged in
-    except:
-        return redirect(url_for('login'))
+	try:
+		functions.login_required(session['user_token']) # confirm the user is logged in
+	except:
+		return redirect(url_for('login'))
     
-    page = request.args.get('page', 1, type=int)
-    filter_results = request.args.get('filter', 1, type=int)
+	page = request.args.get('page', 1, type=int)
+	filter_results = request.args.get('filter', 1, type=int)
 
-    # find all the UNSPSC filters for the user
-    unspsc_filters = []
-    myfilter = FilterUnspsc.query.filter_by(user_id=session['user_id']).all()
-    unspsc_filters_result = FilterUnspscSchema(many=True).dumps(myfilter).data
-    unspsc_filters_result = json.loads(unspsc_filters_result)
-    for item in unspsc_filters_result:
-        unspsc_filters.append( item['unspsc']['id'] ) 
-    print(unspsc_filters)
+	# find all the UNSPSC filters for the user
+	unspsc_filters = []
+	myfilter = FilterUnspsc.query.filter_by(user_id=session['user_id']).all()
+	unspsc_filters_result = FilterUnspscSchema(many=True).dumps(myfilter).data
+	unspsc_filters_result = json.loads(unspsc_filters_result)
+	for item in unspsc_filters_result:
+		unspsc_filters.append( item['unspsc']['id'] ) 
+	print(unspsc_filters)
 
-    opportunities = Op.query
-    opportunities = opportunities.filter( getattr(Op,'close_date')>=datetime.now()-timedelta(days=1) ) # Only show the open opportunities
-    opportunities = opportunities.all() #.paginate(page, 100, False)
+	opportunities = Op.query
+	opportunities = opportunities.filter( getattr(Op,'close_date')>=datetime.now()-timedelta(days=1) ) # Only show the open opportunities
+	opportunities = opportunities.all() #.paginate(page, 100, False)
  
-    output = {}
-    output['results_raw'] = OpSimpleSchema(many=True).dump(opportunities).data
-    output['results'] = []
+	output = {}
+	output['results_raw'] = OpSimpleSchema(many=True).dump(opportunities).data
+	output['results'] = []
 
-    # Update all of the times to human readable # THIS MAY BE ABLE TO BE DONE IS JS CLIENT SIDE - TO AVOID THIS LOOP?
-    for op in output['results_raw']:
-        published = datetime.strptime(op['publish_date'], '%Y-%m-%d')
-        op['published_date_human'] = humanize.naturalday(published)
-        close_date = datetime.now() - datetime.strptime(op['close_date'], '%Y-%m-%d')
-        op['close_date_human'] = humanize.naturaltime(close_date)
-        op['title'] = op['title'].capitalize()
-        op['category_display'] = max(op['categories'], key=lambda x:x['level_int']) # Get the highest (most specific) category provided for the ATM
-        output['results'].append(op)
+	# Update all of the times to human readable # THIS MAY BE ABLE TO BE DONE IS JS CLIENT SIDE - TO AVOID THIS LOOP?
+	for op in output['results_raw']:
+		hide_op = False
+		published = datetime.strptime(op['publish_date'], '%Y-%m-%d')
+		op['published_date_human'] = humanize.naturalday(published)
+		close_date = datetime.now() - datetime.strptime(op['close_date'], '%Y-%m-%d')
+		op['close_date_human'] = humanize.naturaltime(close_date)
+		op['title'] = op['title'].capitalize()
+		op['category_display'] = max(op['categories'], key=lambda x:x['level_int']) # Get the highest (most specific) category provided for the ATM
+		
+		for category in op['categories']:
+			if category['id'] in unspsc_filters:
+				hide_op = True
+
+		if hide_op==False:
+			output['results'].append(op)
+		
         
-    return render_template('opportunities.html', data=output)
+	return render_template('opportunities.html', data=output)
 
 
 
@@ -883,7 +939,7 @@ def agency_add():
     agency = Agency.query.filter_by(title=title).first()
     if agency==None:
         db.create_all()
-        agency = Agency(title=title, portfolio=portfolio)
+        agency = Agency(title=title, portfolio=portfolio, display_title=functions.cleanTitle(title))
         db.session.add(agency)
         db.session.commit()
 
@@ -906,7 +962,7 @@ def division_add():
     division = Division.query.filter_by(title=title).first()
     if division==None:
         db.create_all()
-        division = Division(title=title, agency_id=agency_id)
+        division = Division(title=title, agency_id=agency_id, display_title=functions.cleanTitle(title))
         db.session.add(division)
         db.session.commit()
 
@@ -915,7 +971,6 @@ def division_add():
     else:
         response = DivisionSchema().dump(division).data
         return functions.json_response('Success - division Already Exists', response)
-
 
 
 @app.route("/branch/add", methods=['GET'])
@@ -927,7 +982,7 @@ def branch_add():
     branch = Branch.query.filter_by(title=title).first()
     if branch==None:
         db.create_all()
-        branch = Branch(title=title, division_id=division_id)
+        branch = Branch(title=title, division_id=division_id, display_title=functions.cleanTitle(title))
         db.session.add(branch)
         db.session.commit()
 
@@ -1099,7 +1154,7 @@ def suppliers_add():
     supplier = Supplier.query.filter_by(abn=abn).first()
     if supplier==None:
         db.create_all()
-        supplier = Supplier(name=name, abn=abn, country=country)
+        supplier = Supplier(name=name, abn=abn, country=country, display_name=functions.cleanTitle(name))
         db.session.add(supplier)
         db.session.commit()
 
@@ -1277,6 +1332,39 @@ def notice_add():
 
 
 
+# ------------------------------------ FILTERS ------------------------------------
+# ---------------------------------------------------------------------------------
+
+
+
+@app.route("/filter/unspsc/add", methods=['GET'])
+def filter_unspsc_add():
+
+	unspsc_id=request.args.get('unspsc_id')
+
+    # Check the token matches the user ID, if not return empty results.
+    #user_id = request.args.get('id')
+    #token = request.args.get('token')
+    #user = User.query.filter_by(id=user_id).filter_by(token=token).first()
+    #result = UserSchema().dumps(user).data
+    #if len(result)<=2:
+    #    output = {"results": []}
+    #    return jsonify(output)  
+    #else:
+	db.create_all()
+	filter_ = FilterUnspsc(user_id=session['user_id'], unspsc_id=unspsc_id)
+	db.session.add(filter_)
+	db.session.commit()
+
+	response = FilterUnspscSchema().dump(filter_).data
+
+	return redirect(url_for('op'))
+	#return functions.json_response('Success - Added Filter', response)
+
+
+
+
+
 # ------------------------------------ ADMIN ------------------------------------
 # ---------------------------------------------------------------------------------
 
@@ -1288,21 +1376,31 @@ def admin_supplier(supplier_id):
 	query=Supplier.query.filter_by(id=supplier_id).first()
 	result = SupplierSchema().dump(query).data
 
+	
+
 	if form.validate_on_submit():
 		f = form.image.data
-		filename = ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(16)) + secure_filename(f.filename)
-
-		f.save(os.path.join(
-			'static/uploads', filename
-		))
-
-		# update the Supplier image path record
+		if f!=None:
+			filename = ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(16)) + secure_filename(f.filename)
+			f.save(os.path.join(
+				'static/uploads', filename
+			))
+			# update the Supplier image path record
+			query = Supplier.query.filter_by(id=supplier_id).first()
+			if query!=None:
+				query.image_url = filename
+				db.session.commit()
+		
+		# update the Details image path record
 		query = Supplier.query.filter_by(id=supplier_id).first()
 		if query!=None:
-			query.image_url = filename
+			query.display_name = form.display_name.data
 			db.session.commit()
 
 		return redirect('/supplier/'+supplier_id)
+
+	form.display_name.default = result['display_name']
+	form.process()
 
 	return render_template('admin_supplier.html', data=result, form=form)
 

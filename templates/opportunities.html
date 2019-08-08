@@ -58,7 +58,35 @@
                 </tbody>
             </table>
         </div>
-    </div>
+	</div>
+	
+
+
+	<div class="card-body">
+		<!-- Modal template -->
+		<div class="modal modal-top fade" id="modals-top">
+			<div class="modal-dialog">
+				<form class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title">Filter
+							<span class="font-weight-light">Creation</span>
+							<br>
+							<small class="text-muted">Create a personal filter for which Opportunities are dispalyed by default.</small>
+						</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">×</button>
+					</div>
+					<div class="modal-body">
+						<p><a href="" id="modal_category_link">Don't show me opportunities in the <b><span id="modal_category">Something</span></b> category anymore.</a></p>
+						<p><a href="">Don't show me opportunities from the <span id="modal_agency">Agency</span> anymore.</a></p>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
 
 </div>
 <!-- [ content ] End -->
@@ -67,7 +95,7 @@
 
 
 {% include "footer.html" %}
-
+<script src="assets/js/pages/ui_modals.js"></script>
 <script>
     $(document).ready(function() {
         $('#myTable').DataTable({
@@ -77,4 +105,16 @@
             ],
         }, );
     });
+</script>
+
+
+<script>
+
+	//data-toggle="modal" data-target="#modals-top"
+	function myFunction(title, agency, category, category_id){
+		$('#modal_category_link').attr("href", "/filter/unspsc/add?unspsc_id="+category_id);
+		$('#modal_category').html(category);
+		$('#modals-top').modal('show');
+	}
+
 </script>

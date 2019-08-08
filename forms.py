@@ -24,6 +24,13 @@ class AddUser(FlaskForm):
     submit = SubmitField('Create Account')
 
 
+# ------------------------------------ ADMIN ------------------------------------
+# ---------------------------------------------------------------------------------
+
+
 class SupplierAdmin(FlaskForm):
-    image = FileField(validators=[FileRequired()])
-    submit = SubmitField('Upload')
+	image = FileField()
+	display_name = StringField('Display Name', validators=[
+		DataRequired(message='Enter an tile to be displayed for this supplier.'),
+		])
+	submit = SubmitField('Save and Upload')
