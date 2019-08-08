@@ -61,7 +61,6 @@ def update_display_name():
 		db.session.commit()
 
 
-
 	# update Branches
 	branch = Branch.query.all()
 	response = BranchSchema(many=True).dump(branch).data
@@ -74,7 +73,7 @@ def update_display_name():
 
 
 	# update Supplier
-	supplier = Supplier.query.all()
+	supplier = Supplier.query.filter_by(display_name=None).all()
 	response = SupplierSchema(many=True).dump(supplier).data
 
 	for item in response:
@@ -1012,7 +1011,7 @@ def suppliers_data():
 	
 	result = SupplierSchema(many=True).dump(suppliers).data
 	for item in result:
-		item['link']="<a href='/supplier/"+ str(item['id']) +"'>"+ item['name'] +"</a>"
+		item['link']="<a href='/supplier/"+ str(item['id']) +"'>"+ item['display_name'] +"</a>"
 	data = {"data": result, "pages": query.pages}
 
 	return jsonify(data)
