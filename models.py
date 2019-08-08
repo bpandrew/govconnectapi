@@ -16,11 +16,11 @@ class Agency(db.Model):
 
 
 class AgencySchema(ma.ModelSchema):
-    class Meta:
-       model = Agency
-    #opportunities = ma.Nested("OpSchema") #, only=("id", "title")
-    #contracts = ma.Nested("ContractSchema") #, only=("id", "title")
-    divisions = ma.Nested("DivisionSchema", many=True, only=("id", "title", "branches"))
+	class Meta:
+		model = Agency
+	#opportunities = ma.Nested("OpSchema") #, only=("id", "title")
+	#contracts = ma.Nested("ContractSchema") #, only=("id", "title")
+	divisions = ma.Nested("DivisionSchema", many=True, only=("id", "title", "branches", "display_title"))
 
 
 
@@ -33,9 +33,9 @@ class Division(db.Model):
 
 
 class DivisionSchema(ma.ModelSchema):
-    class Meta:
-       model = Division
-    branches = ma.Nested("BranchSchema", many=True, only=("id", "title"))
+	class Meta:
+		model = Division
+	branches = ma.Nested("BranchSchema", many=True, only=("id", "title", "display_title"))
     
 
 
@@ -109,19 +109,19 @@ class Op(db.Model):
    
 
 class OpSchema(ma.ModelSchema):
-    class Meta:
-       model = Op
-       #fields = ("title",)
-    categories = ma.Nested("UnspscSchema", many=True, only=("id", "unspsc", "title", "level_int"))
-    agency = ma.Nested(AgencySchema, only=("id", "title"))
+	class Meta:
+		model = Op
+		#fields = ("title",)
+	categories = ma.Nested("UnspscSchema", many=True, only=("id", "unspsc", "title", "level_int"))
+	agency = ma.Nested(AgencySchema, only=("id", "title", "display_title"))
 
 
 class OpSimpleSchema(ma.ModelSchema):
-    categories = ma.Nested("UnspscSchema", many=True, only=("id", "unspsc", "title", "level_int"))
-    agency = ma.Nested(AgencySchema, only=("id", "title"))
-    class Meta:
-       model = Op
-       fields = ("id", "title", "publish_date", "close_date", "categories", "agency", "atm_type")
+	categories = ma.Nested("UnspscSchema", many=True, only=("id", "unspsc", "title", "level_int"))
+	agency = ma.Nested(AgencySchema, only=("id", "title", "display_title"))
+	class Meta:
+		model = Op
+		fields = ("id", "title", "publish_date", "close_date", "categories", "agency", "atm_type")
 
 
 
@@ -254,12 +254,12 @@ class Contract(db.Model):
 class ContractSchema(ma.ModelSchema):
 	class Meta:
 		model = Contract
-	agency = ma.Nested(AgencySchema, only=("id", "title"))
-	supplier = ma.Nested(SupplierSchema, only=("id", "name", "abn", "country"))
+	agency = ma.Nested(AgencySchema, only=("id", "title", "display_title"))
+	supplier = ma.Nested(SupplierSchema, only=("id", "name", "abn", "country", "display_name"))
 	unspsc = ma.Nested(SupplierSchema, only=("id", "title", "unspsc", "level", "level_int", "parent_id"))
 	son = ma.Nested(SonSchema, only=("id", "austender_id"))
-	division = ma.Nested(DivisionSchema, only=("id", "title"))
-	branch = ma.Nested(BranchSchema, only=("id", "title"))
+	division = ma.Nested(DivisionSchema, only=("id", "title", "display_title"))
+	branch = ma.Nested(BranchSchema, only=("id", "title", "display_title"))
 	role = ma.Nested(RoleSchema, only=("id", "title", "level"))
 
 

@@ -40,7 +40,7 @@ from models import User, UserSchema, Comment, CommentSchema, Op, OpSchema, OpSim
 def update_display_name():
 
 	# update agencies
-	agency = Agency.query.all()
+	agency = Agency.query.filter_by(display_title=None).all()
 	response = AgencySchema(many=True).dump(agency).data
 
 	for item in response:
@@ -51,7 +51,7 @@ def update_display_name():
 
 
 	# update Divisions
-	division = Division.query.all()
+	division = Division.query.filter_by(display_title=None).all()
 	response = DivisionSchema(many=True).dump(division).data
 
 	for item in response:
@@ -62,7 +62,7 @@ def update_display_name():
 
 
 	# update Branches
-	branch = Branch.query.all()
+	branch = Branch.query.filter_by(display_title=None).all()
 	response = BranchSchema(many=True).dump(branch).data
 
 	for item in response:
@@ -868,31 +868,31 @@ def agency_detail(agency_id, division_id=0, branch_id=0):
 		data['branch_data'] = None
 
 	# create the dataset for the Agency Page to display the correct level of detail
-	data['page_data']['breadcrumbs'] = [{"title":data['agency_data']['title'], "id":data['agency_data']['id'], "link":"/"+str(data['agency_data']['id']) }]
+	data['page_data']['breadcrumbs'] = [{"title":data['agency_data']['display_title'], "id":data['agency_data']['id'], "link":"/"+str(data['agency_data']['id']) }]
 	if drill_down=="agency":
-		data['page_data']['title'] = data['agency_data']['title']
+		data['page_data']['title'] = data['agency_data']['display_title']
 		data['page_data']['title_id'] = data['agency_data']['id']
 		data['page_data']['subordinates'] = data['agency_data']['divisions']
 		data['page_data']['subordinate_name'] = "Divisions"
 		data['page_data']['subordinate_name_single'] = "Division"
 		data['page_data']['current_name'] = "Agency"
 	if drill_down=="division":
-		data['page_data']['title'] = data['division_data']['title']
+		data['page_data']['title'] = data['division_data']['display_title']
 		data['page_data']['title_id'] = data['division_data']['id']
 		data['page_data']['subordinates'] = data['division_data']['branches']
 		data['page_data']['subordinate_name'] = "Branches"
 		data['page_data']['subordinate_name_single'] = "Branch"
 		data['page_data']['current_name'] = "Division"
-		data['page_data']['breadcrumbs'].append({"title":data['division_data']['title'], "id":data['division_data']['id'], "link":"/"+str(data['agency_data']['id'])+"/"+ str(data['division_data']['id']) })
+		data['page_data']['breadcrumbs'].append({"title":data['division_data']['display_title'], "id":data['division_data']['id'], "link":"/"+str(data['agency_data']['id'])+"/"+ str(data['division_data']['id']) })
 	if drill_down=="branch":
-		data['page_data']['title'] = data['branch_data']['title']
+		data['page_data']['title'] = data['branch_data']['display_title']
 		data['page_data']['title_id'] = data['branch_data']['id']
 		data['page_data']['subordinates'] = None
 		data['page_data']['subordinate_name'] = None
 		data['page_data']['subordinate_name_single'] = None
 		data['page_data']['current_name'] = "Branch"
-		data['page_data']['breadcrumbs'].append({"title":data['division_data']['title'], "id":data['division_data']['id'], "link":"/"+str(data['agency_data']['id'])+"/"+ str(data['division_data']['id']) })
-		data['page_data']['breadcrumbs'].append({"title":data['branch_data']['title'], "id":data['branch_data']['id'], "link":"/"+str(data['agency_data']['id'])+"/"+ str(data['division_data']['id'])+"/"+ str(data['branch_data']['id']) })
+		data['page_data']['breadcrumbs'].append({"title":data['division_data']['display_title'], "id":data['division_data']['id'], "link":"/"+str(data['agency_data']['id'])+"/"+ str(data['division_data']['id']) })
+		data['page_data']['breadcrumbs'].append({"title":data['branch_data']['display_title'], "id":data['branch_data']['id'], "link":"/"+str(data['agency_data']['id'])+"/"+ str(data['division_data']['id'])+"/"+ str(data['branch_data']['id']) })
 		
 
 	# Get all of the contracts for the Agency/Division/Branch

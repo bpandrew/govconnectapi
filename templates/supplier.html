@@ -9,7 +9,7 @@
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="#"><i class="feather icon-home"></i></a></li>
             <li class="breadcrumb-item"><a href="/suppliers">Supplier</a></li>
-            <li class="breadcrumb-item active">{{data.supplier_details['name']}}</li>
+            <li class="breadcrumb-item active">{{data.supplier_details['display_name']}}</li>
         </ol>
     </div>
 
@@ -26,10 +26,10 @@
 							{% endif %}
 						</div>
 						<div class="col">
-							<h4 class="font-weight-bold mb-4">{{ data.supplier_details['name'] }} <a href="/admin/supplier/{{ data.supplier_details['id'] }}"><i class="fas fa-edit"></i></a></h4>
+							<h4 class="font-weight-bold mb-4">{{ data.supplier_details['display_name'] }} <a href="/admin/supplier/{{ data.supplier_details['id'] }}"><i class="fas fa-edit"></i></a></h4>
 							<div class="text-muted mb-4">
 								{% if data.analysis_json|length >0 %} 
-								<p>{{data.supplier_details['name']}} earned {{data.analysis_json['sum_contracts_prev_fy']}} in government revenue last financial year. 
+								<p>{{data.supplier_details['display_name']}} earned {{data.analysis_json['sum_contracts_prev_fy']}} in government revenue last financial year. 
 									{% if data.analysis_json['highest_revenue_prev_fy']|length >0 %}   
 										The majority from the {{data.analysis_json['highest_revenue_prev_fy'][0]}}.
 									{%endif %}
@@ -87,7 +87,7 @@
         <div class="col">
 			<div class="card mb-4">
 				<div class="card-header with-elements pb-0">
-					<h6 class="card-header-title mb-0">{{ data.supplier_details['name'] }} Contracts</h6> 
+					<h6 class="card-header-title mb-0">{{ data.supplier_details['display_name'] }} Contracts</h6> 
 					<div class="card-header-elements ml-auto p-0">
 						<ul class="nav nav-tabs">
 							<li class="nav-item">
@@ -161,7 +161,7 @@
 			<div class="card mb-4">
 				<div class="card-body">
 					<canvas id="bar-chart-grouped" class="chartjs-demo" style="display: block; max-width: 100%; height:{{ data.agency_chart_data['chart_height']}}px;"></canvas>
-					<p><hr><br>{{data.supplier_details['name']}} generated revenue from {{ data.agency_chart_data['lfy_agencies']|safe}} last financial year, and {{ data.agency_chart_data['cfy_agencies']|safe}} to date this financial year.</p>
+					<p><hr><br>{{data.supplier_details['display_name']}} generated revenue from {{ data.agency_chart_data['lfy_agencies']|safe}} last financial year, and {{ data.agency_chart_data['cfy_agencies']|safe}} to date this financial year.</p>
 				</div>
 			</div>
 		</div>

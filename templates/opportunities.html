@@ -47,7 +47,7 @@
                     {% for opportunity in data.results %}
                     <tr>
                         <td><a href="javascript:;" onclick="myFunction('{{ opportunity.title }}', '{{ opportunity.agency.title }}', '{{ opportunity.categories[0].title }}', '{{ opportunity.categories[0].id }}');return false;"><i class="fa fa-ellipsis-h fa-lg"></i></a></td>
-                        <td>{{ opportunity.agency.title }}</td>
+                        <td>{{ opportunity.agency.display_title }}</td>
                         <td><a href="/op/{{ opportunity.id }}" class="showload">{{ opportunity.title }}</a></td>
                         <td nowrap>{{ opportunity.atm_type }}</td>
                         <td>{{ opportunity.category_display['title'] }}</td>

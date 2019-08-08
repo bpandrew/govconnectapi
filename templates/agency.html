@@ -77,7 +77,7 @@
 								
 								{% for item in data.page_data['subordinates']: %}
 								<tr>
-									<td><a href="/agency{{data.page_data['subordinate_url']}}/{{ item.id }}" class="showload">{{ item.title }}</a></td>
+									<td><a href="/agency{{data.page_data['subordinate_url']}}/{{ item.id }}" class="showload">{{ item.display_title }}</a></td>
 									<td></td>
 								</tr>
 								{% endfor %}
@@ -122,10 +122,10 @@
 								{% for contract in data.contract_data: %}
 								<tr>
 									<td><a href="/contract/{{ contract.id }}" class="showload">{{ contract.title }}</a></td>
-									<td>{{ contract.supplier.name }}</td>
+									<td>{{ contract.supplier.display_name }}</td>
 									<td>{{ contract.category_temp_title }}</td>
-									<td>{{ contract.division.title }}</td>
-									<td>{{ contract.branch.title }}</td>
+									<td>{{ contract.division.display_title }}</td>
+									<td>{{ contract.branch.display_title }}</td>
 									<td>${{ contract.contract_value }}</td>
 									<td nowrap>{{ contract.publish_date }}</td>
 								</tr>
