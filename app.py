@@ -46,13 +46,13 @@ def update_display_name():
 	response = AgencySchema(many=True).dump(agency).data
 
 	for item in response:
-		if i>100:
+		if i>500:
 			break
 		display_title = functions.cleanTitle(item['title'].title())
 		query = Agency.query.filter_by(id=item['id']).first()
 		query.display_title = display_title
 		db.session.commit()
-		i++
+		i = i + 1
 
 
 	# update Divisions
@@ -60,13 +60,13 @@ def update_display_name():
 	response = DivisionSchema(many=True).dump(division).data
 
 	for item in response:
-		if i>100:
+		if i>500:
 			break
 		display_title = functions.cleanTitle(item['title'].title())
 		query = Division.query.filter_by(id=item['id']).first()
 		query.display_title = display_title
 		db.session.commit()
-		i++
+		i = i + 1
 
 
 	# update Branches
@@ -74,13 +74,13 @@ def update_display_name():
 	response = BranchSchema(many=True).dump(branch).data
 
 	for item in response:
-		if i>100:
+		if i>500:
 			break
 		display_title = functions.cleanTitle(item['title'].title())
 		query = Branch.query.filter_by(id=item['id']).first()
 		query.display_title = display_title
 		db.session.commit()
-		i++
+		i = i + 1
 
 
 	# update Supplier
@@ -88,13 +88,13 @@ def update_display_name():
 	response = SupplierSchema(many=True).dump(supplier).data
 
 	for item in response:
-		if i>100:
+		if i>500:
 			break
 		display_title = functions.cleanTitle(item['name'].title())
 		query = Supplier.query.filter_by(id=item['id']).first()
 		query.display_name = display_title
 		db.session.commit()
-		i++
+		i = i + 1
 
 
 	return str("Done")
