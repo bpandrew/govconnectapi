@@ -64,7 +64,7 @@ def opportunity(data, agency_id, category_id):
 	contract_data['no_contracts'] = df_op['id'].count()
 
 	# Average value of contracts
-	contract_data['avg_value'] = df_op['contract_value'].mean()
+	contract_data['avg_value'] = int(df_op['contract_value'].mean())
 
 	# number of suppliers
 	contract_data['no_suppliers'] = df_op['supplier.id'].nunique()
@@ -72,7 +72,7 @@ def opportunity(data, agency_id, category_id):
 	# Contracts awarded per month
 	month_count = df_op['month'].value_counts() # number of records/contracts per month in this df
 	try:
-		contract_data['avg_contracts_month'] = sum(month_count) / len(month_count)
+		contract_data['avg_contracts_month'] = int(sum(month_count) / len(month_count))
 	except:
 		contract_data['avg_contracts_month'] = "N/A"
 	contract_data['contracts_month'] = month_count.to_dict()
