@@ -127,7 +127,7 @@
 						<div class="card-body media align-items-center text-dark">
 							<i class="lnr lnr-flag display-4 d-block text-success"></i>
 							<span class="media-body d-block ml-3">
-								<span class="text-big"><span class="mr-1 text-success">Thales Australia Pty Ltd</span></span>
+								<span class="text-big"><span class="mr-1 text-success">{{ contract_data.supplier_data[0]['name'] }}</span></span>
 							<br>
 							<small class="text-muted">Is the top supplier to {{ data.agency.display_title }} in this category, for the second year running.</small>
 							</span>
@@ -185,7 +185,7 @@
 								<tbody style="font-size:small">
 									{% for contract in contract_data.contracts: %}
 									<tr data-year="{{ contract.year }}" data-ongoing="{{ contract.ongoing }}">
-										<td>{% if contract.contract_ending_soon==True %}<div class="badge badge-danger">Ending soon</div>{% endif %}</td>
+										<td>{% if (contract.contract_ending_soon==True and contract.contract_ongoing==True) %}<div class="badge badge-danger">Ending soon</div>{% endif %}</td>
 										<td><a href="/contract/{{ contract.contract_id }}">{{ contract.title }}</a></td>
 										<td>{{ contract.agency }}</td>
 										<td>{% if contract.division!="nan" %}{{ contract.division }}{% endif %}</td>

@@ -291,12 +291,20 @@ def op_detail(op_id):
 	result['multi_stage'] = 'Yes' if result['multi_stage'] == 1 else 'No'
 	result['multi_agency_access'] = 'Yes' if result['multi_agency_access'] == 1 else 'No'
 	
-	#return result
 
 	# Query all contracts from the database
-	query = Contract.query.all()
+
+	#the_value = 141
+	#db.session.query(Contract).filter(Contract.categories.contains(
+    #{'categrories': [{'id': the_value}]}
+	#))
+	#https://stackoverflow.com/questions/39460387/sqlalchemy-filtering-on-values-stored-in-nested-list-of-the-jsonb-field
+
+
+	query = Contract.query.filter_by(unspsc_id=result['category_display']['id']).all()
 	data = ContractSchema(many=True).dumps(query).data
 	data = json.loads(data)
+	print(data)
 
 	contract_data = insight_functions.opportunity(data, result['agency']['id'], result['category_display']['id'])
 

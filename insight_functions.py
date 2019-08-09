@@ -13,7 +13,7 @@ def opportunity(data, agency_id, category_id):
 
 	# Save the results to a dataframe
 	df = json_normalize(data)
-	df = df.drop(['branch', 'division', 'son', 'unspsc'], axis=1) # drop the json 'column headers'
+	#df = df.drop(['branch', 'division', 'son', 'unspsc'], axis=1) # drop the json 'column headers'
 
 	# Clean up the dataframe, format the dates, and add in financial year data
 	df['dt_publish_date'] = pd.to_datetime(df['publish_date'])
@@ -25,7 +25,7 @@ def opportunity(data, agency_id, category_id):
 	df['financial_year'] = pd.to_datetime(df.dt_contract_start).dt.to_period('A-JUN')
 	df['financial_year'] = df['financial_year'].map(lambda x: x.year).astype(int)
 	df["contract_ongoing"] = df["dt_contract_end"] > datetime.now() # Is the contract still open?
-	df["contract_ending_soon"] = df["dt_contract_end"] > datetime.now()-timedelta(days=30) # Is the contract still open?
+	df["contract_ending_soon"] = df["dt_contract_end"] < datetime.now()+timedelta(days=30) # Is the contract still open?
 
 	# get the number of years back 
 	df['current_fy'] = datetime.now()
@@ -56,8 +56,6 @@ def opportunity(data, agency_id, category_id):
 		temp_data = {"contract_ending_soon":row['contract_ending_soon'], "agency":row['agency.display_title'], "branch":row['branch.display_title'], "division":row['division.display_title'], "contract_end":row['contract_end'], "contract_start":row['contract_start'], "contract_value":row['contract_value'], "supplier_name":row['supplier.name'], "supplier_id":row['supplier.id'], "title":row['title'], "contract_ongoing":row['contract_ongoing'], "years_back":row['years_back'], "financial_year":row['financial_year']}
 		contract_data['contracts'].append(temp_data) 
 		
-
-
 
 	contract_data['agency_id'] = agency_id
 	contract_data['category_id'] = category_id
