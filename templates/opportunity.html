@@ -144,18 +144,31 @@
 		<div class="col mb-4">
 			<!-- Posts -->			
 			<div class="card mb-4">
+
 				<div class="card-header with-elements pb-0">
-					<h6 class="card-header-title mb-0">Top suppliers in the {{ data.category_display['title']}} category.</h6>
+					<h6 class="card-header-title mb-0">Top suppliers in the {{ data.category_display['title']}} category.</h6> 
+					<div class="card-header-elements ml-auto p-0">
+						<ul class="nav nav-tabs">
+							<li class="nav-item">
+								<a class="nav-link show active" data-toggle="tab" class="showload" id="ongoing">Opportunity Agency</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link show" data-toggle="tab" class="showload" id="ongoing">All Agencies</a>
+							</li>
+						</ul>
+					</div>
 				</div>
+								
+
 				<div class="card-body">
+						<div class="card-subtitle text-muted mb-3">Outer ring shows supplier revenue, inner ring shows number of contracts awarded.</div>
 					<div id="chartdiv" class="chartjs-demo" style="height: 400px; position: relative;"></div>
 				</div>
 			</div>
-
-
+				
 			<div class="card mb-4">
 					<div class="card-header with-elements pb-0">
-						<h6 class="card-header-title mb-0">Contracts in {{ data.agency.display_title }} in the XXX category. </h6> 
+						<h6 class="card-header-title mb-0">Exemplar contracts in the {{ data.category_display['title']}} category. </h6> 
 						<div class="card-header-elements ml-auto p-0">
 							<ul class="nav nav-tabs">
 								<li class="nav-item">
@@ -271,7 +284,7 @@ pieSeries.dataFields.category = "name";
 pieSeries.slices.template.stroke = am4core.color("#fff");
 pieSeries.slices.template.strokeWidth = 2;
 pieSeries.slices.template.strokeOpacity = 1;
-pieSeries.slices.template.tooltipText = "{category}: {value.value} Contracts";
+pieSeries.slices.template.tooltipText = "{category}: {value.value} Contract(s)";
 
 // Add a legend
 //chart.legend = new am4charts.Legend();

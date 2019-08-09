@@ -191,11 +191,12 @@ class SonSchema(ma.ModelSchema):
        model = Supplier
 
 
-#----------  APSJOBS ----------
+#----------  SCRAPER TRACKING ----------
 
 class ContractCount(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	scrape_date = db.Column(db.Date())
+	aps_notification = db.Column(db.Integer)
 
 
 class ContractCountSchema(ma.ModelSchema):

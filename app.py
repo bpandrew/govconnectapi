@@ -40,63 +40,66 @@ from models import User, UserSchema, Comment, CommentSchema, Op, OpSchema, OpSim
 def update_display_name():
 
 	i=0
-
 	# *** UPDATE THE DISPLAY NAMES
+	query = ContractCount.query.filter_by(id=1).first()
+	query.aps_notification = 10733901
+	db.session.commit()
+
 
 	# update agencies
-	agency = Agency.query.filter_by(display_title=None).all()
-	response = AgencySchema(many=True).dump(agency).data
+	#agency = Agency.query.filter_by(display_title=None).all()
+	#response = AgencySchema(many=True).dump(agency).data
 
-	for item in response:
-		if i>500:
-			break
-		display_title = functions.cleanTitle(item['title'].title())
-		query = Agency.query.filter_by(id=item['id']).first()
-		query.display_title = display_title
-		db.session.commit()
-		i = i + 1
+	#for item in response:
+	#	if i>500:
+	#		break
+	#	display_title = functions.cleanTitle(item['title'].title())
+	#	query = Agency.query.filter_by(id=item['id']).first()
+	#	query.display_title = display_title
+	#	db.session.commit()
+	#	i = i + 1
 
 
 	# update Divisions
-	division = Division.query.filter_by(display_title=None).all()
-	response = DivisionSchema(many=True).dump(division).data
+	#division = Division.query.filter_by(display_title=None).all()
+	#response = DivisionSchema(many=True).dump(division).data
 
-	for item in response:
-		if i>500:
-			break
-		display_title = functions.cleanTitle(item['title'].title())
-		query = Division.query.filter_by(id=item['id']).first()
-		query.display_title = display_title
-		db.session.commit()
-		i = i + 1
+	#for item in response:
+	#	if i>500:
+	#		break
+	#	display_title = functions.cleanTitle(item['title'].title())
+	#	query = Division.query.filter_by(id=item['id']).first()
+	#	query.display_title = display_title
+	#	db.session.commit()
+	#	i = i + 1
 
 
 	# update Branches
-	branch = Branch.query.filter_by(display_title=None).all()
-	response = BranchSchema(many=True).dump(branch).data
+	#branch = Branch.query.filter_by(display_title=None).all()
+	#response = BranchSchema(many=True).dump(branch).data
 
-	for item in response:
-		if i>500:
-			break
-		display_title = functions.cleanTitle(item['title'].title())
-		query = Branch.query.filter_by(id=item['id']).first()
-		query.display_title = display_title
-		db.session.commit()
-		i = i + 1
+	#for item in response:
+	#	if i>500:
+	#		break
+	#	display_title = functions.cleanTitle(item['title'].title())
+	#	query = Branch.query.filter_by(id=item['id']).first()
+	#	query.display_title = display_title
+	#	db.session.commit()
+	#	i = i + 1
 
 
 	# update Supplier
-	supplier = Supplier.query.filter_by(display_name=None).all()
-	response = SupplierSchema(many=True).dump(supplier).data
+	#supplier = Supplier.query.filter_by(display_name=None).all()
+	#response = SupplierSchema(many=True).dump(supplier).data
 
-	for item in response:
-		if i>500:
-			break
-		display_title = functions.cleanTitle(item['name'].title())
-		query = Supplier.query.filter_by(id=item['id']).first()
-		query.display_name = display_title
-		db.session.commit()
-		i = i + 1
+	#for item in response:
+	#	if i>500:
+	#		break
+	#	display_title = functions.cleanTitle(item['name'].title())
+	#	query = Supplier.query.filter_by(id=item['id']).first()
+	#	query.display_name = display_title
+	#	db.session.commit()
+	#	i = i + 1
 
 
 	return str("Done")
@@ -1229,6 +1232,23 @@ def suppliers_add():
 @app.route("/staff")
 def staff():
 	return render_template('aps.html')
+
+
+# returns the latest contract, for the contract scraping bot
+@app.route("/latest_notice")
+def latest_notice():
+	query = ContractCount.query.first()
+	result = ContractCountSchema().dump(query).data
+	data = {"aps_notification": result['aps_notification']}
+	return jsonify(data)
+
+
+@app.route("/latest_notice_update", methods=['GET', 'POST'])
+def latest_notice_update():
+	latest_notice=int(request.args.get('latest_notice'))
+	query = ContractCount.query.filter_by(id=1).first()
+	query.aps_notification = latest_notice
+	db.session.commit()	
 
 
 @app.route("/staff_data", methods=['GET', 'POST'])
