@@ -21,6 +21,9 @@ def opportunity(data, agency_id, category_id):
 	df['dt_contract_end'] = pd.to_datetime(df['contract_end'])
 	df['month'] = df['dt_contract_start'].map(lambda x: x.month)
 	df['calendar_year'] = df['dt_contract_start'].map(lambda x: x.year)
+
+	df['contract_value'] = df['contract_value'].astype(str)
+	df = df[~df.contract_value.str.contains("Original")]
 	df['contract_value'] = df['contract_value'].astype(float)
 	df['financial_year'] = pd.to_datetime(df.dt_contract_start).dt.to_period('A-JUN')
 	df['financial_year'] = df['financial_year'].map(lambda x: x.year).astype(int)
