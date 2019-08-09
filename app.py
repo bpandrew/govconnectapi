@@ -12,7 +12,7 @@ import random, string
 import pandas as pd
 import numpy as np
 from pandas.io.json import json_normalize
-import functions # import all of the custom written functions
+import functions, insight_functions # import all of the custom written functions
 import charts
 from werkzeug.utils import secure_filename
 
@@ -253,41 +253,59 @@ def op():
 
 @app.route("/op/<op_id>", methods=['GET'])
 def op_detail(op_id):
-    try:
-        opportunity = Op.query.filter_by(id=op_id).first()
-        result = OpSchema().dumps(opportunity).data
-        result = json.loads(result)
+	#try:
+	opportunity = Op.query.filter_by(id=op_id).first()
+	result = OpSchema().dumps(opportunity).data
+	result = json.loads(result)
 
-        published = datetime.now() - datetime.strptime(result['publish_date'], '%Y-%m-%d')
-        result['published_date_human'] = humanize.naturaltime(published)
-        close_date = datetime.now() - datetime.strptime(result['close_date'], '%Y-%m-%d')
-        result['close_date_human'] = humanize.naturaltime(close_date)
+	published = datetime.now() - datetime.strptime(result['publish_date'], '%Y-%m-%d')
+	result['published_date_human'] = humanize.naturaltime(published)
+	close_date = datetime.now() - datetime.strptime(result['close_date'], '%Y-%m-%d')
+	result['close_date_human'] = humanize.naturaltime(close_date)
 
-        # Loop through and add the categories to segment/class etc.
-        result['unspsc_segment'] = None
-        result['unspsc_family'] = None
-        result['unspsc_class'] = None
-        result['unspsc_commodity'] = None
-        for category in result['categories']:
-            if category['level_int']==1:
-                result['unspsc_segment'] = category
-            elif category['level_int']==2:
-                result['unspsc_family'] = category
-            elif category['level_int']==3:
-                result['unspsc_class'] = category
-            elif category['level_int']==4:
-                result['unspsc_commodity'] = category
-        
-        result['panel_arrangement'] = 'Yes' if result['panel_arrangement'] == 1 else 'No'
-        result['multi_stage'] = 'Yes' if result['multi_stage'] == 1 else 'No'
-        result['multi_agency_access'] = 'Yes' if result['multi_agency_access'] == 1 else 'No'
-        
-        #return result
+	result['description'] = result['description'].strip()
+	result['description'] = result['description'].replace("\r\n", "")
+	result['description'] = result['description'].replace("<p>\xa0</p>", "")
 
-        return render_template('opportunity.html', data=result)
+	
+	# Loop through and add the categories to segment/class etc.
+	#result['category_display'] = max(result['categories'], key=lambda x:x['level_int']) # Get the highest (most specific) category provided for the ATM
+	result['unspsc_segment'] = None
+	result['unspsc_family'] = None
+	result['unspsc_class'] = None
+	result['unspsc_commodity'] = None
+	for category in result['categories']:
+		if category['level_int']==1:
+			result['unspsc_segment'] = category
+		elif category['level_int']==2:
+			result['unspsc_family'] = category
+			result['category_display'] = category
+		elif category['level_int']==3:
+			result['unspsc_class'] = category
+		elif category['level_int']==4:
+			result['unspsc_commodity'] = category
 
-    except Exception as e:
-	    return(str(e))
+	
+	
+	result['panel_arrangement'] = 'Yes' if result['panel_arrangement'] == 1 else 'No'
+	result['multi_stage'] = 'Yes' if result['multi_stage'] == 1 else 'No'
+	result['multi_agency_access'] = 'Yes' if result['multi_agency_access'] == 1 else 'No'
+	
+	#return result
+
+	# Query all contracts from the database
+	query = Contract.query.all()
+	data = ContractSchema(many=True).dumps(query).data
+	data = json.loads(data)
+
+	contract_data = insight_functions.opportunity(data, result['agency']['id'], result['category_display']['id'])
+
+	#contract_data = {}
+
+	return render_template('opportunity.html', data=result, contract_data=contract_data)
+
+	#except Exception as e:
+	#	return(str(e))
 
 
 
@@ -1219,7 +1237,7 @@ def staff_data():
 			item['agency'] = item['latest_notice']['agency']['title']
 			item['position_details'] = item['latest_notice']['position_details']
 			item['publish_date'] = item['latest_notice']['publish_date']
-		except:
+		except: 
 			item['latest_notice'] = None
 			item['classification'] = None
 			item['agency'] = None
