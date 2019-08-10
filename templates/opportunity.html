@@ -88,16 +88,48 @@
         </div>
     </div>
 
+
+	{% if contract_data.family['contracts']|length >0 %}
 	<div class="row">
 		<div class="col-xl-12 col-md-12">
+
+			<div class="card-header-elements ml-auto p-0 mb-2">
+				<ul class="nav nav-tabs">
+					<li class="nav-item">
+						<a class="nav-link show active" data-toggle="tab" class="showload" id="ongoing">Broad Service Cateogry</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link show" data-toggle="tab" class="showload" id="ongoing">General Service Cateogry</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link show" data-toggle="tab" class="showload" id="ongoing">Specific Service Cateogry</a>
+					</li>
+				</ul>
+			</div>
+
+			<div class="card-header-elements ml-auto p-0 mb-2">
+				<ul class="nav nav-tabs">
+					<li class="nav-item">
+						<a class="nav-link show active" data-toggle="tab" class="showload" id="ongoing">{{ data.agency.display_title }}</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link show" data-toggle="tab" class="showload" id="ongoing">All Agencies</a>
+					</li>
+				</ul>
+			</div>
+
 			<div class="card d-flex w-100 mb-4">
-					<h4 class="card-header">Insights</h4>
+				<div class="card-header">
+					<h4>Insights</h4>
+					<div class="card-subtitle text-muted mb-0">{{ contract_data.family['unspsc']['title'] }} category</div>
+				</div>
+				
 				<div class="row no-gutters row-bordered row-border-light h-100">
 					<div class="d-flex col-sm-6 align-items-center">
 						<div class="card-body media align-items-center text-dark">
 							<i class="lnr lnr-diamond display-4 d-block text-primary"></i>
 							<span class="media-body d-block ml-3">
-								<span class="text-big mr-1 text-primary">${{ contract_data.avg_value }}</span>
+								<span class="text-big mr-1 text-primary">${{ contract_data.family['avg_value'] }}</span>
 							<br>
 							<small class="text-muted">Average contract value in this category, in {{ data.agency.display_title }}.</small>
 							</span>
@@ -107,7 +139,7 @@
 						<div class="card-body media align-items-center text-dark">
 							<i class="lnr lnr-calendar-full display-4 d-block text-warning"></i>
 							<span class="media-body d-block ml-3">
-								<span class="text-big"><span class="mr-1 text-warning">{{ contract_data.avg_contracts_month }}</span>Contracts</span>
+								<span class="text-big"><span class="mr-1 text-warning">{{ contract_data.family['avg_contracts_month'] }}</span>Contracts</span>
 							<br>
 							<small class="text-muted">Awarded each month in this category. 70% via Limited Tender.</small>
 							</span>
@@ -117,7 +149,7 @@
 						<div class="card-body media align-items-center text-dark">
 							<i class="lnr lnr-apartment display-4 d-block text-danger"></i>
 							<span class="media-body d-block ml-3">
-								<span class="text-big"><span class="mr-1 text-danger">{{ contract_data.no_suppliers }}</span> Suppliers</span>
+								<span class="text-big"><span class="mr-1 text-danger">{{ contract_data.family['no_suppliers'] }}</span> Suppliers</span>
 							<br>
 							<small class="text-muted">Provided services in this category to {{ data.agency.display_title }} over the previous two years.</small>
 							</span>
@@ -127,7 +159,7 @@
 						<div class="card-body media align-items-center text-dark">
 							<i class="lnr lnr-flag display-4 d-block text-success"></i>
 							<span class="media-body d-block ml-3">
-								<span class="text-big"><span class="mr-1 text-success">{{ contract_data.supplier_data[0]['name'] }}</span></span>
+								<span class="text-big"><span class="mr-1 text-success">{{ contract_data.family['supplier_data'][0]['name'] }}</span></span>
 							<br>
 							<small class="text-muted">Is the top supplier in this category, for the second year running.</small>
 							</span>
@@ -139,24 +171,13 @@
 	</div>
 
 
-
 	<div class="row">
 		<div class="col mb-4">
 			<!-- Posts -->			
 			<div class="card mb-4">
 
 				<div class="card-header with-elements pb-0">
-					<h6 class="card-header-title mb-0">Top suppliers in the {{ data.category_display['title']}} category.</h6> 
-					<div class="card-header-elements ml-auto p-0">
-						<ul class="nav nav-tabs">
-							<li class="nav-item">
-								<a class="nav-link show active" data-toggle="tab" class="showload" id="ongoing">Opportunity Agency</a>
-							</li>
-							<li class="nav-item">
-								<a class="nav-link show" data-toggle="tab" class="showload" id="ongoing">All Agencies</a>
-							</li>
-						</ul>
-					</div>
+					<h6 class="card-header-title mb-0">Top suppliers in the {{ contract_data.family['unspsc']['title'] }} category.</h6> 
 				</div>
 								
 
@@ -168,7 +189,7 @@
 				
 			<div class="card mb-4">
 					<div class="card-header with-elements pb-0">
-						<h6 class="card-header-title mb-0">Exemplar contracts in the {{ data.category_display['title']}} category. </h6> 
+						<h6 class="card-header-title mb-0">Exemplar contracts in the {{ contract_data.family['unspsc']['title'] }} category. </h6> 
 						<div class="card-header-elements ml-auto p-0">
 							<ul class="nav nav-tabs">
 								<li class="nav-item">
@@ -196,10 +217,10 @@
 								</tr>
 								</thead>
 								<tbody style="font-size:small">
-									{% for contract in contract_data.contracts: %}
+									{% for contract in contract_data['family'].contracts: %}
 									<tr data-year="{{ contract.year }}" data-ongoing="{{ contract.ongoing }}">
 										<td>{% if (contract.contract_ending_soon==True and contract.contract_ongoing==True) %}<div class="badge badge-danger">Ending soon</div>{% endif %}</td>
-										<td><a href="/contract/{{ contract.contract_id }}">{{ contract.title }}</a></td>
+										<td><a href="/contract/{{ contract.id }}">{{ contract.title }}</a></td>
 										<td>{{ contract.agency }}</td>
 										<td>{% if contract.division!="nan" %}{{ contract.division }}{% endif %}</td>
 										<td>{{ contract.supplier_name }}</td>
@@ -220,6 +241,17 @@
 			
 		</div>
 	</div>	
+	{% else %}
+	<div class="row">
+		<div class="col mb-4">
+			No Data Available for Insights into this Opportunity
+		</div>
+	</div>
+
+	{% endif %}
+
+
+
 	{{ data.category_display}}
 
 	<br><br>
@@ -273,7 +305,7 @@ var chart = am4core.create("chartdiv", am4charts.PieChart);
 chart.innerRadius = am4core.percent(30);
 
 // Add data
-chart.data = {{ contract_data.supplier_pie_chart|safe }}
+chart.data = {{ contract_data.family['supplier_pie_chart']|safe }}
 
 
 

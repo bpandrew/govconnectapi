@@ -3,6 +3,7 @@ import requests
 from flask import Flask, request, jsonify, render_template, session, redirect, url_for, g, Response
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import desc
+from sqlalchemy import and_, or_, not_
 from flask_marshmallow import Marshmallow
 import json
 from datetime import datetime, date, time, timedelta
@@ -277,18 +278,26 @@ def op_detail(op_id):
 	result['unspsc_family'] = None
 	result['unspsc_class'] = None
 	result['unspsc_commodity'] = None
+
+	category_dict = []  #[ {"level":"family",  "data":result['unspsc_family']}, {"level":"class",  "data":result['unspsc_class']}, {"level":"commodity",  "data":result['unspsc_commodity']}]
+	category_list = []  #[result['unspsc_family']['id'], result['unspsc_class']['id'], result['unspsc_commodity']['id']]
+
 	for category in result['categories']:
 		if category['level_int']==1:
 			result['unspsc_segment'] = category
 		elif category['level_int']==2:
 			result['unspsc_family'] = category
-			result['category_display'] = category
+			category_dict.append( {"level":"family",  "data":result['unspsc_family']} )
+			category_list.append( result['unspsc_family']['id'] )
 		elif category['level_int']==3:
 			result['unspsc_class'] = category
+			category_dict.append( {"level":"class",  "data":result['unspsc_class']} )
+			category_list.append( result['unspsc_class']['id'] )
 		elif category['level_int']==4:
 			result['unspsc_commodity'] = category
+			category_dict.append( {"level":"commodity",  "data":result['unspsc_commodity']} )
+			category_list.append( result['unspsc_commodity']['id'] )
 
-	
 	
 	result['panel_arrangement'] = 'Yes' if result['panel_arrangement'] == 1 else 'No'
 	result['multi_stage'] = 'Yes' if result['multi_stage'] == 1 else 'No'
@@ -304,14 +313,13 @@ def op_detail(op_id):
 	#https://stackoverflow.com/questions/39460387/sqlalchemy-filtering-on-values-stored-in-nested-list-of-the-jsonb-field
 
 
-	query = Contract.query.filter_by(unspsc_id=result['category_display']['id']).all()
+
+	query = Contract.query.filter(Contract.unspsc_id.in_(category_list)).all()
 	data = ContractSchema(many=True).dumps(query).data
 	data = json.loads(data)
-	print(data)
+	#print(data)
 
-	contract_data = insight_functions.opportunity(data, result['agency']['id'], result['category_display']['id'])
-
-	#contract_data = {}
+	contract_data = insight_functions.opportunity(data, result['agency']['id'], category_dict)
 
 	return render_template('opportunity.html', data=result, contract_data=contract_data)
 
