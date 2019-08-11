@@ -287,13 +287,33 @@ def op_detail(op_id):
 			result['unspsc_segment'] = category
 		elif category['level_int']==2:
 			result['unspsc_family'] = category
-			category_dict.append( {"level":"family",  "data":result['unspsc_family']} )
+
+			# add all of the suboordinate classes
+			temp_ids = []
+			query = Unspsc.query.filter(Unspsc.parent_id==result['unspsc_family']['id']).all() #result['unspsc_family']['id']
+			data_temp = UnspscSchema(many=True).dumps(query).data
+			data_temp = json.loads(data_temp)
+			for item in data_temp:
+				temp_ids.append(item['id'])
+
+			# add all of the suboordinate commodities
+			query = Unspsc.query.filter(Unspsc.parent_id.in_(temp_ids)).all()
+			data_temp = UnspscSchema(many=True).dumps(query).data
+			data_temp = json.loads(data_temp)	
+			for item in data_temp:
+				temp_ids.append(item['id'])
+
+			temp_ids.append(result['unspsc_family']['id'])
+			print(temp_ids)
+			category_dict.append( {"level":"family",  "data":result['unspsc_family'], "ids": temp_ids } )
+
+
 			category_list.append( result['unspsc_family']['id'] )
-		elif category['level_int']==3:
+		elif category['level_int']==30: # FIX THIS!!!!!
 			result['unspsc_class'] = category
-			category_dict.append( {"level":"class",  "data":result['unspsc_class']} )
+			category_dict.append( {"level":"class",  "data":result['unspsc_class'] } )
 			category_list.append( result['unspsc_class']['id'] )
-		elif category['level_int']==4:
+		elif category['level_int']==400: # FIX THIS!!!!!
 			result['unspsc_commodity'] = category
 			category_dict.append( {"level":"commodity",  "data":result['unspsc_commodity']} )
 			category_list.append( result['unspsc_commodity']['id'] )

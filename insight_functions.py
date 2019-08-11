@@ -43,16 +43,23 @@ def opportunity(data, agency_id, category_dict):
 	df_op = df.copy()
 	df_op['count']=1
 
+	#print(df)
+
 	agency_id = 10 # *************    TEMPORARY  ****************
-	
-	
+
 	contract_data = {}
 
 	#df_op = df_op[df_op['agency.id']==agency_id]
 	
 	for category in category_dict:
 
-		df_op = df_op[df_op['unspsc.id']==category['data']['id']]
+		print(category)
+			
+		#df_op = df_op[df_op['unspsc.id']==category['data']['id']]
+		print(category['ids'])
+		print(category['data']['id'])
+		df_op = df_op[df_op['unspsc.id'].isin(category['ids'])]
+		
 		contract_data[category['level']] = {"unspsc":category['data']}
 
 		if len(df_op)>0:
