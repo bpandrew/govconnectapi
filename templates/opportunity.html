@@ -96,14 +96,16 @@
 			<div class="card-header-elements ml-auto p-0 mb-2">
 				<ul class="nav nav-tabs">
 					<li class="nav-item">
-						<a class="nav-link show active" data-toggle="tab" class="showload" id="ongoing">Broad Service Cateogry</a>
+						<a class="nav-link show active" data-toggle="tab" class="showload" id="insight_broad_category_button">Broad Service Cateogry</a>
 					</li>
 					<li class="nav-item">
-						<a class="nav-link show" data-toggle="tab" class="showload" id="ongoing">General Service Cateogry</a>
+						<a class="nav-link show" data-toggle="tab" class="showload" id="insight_general_category_button">General Service Cateogry</a>
 					</li>
+					{% if commodity in contract_data   %} 
 					<li class="nav-item">
-						<a class="nav-link show" data-toggle="tab" class="showload" id="ongoing">Specific Service Cateogry</a>
+						<a class="nav-link show" data-toggle="tab" class="showload" id="insight_specific_category_button">Specific Service Cateogry</a>
 					</li>
+					{% endif %}
 				</ul>
 			</div>
 
@@ -121,7 +123,7 @@
 			<div class="card d-flex w-100 mb-4">
 				<div class="card-header">
 					<h4>Insights</h4>
-					<div class="card-subtitle text-muted mb-0">{{ contract_data.family['unspsc']['title'] }} category</div>
+					<div class="card-subtitle text-muted mb-0 insight_category_name">{{ contract_data.family['unspsc']['title'] }} category</div>
 				</div>
 				
 				<div class="row no-gutters row-bordered row-border-light h-100">
@@ -129,7 +131,7 @@
 						<div class="card-body media align-items-center text-dark">
 							<i class="lnr lnr-diamond display-4 d-block text-primary"></i>
 							<span class="media-body d-block ml-3">
-								<span class="text-big mr-1 text-primary">${{ contract_data.family['avg_value'] }}</span>
+								<span class="text-big mr-1 text-primary" id="insight_avg_value">${{ contract_data.family['avg_value'] }}</span>
 							<br>
 							<small class="text-muted">Average contract value in this category, in {{ data.agency.display_title }}.</small>
 							</span>
@@ -139,9 +141,9 @@
 						<div class="card-body media align-items-center text-dark">
 							<i class="lnr lnr-calendar-full display-4 d-block text-warning"></i>
 							<span class="media-body d-block ml-3">
-								<span class="text-big"><span class="mr-1 text-warning">{{ contract_data.family['avg_contracts_month'] }}</span>Contracts</span>
+								<span class="text-big"><span class="mr-1 text-warning" id="insight_avg_contracts">{{ contract_data.family['avg_contracts_month'] }}</span>Contracts</span>
 							<br>
-							<small class="text-muted">Awarded each month in this category. 70% via Limited Tender.</small>
+							<small class="text-muted">Awarded each month in this category. XX% via limited tender.</small>
 							</span>
 						</div>
 					</div>
@@ -149,7 +151,7 @@
 						<div class="card-body media align-items-center text-dark">
 							<i class="lnr lnr-apartment display-4 d-block text-danger"></i>
 							<span class="media-body d-block ml-3">
-								<span class="text-big"><span class="mr-1 text-danger">{{ contract_data.family['no_suppliers'] }}</span> Suppliers</span>
+								<span class="text-big"><span class="mr-1 text-danger" id="insight_no_suppliers">{{ contract_data.family['no_suppliers'] }}</span> Suppliers</span>
 							<br>
 							<small class="text-muted">Provided services in this category to {{ data.agency.display_title }} over the previous two years.</small>
 							</span>
@@ -159,9 +161,9 @@
 						<div class="card-body media align-items-center text-dark">
 							<i class="lnr lnr-flag display-4 d-block text-success"></i>
 							<span class="media-body d-block ml-3">
-								<span class="text-big"><span class="mr-1 text-success">{{ contract_data.family['supplier_data'][0]['name'] }}</span></span>
+								<span class="text-big"><span class="mr-1 text-success"  id="insight_top_supplier">{{ contract_data.family['supplier_data'][0]['name'] }}</span></span>
 							<br>
-							<small class="text-muted">Is the top supplier in this category, for the second year running.</small>
+							<small class="text-muted">Is the top supplier in this category.</small>
 							</span>
 						</div>
 					</div>
@@ -177,7 +179,7 @@
 			<div class="card mb-4">
 
 				<div class="card-header with-elements pb-0">
-					<h6 class="card-header-title mb-0">Top suppliers in the {{ contract_data.family['unspsc']['title'] }} category.</h6> 
+					<h6 class="card-header-title mb-0">Top suppliers in the <span class="insight_category_name">{{ contract_data.family['unspsc']['title'] }} category</span>.</h6> 
 				</div>
 								
 
@@ -252,11 +254,7 @@
 
 
 
-	{{ data.category_display}}
 
-	<br><br>
-
-	{{ contract_data }}
 
 
 
@@ -285,6 +283,10 @@
 
 
 
+
+
+
+
 <!-- Resources -->
 <script src="https://www.amcharts.com/lib/4/core.js"></script>
 <script src="https://www.amcharts.com/lib/4/charts.js"></script>
@@ -292,6 +294,22 @@
 
 <!-- Chart code -->
 <script>
+
+
+{% if contract_data.family is defined   %} 
+var family_chart_data = {{ contract_data.family['supplier_pie_chart']|safe }};
+{% endif %}
+
+{% if contract_data.class is defined   %} 
+var class_chart_data = {{ contract_data.class['supplier_pie_chart']|safe }};
+{% endif %}
+
+{% if contract_data.commodity is defined   %} 
+var commodity_chart_data = {{ contract_data.commodity['supplier_pie_chart']|safe }};
+{% endif %}
+
+
+
 am4core.ready(function() {
 
 // Themes begin
@@ -305,8 +323,7 @@ var chart = am4core.create("chartdiv", am4charts.PieChart);
 chart.innerRadius = am4core.percent(30);
 
 // Add data
-chart.data = {{ contract_data.family['supplier_pie_chart']|safe }}
-
+chart.data = family_chart_data;
 
 
 // Add and configure Series
@@ -347,6 +364,45 @@ pieSeries2.slices.template.tooltipText = "{category}: ${value.value} Total Reven
 pieSeries2.labels.template.text = "{category}: ${value.value}";
 
 
+
+{% if contract_data.family is defined   %} 
+$('#insight_broad_category_button').on('click', function() { 
+	$('#insight_avg_value').text("${{ contract_data.family['avg_value'] }}");
+	$('.insight_category_name').text("{{ contract_data.family['unspsc']['title'] }} category"); 
+	$('#insight_avg_contract').text("{{ contract_data.family['avg_contracts_month'] }}"); 
+	$('#insight_no_suppliers').text("{{ contract_data.family['no_suppliers'] }}"); 
+	$('#insight_top_supplier').text("{{ contract_data.family['supplier_data'][0]['name'] }}"); 
+	chart.data = family_chart_data;
+	
+}); 
+{% endif %}
+
+{% if contract_data.class is defined   %} 
+$('#insight_general_category_button').on('click', function() { 
+	$('#insight_avg_value').text("${{ contract_data.class['avg_value'] }}"); 
+	$('.insight_category_name').text("{{ contract_data.family['unspsc']['title'] }} > {{ contract_data.class['unspsc']['title'] }} category"); 
+	$('#insight_avg_contract').text("{{ contract_data.class['avg_contracts_month'] }}"); 
+	$('#insight_no_suppliers').text("{{ contract_data.class['no_suppliers'] }}"); 
+	$('#insight_top_supplier').text("{{ contract_data.class['supplier_data'][0]['name'] }}"); 
+	chart.data = class_chart_data;
+});
+{% endif %}
+
+{% if contract_data.commodity is defined   %} 
+$('#insight_specific_category_button').on('click', function() { 
+	$('#insight_avg_value').text("${{ contract_data.commodity['avg_value'] }}"); 
+	$('.insight_category_name').text("{{ contract_data.family['unspsc']['title'] }} > {{ contract_data.class['unspsc']['title'] }} > {{ contract_data.commodity['unspsc']['title'] }} category"); 
+	$('#insight_avg_contract').text("{{ contract_data.commodity['avg_contracts_month'] }}"); 
+	$('#insight_no_suppliers').text("{{ contract_data.commodity['no_suppliers'] }}"); 
+	$('#insight_top_supplier').text("{{ contract_data.commodity['supplier_data'][0]['name'] }}"); 
+	chart.data = commodity_chart_data;
+});    
+{% endif %}
+
+
+
 }); // end am4core.ready()
+
+
 </script>
 
