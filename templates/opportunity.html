@@ -95,13 +95,16 @@
 
 			<div class="card-header-elements ml-auto p-0 mb-2">
 				<ul class="nav nav-tabs">
+					{% if contract_data.class is defined   %} 
 					<li class="nav-item">
 						<a class="nav-link show active" data-toggle="tab" class="showload" id="insight_broad_category_button">Broad Service Cateogry</a>
 					</li>
+					
 					<li class="nav-item">
 						<a class="nav-link show" data-toggle="tab" class="showload" id="insight_general_category_button">General Service Cateogry</a>
 					</li>
-					{% if commodity in contract_data   %} 
+					{% endif %}
+					{% if contract_data.commodity is defined   %} 
 					<li class="nav-item">
 						<a class="nav-link show" data-toggle="tab" class="showload" id="insight_specific_category_button">Specific Service Cateogry</a>
 					</li>
