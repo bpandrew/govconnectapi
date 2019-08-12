@@ -66,6 +66,7 @@ def update_display_name():
 		i=i+1
 		count_=count_+1
 
+	return str(count_)
 	return redirect(url_for('update_display_name')+"?count="+str(count_))
 
 	# update agencies
