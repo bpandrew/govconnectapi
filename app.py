@@ -304,11 +304,12 @@ def op_detail(op_id):
 				temp_ids.append(item['id'])
 
 			temp_ids.append(result['unspsc_family']['id'])
+			print("Family IDS:")
 			print(temp_ids)
 			category_dict.append( {"level":"family",  "data":result['unspsc_family'], "ids": temp_ids } )
 
-
 			category_list.append( result['unspsc_family']['id'] )
+
 		elif category['level_int']==3: # FIX THIS!!!!!
 			result['unspsc_class'] = category
 
@@ -321,6 +322,8 @@ def op_detail(op_id):
 				temp_ids.append(item['id'])
 
 			temp_ids.append(result['unspsc_class']['id'])
+			print("Class IDS:")
+			print(temp_ids)
 			category_dict.append( {"level":"class",  "data":result['unspsc_class'], "ids": temp_ids } )
 			category_list.append( result['unspsc_class']['id'] )
 		elif category['level_int']==4: # FIX THIS!!!!!
@@ -328,6 +331,8 @@ def op_detail(op_id):
 
 			temp_ids = []
 			temp_ids.append(result['unspsc_commodity']['id'])
+			print("Commodity IDS:")
+			print(temp_ids)
 			category_dict.append( {"level":"commodity",  "data":result['unspsc_commodity'], "ids": temp_ids } )
 			category_list.append( result['unspsc_commodity']['id'] )
 

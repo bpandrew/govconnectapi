@@ -60,14 +60,13 @@ def opportunity(data, agency_id, category_dict):
 		print(category['data']['id'])
 		df_op = df_op[df_op['unspsc.id'].isin(category['ids'])]
 		
-		contract_data[category['level']] = {"unspsc":category['data']}
+		contract_data[category['level']] = {"unspsc":category['data'], "contracts":[], "ids":category['ids'] }
 
 		if len(df_op)>0:
 		
 			# Save ALL of the contracts to JSON
-			contract_data[category['level']]['contracts'] = []
 			for index, row in df_op.iterrows():
-				temp_data = {"id":row['id'], "contract_ending_soon":row['contract_ending_soon'], "agency":row['agency.display_title'], "branch":row['branch.display_title'], "division":row['division.display_title'], "contract_end":row['contract_end'], "contract_start":row['contract_start'], "contract_value":row['contract_value'], "supplier_name":row['supplier.name'], "supplier_id":row['supplier.id'], "title":row['title'], "contract_ongoing":row['contract_ongoing'], "years_back":row['years_back'], "financial_year":row['financial_year']}
+				temp_data = {"unspsc_id":row['unspsc.id'],  "id":row['id'], "contract_ending_soon":row['contract_ending_soon'], "agency":row['agency.display_title'], "branch":row['branch.display_title'], "division":row['division.display_title'], "contract_end":row['contract_end'], "contract_start":row['contract_start'], "contract_value":row['contract_value'], "supplier_name":row['supplier.name'], "supplier_id":row['supplier.id'], "title":row['title'], "contract_ongoing":row['contract_ongoing'], "years_back":row['years_back'], "financial_year":row['financial_year']}
 				contract_data[category['level']]['contracts'].append(temp_data) 
 				
 
@@ -130,8 +129,30 @@ def opportunity(data, agency_id, category_dict):
 	#	contract_data['division_contracts'][index]['sum_contracts']=row['contract_value']
 	#	contract_data['division_contracts'][index]['contract_count']=row['count']
 
+	# Compare the category contracts, to see if there is a change between general and specific categories
+	temp_arr_a = np.asarray(contract_data['family']['contracts'])
+	try:
+		temp_arr_b = np.asarray(contract_data['class']['contracts'])
+	except:
+		temp_arr_b = []
+	try:
+		temp_arr_c = np.asarray(contract_data['commodity']['contracts'])
+	except:
+		temp_arr_c = []
 
+	# does the family == the class. ie. all contracts  in the class are the same as in the family.
+	family_class = np.array_equal(temp_arr_a,temp_arr_b)
+	if family_class==True:
+		contract_data['family']['category_nochange']=True
+	else:
+		contract_data['family']['category_nochange']=False
 
+	if len(temp_arr_b)>0:
+		class_commodity = np.array_equal(temp_arr_b,temp_arr_c)
+		if class_commodity==True:
+			contract_data['class']['category_nochange']=True
+		else:
+			contract_data['class']['category_nochange']=False
 
 
 		

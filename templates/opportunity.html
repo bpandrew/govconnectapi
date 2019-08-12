@@ -112,6 +112,7 @@
 				</ul>
 			</div>
 
+
 			<div class="card-header-elements ml-auto p-0 mb-2">
 				<ul class="nav nav-tabs">
 					<li class="nav-item">
@@ -122,6 +123,22 @@
 					</li>
 				</ul>
 			</div>
+
+			{% if contract_data['family']['category_nochange']==True: %}
+			<div class="alert alert-warning alert-dismissible fade show">
+				<button type="button" class="close" data-dismiss="alert">×</button>
+				There is no difference between the data available for the Broad or General Service Categories.<br>Indicating <b>all</b> contracts issued in the '{{ data.unspsc_family.title }}' category were for '{{ data.unspsc_class.title }}'. 
+			</div>
+			{% endif %}
+
+			{% if contract_data.class is defined %}
+			{% if contract_data['class']['category_nochange']==True: %}
+			<div class="alert alert-warning alert-dismissible fade show">
+				<button type="button" class="close" data-dismiss="alert">×</button>
+				There is no difference between the data available for the General or Specific Service Categories.<br>Indicating <b>all</b> contracts issued in the '{{ data.unspsc_family.title }} > {{ data.unspsc_class.title }}' category were for '{{ data.unspsc_commodity.title }}'. 
+			</div>
+			{% endif %}
+			{% endif %}
 
 			<div class="card d-flex w-100 mb-4">
 				<div class="card-header">
@@ -194,24 +211,14 @@
 				
 			<div class="card mb-4">
 					<div class="card-header with-elements pb-0">
-						<h6 class="card-header-title mb-0">Exemplar contracts in the {{ contract_data.family['unspsc']['title'] }} category. </h6> 
-						<div class="card-header-elements ml-auto p-0">
-							<ul class="nav nav-tabs">
-								<li class="nav-item">
-									<a class="nav-link show active" data-toggle="tab" class="showload" id="ongoing">Ongoing Contracts</a>
-								</li>
-								<li class="nav-item">
-									<a class="nav-link show" data-toggle="tab" class="showload" id="ongoing">Completed Contracts</a>
-								</li>
-							</ul>
-						</div>
+						<h6 class="card-header-title mb-0">Recent contracts in the: <span class="insight_category_name">{{ contract_data.family['unspsc']['title'] }} category</span>. </h6> 
 					</div>
 					<div class="card-body">
 						<div class="card-datatable table-responsive" style="margin-top: -25px">
 							<table id="myTable" class="table table-hover card-table">
 								<thead style="font-size:small">
 								<tr>
-									<th></th>
+									<th>Status</th>
 									<th>Title</th>
 									<th>Agency</th>
 									<th>Division</th>
@@ -223,26 +230,29 @@
 								</thead>
 								<tbody style="font-size:small">
 									{% for contract in contract_data['family'].contracts: %}
-									<tr data-year="{{ contract.year }}" data-ongoing="{{ contract.ongoing }}">
-										<td>{% if (contract.contract_ending_soon==True and contract.contract_ongoing==True) %}<div class="badge badge-danger">Ending soon</div>{% endif %}</td>
+									<tr data-year="{{ contract.financial_year }}" data-ongoing="{{ contract.contract_ongoing }}" data-unspsc="{{ contract.unspsc_id }}">
+										<td>{% if (contract.contract_ending_soon==True and contract.contract_ongoing==True) %}<div class="badge badge-info">Ending soon</div>{% elif contract.contract_ongoing==True %}<div class="badge badge-success">Ongoing</div>{% else %} <div class="badge badge-danger">Complete</div>{% endif %}</td>
 										<td><a href="/contract/{{ contract.id }}">{{ contract.title }}</a></td>
 										<td>{{ contract.agency }}</td>
 										<td>{% if contract.division!="nan" %}{{ contract.division }}{% endif %}</td>
 										<td>{{ contract.supplier_name }}</td>
-										<td>{{ contract.contract_value }}</td>
-										<td>{{ contract.contract_start }}</td>
-										<td>{{ contract.contract_end }}</td>
+										<td>${{ contract.contract_value }}</td>
+										<td nowrap>{{ contract.contract_start }}</td>
+										<td nowrap>{{ contract.contract_end }}</td>
 									</tr>
 									{% endfor %}
 								</tbody>
 							</table>
 						</div>
-	
 					</div>
 	
 				</div>
 
+				{{ contract_data['family']['category_nochange'] }}
 
+			<br><br>
+
+			{{ contract_data }}
 			
 		</div>
 	</div>	
@@ -273,12 +283,55 @@
 
 <script>
     $(document).ready(function() {
-        $('#myTable').DataTable({
+        var table = $('#myTable').DataTable({
             "scrollX": false,
             "order": [
                 [6, "desc"]
             ],
-        }, );
+		}, );
+		
+		{% if contract_data.family is defined   %} 
+		$("#insight_broad_category_button").click(function() {
+			$.fn.dataTable.ext.search.pop();
+			var family_ids = {{ contract_data.family['ids'] }};
+			$.fn.dataTable.ext.search.push(
+				function(settings, data, dataIndex) {
+					var temp_value = parseInt($(table.row(dataIndex).node()).attr('data-unspsc'));
+					return family_ids.includes(temp_value);
+				}
+			);
+			table.draw();
+		});
+		{% endif %}
+		
+		{% if contract_data.class is defined   %} 
+		$("#insight_general_category_button").click(function() {
+			$.fn.dataTable.ext.search.pop();
+			var family_ids = {{ contract_data.class['ids'] }};
+			$.fn.dataTable.ext.search.push(
+				function(settings, data, dataIndex) {
+					var temp_value = parseInt($(table.row(dataIndex).node()).attr('data-unspsc'));
+					return family_ids.includes(temp_value);
+				}
+			);
+			table.draw();
+		});
+		{% endif %}
+		
+		{% if contract_data.commodity is defined   %} 
+		$("#insight_specific_category_button").click(function() {
+			$.fn.dataTable.ext.search.pop();
+			var family_ids = {{ contract_data.commodity['ids'] }};
+			$.fn.dataTable.ext.search.push(
+				function(settings, data, dataIndex) {
+					var temp_value = parseInt($(table.row(dataIndex).node()).attr('data-unspsc'));
+					return family_ids.includes(temp_value);
+				}
+			);
+			table.draw();
+		});
+		{% endif %}
+
     });
 </script>
 
