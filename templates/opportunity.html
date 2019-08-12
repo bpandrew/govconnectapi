@@ -127,7 +127,7 @@
 			{% if contract_data['family']['category_nochange']==True: %}
 			<div class="alert alert-warning alert-dismissible fade show">
 				<button type="button" class="close" data-dismiss="alert">×</button>
-				There is no difference between the data available for the Broad or General Service Categories.<br>Indicating <b>all</b> contracts issued in the '{{ data.unspsc_family.title }}' category were for '{{ data.unspsc_class.title }}'. 
+				There is no difference between the data available for the Broad or General Service Categories.<br>Indicating <b>all</b> contracts issued in the <b>{{ data.unspsc_family.title }}</b> category were for <b>{{ data.unspsc_class.title }}.</b> 
 			</div>
 			{% endif %}
 
@@ -135,7 +135,7 @@
 			{% if contract_data['class']['category_nochange']==True: %}
 			<div class="alert alert-warning alert-dismissible fade show">
 				<button type="button" class="close" data-dismiss="alert">×</button>
-				There is no difference between the data available for the General or Specific Service Categories.<br>Indicating <b>all</b> contracts issued in the '{{ data.unspsc_family.title }} > {{ data.unspsc_class.title }}' category were for '{{ data.unspsc_commodity.title }}'. 
+				There is no difference between the data available for the General or Specific Service Categories.<br>Indicating <b>all</b> contracts issued in the <b>{{ data.unspsc_family.title }}</b> > <b>{{ data.unspsc_class.title }}</b> category were for '{{ data.unspsc_commodity.title }}'. 
 			</div>
 			{% endif %}
 			{% endif %}
@@ -248,12 +248,6 @@
 	
 				</div>
 
-				{{ contract_data['family']['category_nochange'] }}
-
-			<br><br>
-
-			{{ contract_data }}
-			
 		</div>
 	</div>	
 	{% else %}
