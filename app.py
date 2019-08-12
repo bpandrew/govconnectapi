@@ -67,6 +67,7 @@ def update_display_name():
 		count_=count_+1
 
 	link = "<a href='/update?count="+ str(count_) +"'>Next</a>"
+	link = "<script>window.location.href = '/update?count="+ str(count_) +"';</script>"
 
 	return str(link)
 	return redirect(url_for('update_display_name')+"?count="+str(count_))
