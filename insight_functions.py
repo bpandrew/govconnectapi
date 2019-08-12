@@ -66,7 +66,7 @@ def opportunity(data, agency_id, category_dict):
 		
 			# Save ALL of the contracts to JSON
 			for index, row in df_op.iterrows():
-				temp_data = {"unspsc_id":row['unspsc.id'],  "id":row['id'], "contract_ending_soon":row['contract_ending_soon'], "agency":row['agency.display_title'], "branch":row['branch.display_title'], "division":row['division.display_title'], "contract_end":row['contract_end'], "contract_start":row['contract_start'], "contract_value":row['contract_value'], "supplier_name":row['supplier.name'], "supplier_id":row['supplier.id'], "title":row['title'], "contract_ongoing":row['contract_ongoing'], "years_back":row['years_back'], "financial_year":row['financial_year']}
+				temp_data = {"unspsc_id":row['unspsc.id'],  "id":row['id'], "contract_ending_soon":row['contract_ending_soon'], "agency":row['agency.display_title'], "agency_id":row['agency.id'], "branch":row['branch.display_title'], "division":row['division.display_title'], "contract_end":row['contract_end'], "contract_start":row['contract_start'], "contract_value":row['contract_value'], "supplier_name":row['supplier.name'], "supplier_id":row['supplier.id'], "title":row['title'], "contract_ongoing":row['contract_ongoing'], "years_back":row['years_back'], "financial_year":row['financial_year']}
 				contract_data[category['level']]['contracts'].append(temp_data) 
 				
 

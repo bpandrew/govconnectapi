@@ -37,15 +37,36 @@ from models import User, UserSchema, Comment, CommentSchema, Op, OpSchema, OpSim
 # ------------------------------------ TEMP ------------------------------------
 # ----------------------------------------------------------------------------------------
 
+import time
 @app.route("/update")
 def update_display_name():
 
 	i=0
 	# *** UPDATE THE DISPLAY NAMES
-	query = ContractCount.query.filter_by(id=1).first()
-	query.aps_notification = 10733901
-	db.session.commit()
+	#query = ContractCount.query.filter_by(id=1).first()
+	#query.aps_notification = 10733901
+	#db.session.commit()
 
+	time.sleep(1)
+	count_ = int(request.args.get('count'))
+	if count_=="":
+		count_=0
+
+	# update Supplier
+	suppliers = Supplier.query.order_by(Supplier.id).filter(Supplier.id>count_).all()
+	#query = Supplier.query.filter_by(id>int(count_)).all()
+	response = SupplierSchema(many=True).dump(suppliers).data
+
+	for item in response:
+		if i>500:
+			break
+		query = Supplier.query.filter_by(id=item['id']).first()
+		query.name = item['name'].title()
+		db.session.commit()
+		i=i+1
+		count_=count_+1
+
+	return redirect(url_for('update_display_name')+"?count="+str(count_))
 
 	# update agencies
 	#agency = Agency.query.filter_by(display_title=None).all()
@@ -103,7 +124,7 @@ def update_display_name():
 	#	i = i + 1
 
 
-	return str("Done")
+	#return str("Done")
 
 
 # ------------------------------------ LOGIN / LOGOUT ------------------------------------
@@ -137,6 +158,7 @@ def login():
     form = LoginForm()
     # Check for errors
     data = {}
+	
     data['error'] = request.args.get('error')
     if form.validate_on_submit():
         # hash the password
@@ -710,6 +732,7 @@ def contract_add():
 		db.session.commit()
 	else:
 		# UPDATE ANY CHANGES TO THE OPPORTUNITY
+		contract.supplier_id = supplier_id
 		contract.son_id = son_id
 		contract.atm_austender_id = atm_id
 		contract.contact_name = contact_name
@@ -1248,26 +1271,34 @@ def supplier_detail(supplier_id):
 @app.route("/suppliers/add", methods=['GET'])
 def suppliers_add():
 
-    name=request.args.get('name').capitalize()
-    abn=request.args.get('abn')
-    country=request.args.get('country')
-    try:
-        country = country.capitalize()
-    except:
-        pass
-    
-    supplier = Supplier.query.filter_by(abn=abn).first()
-    if supplier==None:
-        db.create_all()
-        supplier = Supplier(name=name, abn=abn, country=country, display_name=functions.cleanTitle(name))
-        db.session.add(supplier)
-        db.session.commit()
+	name=request.args.get('name').capitalize()
+	abn=request.args.get('abn')
+	country=request.args.get('country')
+	try:
+		country = country.capitalize()
+	except:
+		pass
 
-        response = SupplierSchema().dump(supplier).data
-        return functions.json_response('Success - Supplier Added', response)
-    else:
-        response = SupplierSchema().dump(supplier).data
-        return functions.json_response('Success - Supplier Already Exists', response)
+    
+	if abn.lower()!="exempt":
+		supplier = Supplier.query.filter_by(abn=abn).first()
+	else:
+		supplier = Supplier.query.filter_by(name=name).first()
+
+	if supplier==None:
+		db.create_all()
+		supplier = Supplier(name=name, abn=abn, country=country, display_name=functions.cleanTitle(name))
+		db.session.add(supplier)
+		db.session.commit()
+
+		response = SupplierSchema().dump(supplier).data
+		return functions.json_response('Success - Supplier Added', response)
+	else:
+		supplier.name = name
+		db.session.commit()
+
+		response = SupplierSchema().dump(supplier).data
+		return functions.json_response('Success - Supplier Already Exists', response)
 
 
 

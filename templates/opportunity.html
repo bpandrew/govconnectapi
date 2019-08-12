@@ -116,10 +116,10 @@
 			<div class="card-header-elements ml-auto p-0 mb-2">
 				<ul class="nav nav-tabs">
 					<li class="nav-item">
-						<a class="nav-link show active" data-toggle="tab" class="showload" id="ongoing">{{ data.agency.display_title }}</a>
+						<a class="nav-link show" data-toggle="tab" class="showload" id="ongoing">{{ data.agency.display_title }}</a>
 					</li>
 					<li class="nav-item">
-						<a class="nav-link show" data-toggle="tab" class="showload" id="ongoing">All Agencies</a>
+						<a class="nav-link show active" data-toggle="tab" class="showload" id="ongoing">All Agencies</a>
 					</li>
 				</ul>
 			</div>
@@ -135,7 +135,7 @@
 			{% if contract_data['class']['category_nochange']==True: %}
 			<div class="alert alert-warning alert-dismissible fade show">
 				<button type="button" class="close" data-dismiss="alert">×</button>
-				There is no difference between the data available for the General or Specific Service Categories.<br>Indicating <b>all</b> contracts issued in the <b>{{ data.unspsc_family.title }}</b> > <b>{{ data.unspsc_class.title }}</b> category were for '{{ data.unspsc_commodity.title }}'. 
+				There is no difference between the data available for the General or Specific Service Categories.<br>Indicating <b>all</b> contracts issued in the <b>{{ data.unspsc_family.title }}</b> > <b>{{ data.unspsc_class.title }}</b> category were for <b>{{ data.unspsc_commodity.title }}.</b> 
 			</div>
 			{% endif %}
 			{% endif %}
@@ -230,7 +230,7 @@
 								</thead>
 								<tbody style="font-size:small">
 									{% for contract in contract_data['family'].contracts: %}
-									<tr data-year="{{ contract.financial_year }}" data-ongoing="{{ contract.contract_ongoing }}" data-unspsc="{{ contract.unspsc_id }}">
+									<tr data-year="{{ contract.financial_year }}" data-ongoing="{{ contract.contract_ongoing }}" data-unspsc="{{ contract.unspsc_id }}" data-agency-id="{{ contract.agency_id }}">
 										<td>{% if (contract.contract_ending_soon==True and contract.contract_ongoing==True) %}<div class="badge badge-info">Ending soon</div>{% elif contract.contract_ongoing==True %}<div class="badge badge-success">Ongoing</div>{% else %} <div class="badge badge-danger">Complete</div>{% endif %}</td>
 										<td><a href="/contract/{{ contract.id }}">{{ contract.title }}</a></td>
 										<td>{{ contract.agency }}</td>
@@ -261,6 +261,8 @@
 
 
 
+
+	{{ contract_data }}
 
 
 
