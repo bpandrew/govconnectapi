@@ -58,7 +58,7 @@ def update_display_name():
 	response = SupplierSchema(many=True).dump(suppliers).data
 
 	for item in response:
-		if i>500:
+		if i>150:
 			break
 		query = Supplier.query.filter_by(id=item['id']).first()
 		query.name = item['name'].title()
@@ -66,7 +66,9 @@ def update_display_name():
 		i=i+1
 		count_=count_+1
 
-	return str(count_)
+	link = "<a href='/update?count="+ str(count_) +"'>Next</a>"
+
+	return str(link)
 	return redirect(url_for('update_display_name')+"?count="+str(count_))
 
 	# update agencies
