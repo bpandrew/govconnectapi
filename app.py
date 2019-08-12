@@ -43,9 +43,9 @@ def update_display_name():
 
 	i=0
 	# *** UPDATE THE DISPLAY NAMES
-	#query = ContractCount.query.filter_by(id=1).first()
-	#query.aps_notification = 10733901
-	#db.session.commit()
+	query = ContractCount.query.filter_by(id=1).first()
+	query.scrape_date = datetime.now() #10733901  aps_notification
+	db.session.commit()
 
 	time.sleep(1)
 	count_ = int(request.args.get('count'))
