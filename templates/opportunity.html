@@ -97,16 +97,16 @@
 				<ul class="nav nav-tabs">
 					{% if contract_data.class is defined   %} 
 					<li class="nav-item">
-						<a class="nav-link show active" data-toggle="tab" class="showload" id="insight_broad_category_button">Broad Service Cateogry</a>
+						<a class="nav-link show active" data-toggle="tab" class="showload" id="insight_broad_category_button">Broad Service Category</a>
 					</li>
 					
 					<li class="nav-item">
-						<a class="nav-link show" data-toggle="tab" class="showload" id="insight_general_category_button">General Service Cateogry</a>
+						<a class="nav-link show" data-toggle="tab" class="showload" id="insight_general_category_button">General Service Category</a>
 					</li>
 					{% endif %}
 					{% if contract_data.commodity is defined   %} 
 					<li class="nav-item">
-						<a class="nav-link show" data-toggle="tab" class="showload" id="insight_specific_category_button">Specific Service Cateogry</a>
+						<a class="nav-link show" data-toggle="tab" class="showload" id="insight_specific_category_button">Specific Service Category</a>
 					</li>
 					{% endif %}
 				</ul>
@@ -116,10 +116,10 @@
 			<div class="card-header-elements ml-auto p-0 mb-2">
 				<ul class="nav nav-tabs">
 					<li class="nav-item">
-						<a class="nav-link show" data-toggle="tab" class="showload" id="ongoing">{{ data.agency.display_title }}</a>
+						<a class="nav-link show" data-toggle="tab" class="showload" id="insight_agency_filter_button">{{ data.agency.display_title }}</a>
 					</li>
 					<li class="nav-item">
-						<a class="nav-link show active" data-toggle="tab" class="showload" id="ongoing">All Agencies</a>
+						<a class="nav-link show active" data-toggle="tab" class="showload" id="insight_all_agencies_button">All Agencies</a>
 					</li>
 				</ul>
 			</div>
@@ -262,7 +262,7 @@
 
 
 
-	{{ contract_data }}
+
 
 
 
@@ -279,6 +279,41 @@
 
 <script>
     $(document).ready(function() {
+
+		// Are the results filtered to the agency
+		var agency_filter = false;
+		var agency_filter_id = {{ data.agency.id }};
+
+		var category_filter = "family";
+
+		$("#insight_agency_filter_button").click(function() {
+			agency_filter = true;
+			if (category_filter == "family"){
+				update_table_broad_category();
+			}
+			if (category_filter == "class"){
+				update_table_general_category();
+			}
+			if (category_filter == "commodity"){
+				update_table_specific_category();
+			}
+			
+		});
+
+		$("#insight_all_agencies_button").click(function() {
+			agency_filter = false;
+			if (category_filter == "family"){
+				update_table_broad_category();
+			}
+			if (category_filter == "class"){
+				update_table_general_category();
+			}
+			if (category_filter == "commodity"){
+				update_table_specific_category();
+			}
+		});	
+		
+
         var table = $('#myTable').DataTable({
             "scrollX": false,
             "order": [
@@ -286,46 +321,104 @@
             ],
 		}, );
 		
+
+
 		{% if contract_data.family is defined   %} 
 		$("#insight_broad_category_button").click(function() {
+			category_filter = "family";
+			update_table_broad_category();
+		});
+
+		function update_table_broad_category() {
+			// updates the datatable with the broad category items
 			$.fn.dataTable.ext.search.pop();
 			var family_ids = {{ contract_data.family['ids'] }};
 			$.fn.dataTable.ext.search.push(
 				function(settings, data, dataIndex) {
 					var temp_value = parseInt($(table.row(dataIndex).node()).attr('data-unspsc'));
-					return family_ids.includes(temp_value);
+					var temp_value_agency = parseInt($(table.row(dataIndex).node()).attr('data-agency-id'));
+					n = family_ids.includes(temp_value);
+					if (n==true){
+						if (agency_filter==true){
+							if (agency_filter_id==temp_value_agency){
+								n=true;
+							} else {
+								n=false
+							}
+						}
+					}
+					return n
 				}
 			);
 			table.draw();
-		});
+
+			return true;
+		};
+
 		{% endif %}
 		
+
 		{% if contract_data.class is defined   %} 
 		$("#insight_general_category_button").click(function() {
+			category_filter = "class";
+			update_table_general_category();
+		});
+
+		function update_table_general_category() {
 			$.fn.dataTable.ext.search.pop();
 			var family_ids = {{ contract_data.class['ids'] }};
 			$.fn.dataTable.ext.search.push(
 				function(settings, data, dataIndex) {
 					var temp_value = parseInt($(table.row(dataIndex).node()).attr('data-unspsc'));
-					return family_ids.includes(temp_value);
+					var temp_value_agency = parseInt($(table.row(dataIndex).node()).attr('data-agency-id'));
+					n = family_ids.includes(temp_value);
+					if (n==true){
+						if (agency_filter==true){
+							if (agency_filter_id==temp_value_agency){
+								n=true;
+							} else {
+								n=false
+							}
+						}
+					}
+					return n
 				}
 			);
 			table.draw();
-		});
+		};
+
+
 		{% endif %}
 		
 		{% if contract_data.commodity is defined   %} 
 		$("#insight_specific_category_button").click(function() {
+			category_filter = "commodity";
+			update_table_specific_category();
+		});
+
+		function update_table_specific_category() {
 			$.fn.dataTable.ext.search.pop();
 			var family_ids = {{ contract_data.commodity['ids'] }};
 			$.fn.dataTable.ext.search.push(
 				function(settings, data, dataIndex) {
 					var temp_value = parseInt($(table.row(dataIndex).node()).attr('data-unspsc'));
-					return family_ids.includes(temp_value);
+					var temp_value_agency = parseInt($(table.row(dataIndex).node()).attr('data-agency-id'));
+					n = family_ids.includes(temp_value);
+					if (n==true){
+						if (agency_filter==true){
+							if (agency_filter_id==temp_value_agency){
+								n=true;
+							} else {
+								n=false
+							}
+						}
+					}
+					return n
 				}
 			);
 			table.draw();
-		});
+		};
+
 		{% endif %}
 
     });
@@ -353,11 +446,19 @@ var family_chart_data = {{ contract_data.family['supplier_pie_chart']|safe }};
 {% endif %}
 
 {% if contract_data.class is defined   %} 
-var class_chart_data = {{ contract_data.class['supplier_pie_chart']|safe }};
+	{% if contract_data.class['supplier_pie_chart'] is defined   %} 
+		var class_chart_data = {{ contract_data.class['supplier_pie_chart']|safe }};
+	{% else %}
+		var class_chart_data = []
+	{% endif %}
 {% endif %}
 
 {% if contract_data.commodity is defined   %} 
-var commodity_chart_data = {{ contract_data.commodity['supplier_pie_chart']|safe }};
+	{% if contract_data.commodity['supplier_pie_chart'] is defined   %} 
+		var commodity_chart_data = {{ contract_data.commodity['supplier_pie_chart']|safe }};
+	{% else %}
+		var commodity_chart_data = []
+	{% endif %}
 {% endif %}
 
 
@@ -423,7 +524,9 @@ $('#insight_broad_category_button').on('click', function() {
 	$('.insight_category_name').text("{{ contract_data.family['unspsc']['title'] }} category"); 
 	$('#insight_avg_contract').text("{{ contract_data.family['avg_contracts_month'] }}"); 
 	$('#insight_no_suppliers').text("{{ contract_data.family['no_suppliers'] }}"); 
+	{% if contract_data.class['supplier_data'] is defined %}
 	$('#insight_top_supplier').text("{{ contract_data.family['supplier_data'][0]['name'] }}"); 
+	{% endif %}
 	chart.data = family_chart_data;
 	
 }); 
@@ -435,7 +538,9 @@ $('#insight_general_category_button').on('click', function() {
 	$('.insight_category_name').text("{{ contract_data.family['unspsc']['title'] }} > {{ contract_data.class['unspsc']['title'] }} category"); 
 	$('#insight_avg_contract').text("{{ contract_data.class['avg_contracts_month'] }}"); 
 	$('#insight_no_suppliers').text("{{ contract_data.class['no_suppliers'] }}"); 
+	{% if contract_data.class['supplier_data'] is defined %}
 	$('#insight_top_supplier').text("{{ contract_data.class['supplier_data'][0]['name'] }}"); 
+	{% endif %}
 	chart.data = class_chart_data;
 });
 {% endif %}
@@ -446,7 +551,9 @@ $('#insight_specific_category_button').on('click', function() {
 	$('.insight_category_name').text("{{ contract_data.family['unspsc']['title'] }} > {{ contract_data.class['unspsc']['title'] }} > {{ contract_data.commodity['unspsc']['title'] }} category"); 
 	$('#insight_avg_contract').text("{{ contract_data.commodity['avg_contracts_month'] }}"); 
 	$('#insight_no_suppliers').text("{{ contract_data.commodity['no_suppliers'] }}"); 
+	{% if contract_data.commodity['supplier_data'] is defined %}
 	$('#insight_top_supplier').text("{{ contract_data.commodity['supplier_data'][0]['name'] }}"); 
+	{% endif %}
 	chart.data = commodity_chart_data;
 });    
 {% endif %}

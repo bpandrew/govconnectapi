@@ -104,6 +104,7 @@ def opportunity(data, agency_id, category_dict):
 
 			df_top10 = df_temp[:10].copy()
 			contract_data[category['level']]['supplier_pie_chart'] = []
+			print(df_top10)
 			# Get the top 10 suppliers and format the pie chart data
 			for index, row in df_top10.iterrows():
 				temp_data = {"earnings":int(row['contract_value']), "no_contracts":row['count'], "name":row['supplier.display_name']}
