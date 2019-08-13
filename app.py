@@ -1130,6 +1130,12 @@ def branch_add():
 # ------------------------------------ SUPPLIERS ------------------------------------
 # ---------------------------------------------------------------------------------
 
+@app.route("/temp")
+def temp():
+	suppliers=Supplier.query.all()
+	result = SupplierSchema(many=True).dump(suppliers).data
+	return jsonify(result)
+
 
 @app.route("/suppliers")
 def suppliers():
@@ -1284,11 +1290,12 @@ def address_add():
 	postcode=request.args.get('postcode')
 	country=request.args.get('country')
 	supplier_id=request.args.get('supplier_id')
+	correct_at=request.args.get('correct_at')
 
 	address = SupplierAddress.query.filter_by(supplier_id=supplier_id).filter_by(postal_address=postal_address).first()
 	if address==None:
 		db.create_all()
-		query = SupplierAddress(postal_address=postal_address, town_city=town_city, postcode=postcode, country=country, supplier_id=supplier_id)
+		query = SupplierAddress(postal_address=postal_address, town_city=town_city, postcode=postcode, country=country, supplier_id=supplier_id, correct_at=correct_at)
 		db.session.add(query)
 		db.session.commit()
 
