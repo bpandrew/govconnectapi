@@ -523,8 +523,10 @@ $('#insight_broad_category_button').on('click', function() {
 	$('.insight_category_name').text("{{ contract_data.family['unspsc']['title'] }} category"); 
 	$('#insight_avg_contract').text("{{ contract_data.family['avg_contracts_month'] }}"); 
 	$('#insight_no_suppliers').text("{{ contract_data.family['no_suppliers'] }}"); 
-	{% if contract_data.class['supplier_data'] is defined %}
-	$('#insight_top_supplier').text("{{ contract_data.family['supplier_data'][0]['name'] }}"); 
+	{% if contract_data.class is defined %}
+		{% if contract_data.class['supplier_data'] is defined %}
+			$('#insight_top_supplier').text("{{ contract_data.family['supplier_data'][0]['name'] }}"); 
+		{% endif %}
 	{% endif %}
 	chart.data = family_chart_data;
 	
@@ -537,8 +539,10 @@ $('#insight_general_category_button').on('click', function() {
 	$('.insight_category_name').text("{{ contract_data.family['unspsc']['title'] }} > {{ contract_data.class['unspsc']['title'] }} category"); 
 	$('#insight_avg_contract').text("{{ contract_data.class['avg_contracts_month'] }}"); 
 	$('#insight_no_suppliers').text("{{ contract_data.class['no_suppliers'] }}"); 
-	{% if contract_data.class['supplier_data'] is defined %}
-	$('#insight_top_supplier').text("{{ contract_data.class['supplier_data'][0]['name'] }}"); 
+	{% if contract_data.class is defined %}
+		{% if contract_data.class['supplier_data'] is defined %}
+			$('#insight_top_supplier').text("{{ contract_data.class['supplier_data'][0]['name'] }}"); 
+		{% endif %}
 	{% endif %}
 	chart.data = class_chart_data;
 });
@@ -550,8 +554,10 @@ $('#insight_specific_category_button').on('click', function() {
 	$('.insight_category_name').text("{{ contract_data.family['unspsc']['title'] }} > {{ contract_data.class['unspsc']['title'] }} > {{ contract_data.commodity['unspsc']['title'] }} category"); 
 	$('#insight_avg_contract').text("{{ contract_data.commodity['avg_contracts_month'] }}"); 
 	$('#insight_no_suppliers').text("{{ contract_data.commodity['no_suppliers'] }}"); 
-	{% if contract_data.commodity['supplier_data'] is defined %}
-	$('#insight_top_supplier').text("{{ contract_data.commodity['supplier_data'][0]['name'] }}"); 
+	{% if contract_data.commodity is defined %}
+		{% if contract_data.commodity['supplier_data'] is defined %}
+			$('#insight_top_supplier').text("{{ contract_data.commodity['supplier_data'][0]['name'] }}"); 
+		{% endif %}
 	{% endif %}
 	chart.data = commodity_chart_data;
 });    
