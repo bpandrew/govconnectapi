@@ -31,7 +31,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 # import all of the database models and schemas
-from models import User, UserSchema, Comment, CommentSchema, Op, OpSchema, OpSimpleSchema, Unspsc, UnspscSchema, UnspscSchemaSimple, Agency, AgencySchema, Addenda, AddendaSchema, Contract, ContractSchema, Supplier, SupplierSchema, FilterUnspsc, FilterUnspscSchema, Page, Tag, Son, SonSchema, Employee, EmployeeSchema, Notice, NoticeSchema, Division, DivisionSchema, Branch, BranchSchema, ContractCount, ContractCountSchema
+from models import User, UserSchema, Comment, CommentSchema, Op, OpSchema, OpSimpleSchema, Unspsc, UnspscSchema, UnspscSchemaSimple, Agency, AgencySchema, Addenda, AddendaSchema, Contract, ContractSchema, Supplier, SupplierSchema, FilterUnspsc, FilterUnspscSchema, Page, Tag, Son, SonSchema, Employee, EmployeeSchema, Notice, NoticeSchema, Division, DivisionSchema, Branch, BranchSchema, ContractCount, ContractCountSchema, SupplierAddress, SupplierAddressSchema
 
 
 # ------------------------------------ TEMP ------------------------------------
@@ -61,7 +61,7 @@ def update_display_name():
 		if i>150:
 			break
 		query = Supplier.query.filter_by(id=item['id']).first()
-		query.name = item['name'].title()
+		query.name = item['name'].lower()
 		db.session.commit()
 		i=i+1
 		count_=count_+1
@@ -728,6 +728,8 @@ def contract_add():
 	else:
 		contact_name = None	
 
+
+	
 	contract=Contract.query.filter_by(cn_id=cn_id).first()
 	if contract==None:
 		db.create_all()
@@ -1270,12 +1272,41 @@ def supplier_detail(supplier_id):
 	return render_template('supplier.html', data=data)
 
 
+# ------------------------------------ SUPPLIER ADDRESS ------------------------------------
+# ---------------------------------------------------------------------------------
+
+
+@app.route("/address/add", methods=['GET'])
+def address_add():
+
+	postal_address=request.args.get('postal_address')
+	town_city=request.args.get('town_city')
+	postcode=request.args.get('postcode')
+	country=request.args.get('country')
+	supplier_id=request.args.get('supplier_id')
+
+	address = SupplierAddress.query.filter_by(supplier_id=supplier_id).filter_by(postal_address=postal_address).first()
+	if address==None:
+		db.create_all()
+		query = SupplierAddress(postal_address=postal_address, town_city=town_city, postcode=postcode, country=country, supplier_id=supplier_id)
+		db.session.add(query)
+		db.session.commit()
+
+		response = SupplierAddressSchema().dump(query).data
+		return functions.json_response('Success - Address Added', response)
+	else:
+		response = SupplierAddressSchema().dump(supplier).data
+		return functions.json_response('Success - Address Already Exists', response)
+
+	
+
+
 
 
 @app.route("/suppliers/add", methods=['GET'])
 def suppliers_add():
 
-	name=request.args.get('name').capitalize()
+	name=request.args.get('name').lower()
 	abn=request.args.get('abn')
 	country=request.args.get('country')
 	try:
@@ -1285,8 +1316,10 @@ def suppliers_add():
 
     
 	if abn.lower()!="exempt":
+		print("entered exempt")
 		supplier = Supplier.query.filter_by(abn=abn).first()
 	else:
+		print("entered checking by name")
 		supplier = Supplier.query.filter_by(name=name).first()
 
 	if supplier==None:

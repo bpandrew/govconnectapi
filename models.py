@@ -150,6 +150,23 @@ class UnspscSchemaSimple(ma.ModelSchema):
 
 
 
+#----------  SUPPLIER REGISTERED ADDRESS ----------
+
+class SupplierAddress(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+	postal_address = db.Column(db.String())
+	town_city = db.Column(db.String)
+	postcode = db.Column(db.String)  
+	country = db.Column(db.String)
+	supplier_id = db.Column(db.Integer, db.ForeignKey("supplier.id"), nullable=True)
+	
+
+class SupplierAddressSchema(ma.ModelSchema):
+    class Meta:
+       model = SupplierAddress
+
+
+
 #----------  SUPPLIERS ----------
 
 class Supplier(db.Model):
@@ -160,10 +177,16 @@ class Supplier(db.Model):
 	country = db.Column(db.String())
 	image_url = db.Column(db.String(), nullable=True)
 
+
 class SupplierSchema(ma.ModelSchema):
 	class Meta:	
 		model = Supplier
 		fields = ("id", "name", "abn", "image_url", "display_name")
+
+
+
+
+
 
 
 
