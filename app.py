@@ -39,7 +39,7 @@ from models import User, UserSchema, Comment, CommentSchema, Op, OpSchema, OpSim
 
 import time
 @app.route("/update")
-def update_display_name():
+def update():
 
 	i=0
 	# *** UPDATE THE DISPLAY NAMES
@@ -1302,7 +1302,7 @@ def address_add():
 		response = SupplierAddressSchema().dump(query).data
 		return functions.json_response('Success - Address Added', response)
 	else:
-		response = SupplierAddressSchema().dump(supplier).data
+		response = SupplierAddressSchema().dump(address).data
 		return functions.json_response('Success - Address Already Exists', response)
 
 	
@@ -1323,10 +1323,10 @@ def suppliers_add():
 
     
 	if abn.lower()!="exempt":
-		print("entered exempt")
+		print("entered - has an abn")
 		supplier = Supplier.query.filter_by(abn=abn).first()
 	else:
-		print("entered checking by name")
+		print("entered - exempt, checking by name")
 		supplier = Supplier.query.filter_by(name=name).first()
 
 	if supplier==None:
