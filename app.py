@@ -31,7 +31,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 # import all of the database models and schemas
-from models import User, UserSchema, Comment, CommentSchema, Op, OpSchema, OpSimpleSchema, Unspsc, UnspscSchema, UnspscSchemaSimple, Agency, AgencySchema, Addenda, AddendaSchema, Contract, ContractSchema, Supplier, SupplierSchema, FilterUnspsc, FilterUnspscSchema, Page, Tag, Son, SonSchema, Employee, EmployeeSchema, Notice, NoticeSchema, Division, DivisionSchema, Branch, BranchSchema, ContractCount, ContractCountSchema, SupplierAddress, SupplierAddressSchema
+from models import User, UserSchema, Comment, CommentSchema, Op, OpSchema, OpSimpleSchema, Unspsc, UnspscSchema, UnspscSchemaSimple, Agency, AgencySchema, AgencySchemaSimple, Addenda, AddendaSchema, Contract, ContractSchema, Supplier, SupplierSchema, FilterUnspsc, FilterUnspscSchema, Page, Tag, Son, SonSchema, Employee, EmployeeSchema, Notice, NoticeSchema, Division, DivisionSchema, Branch, BranchSchema, ContractCount, ContractCountSchema, SupplierAddress, SupplierAddressSchema, SupplierMatrix, SupplierMatrixSchema
 
 
 # ------------------------------------ TEMP ------------------------------------
@@ -43,9 +43,9 @@ def update():
 
 	i=0
 	# *** UPDATE THE DISPLAY NAMES
-	query = ContractCount.query.filter_by(id=1).first()
-	query.scrape_date = datetime.now() #10733901  aps_notification
-	db.session.commit()
+	#query = ContractCount.query.filter_by(id=1).first()
+	#query.scrape_date = datetime.now() #10733901  aps_notification
+	#db.session.commit()
 
 	time.sleep(1)
 	count_ = int(request.args.get('count'))
@@ -130,15 +130,162 @@ def update():
 
 	#return str("Done")
 
+def all_agencies_segments():
+	# Get UNSPSC Segments
+	query = Unspsc.query.filter_by(level_int=1).all()
+	data = UnspscSchemaSimple(many=True).dumps(query).data
+	data = json.loads(data)
+
+	unspsc_segments = []
+	unspsc_dict = {}
+	for item in data:
+		unspsc_segments.append(item['id'])
+		unspsc_dict[item['unspsc'][:2]]=int(item['id'])
+
+	# Get all agenceis 
+	query = Agency.query.all()
+	data = AgencySchemaSimple(many=True).dumps(query).data
+	data = json.loads(data)
+
+	agencies = []
+	for item in data:
+		agencies.append(item['id'])
+
+	return unspsc_segments, agencies
+
+
+@app.route("/matrix_read")
+def matrix_read():
+
+	target_supplier = 152
+	
+	# Get Matrices
+	query = SupplierMatrix.query.filter_by(supplier_id=target_supplier).filter_by(matrix_type="agency_segment").first() 
+	data = SupplierMatrixSchema().dumps(query).data
+	data = json.loads(data)
+	json_data = data['json']['data']
+	# find all of the agencies and segments so the matrix can be rebuilt
+	unspscs, agencies = all_agencies_segments()
+	# Rebuild the matrix
+	matrix_a = insight_functions.rebuild_matrix(json_data, unspscs, agencies)
+
+	query = SupplierMatrix.query.filter_by(matrix_type="agency_segment").all()
+	#query = SupplierMatrix.query.filter_by(supplier_id=1314).all()
+	data = SupplierMatrixSchema(many=True).dumps(query).data
+	supplier_matrices = json.loads(data)
+
+	#print(supplier_ids)
+
+	supplier_id = []
+	comp_score = []
+	for supplier in supplier_matrices:
+		# Get Matrices
+		if len(supplier['json']['data'])>3:
+			#print("***** YEAHYEAH ")
+			json_data = supplier['json']['data']
+			#print(json_data)
+			matrix_b = insight_functions.rebuild_matrix(json_data, unspscs, agencies)
+			#matrix_b = populate_matrix(supplier, df)
+			#print(supplier['id'])
+			#print("*****")
+			supplier_id.append(supplier['supplier'])
+			comp_score.append( insight_functions.calc_competition(matrix_a, matrix_b) )
+
+		#break
+
+	# Create the scores dataframe, sort and filter by competitor score
+	comp_scores = pd.DataFrame()
+	comp_scores['supplier_id'] = supplier_id
+	comp_scores['score'] = comp_score
+	comp_scores.set_index('supplier_id', drop=True, append=False, inplace=True, verify_integrity=False)
+	comp_scores = comp_scores.sort_values(by='score', ascending=0)
+	comp_scores = comp_scores[comp_scores['score']>-1]
+	# convert the dataframe to json to be stored in the DB
+	json_data = comp_scores.to_json(orient='index')
+
+	# Add the record to the supplier matrix.
+	obj=SupplierMatrix.query.filter_by(supplier_id=target_supplier).filter_by(matrix_type='competitors').first()
+	if obj==None:
+		db.create_all()
+		query = SupplierMatrix(matrix_type="competitors", supplier_id=target_supplier, json=json_data, financial_year=0, financial_quarter=0, created=datetime.now())
+		db.session.add(query)
+		db.session.commit()
+	else:
+		response = OpSchema().dump(obj).data # get the existing op data
+		# Update any changes to the opportunity
+		obj.json = json_data
+		created=datetime.now()
+		db.session.commit()	
+
+	return json_data
+
+
+@app.route("/matrix")
+def matrix():
+	
+	# Get UNSPSC Segments
+	query = Unspsc.query.filter_by(level_int=1).all()
+	data = UnspscSchemaSimple(many=True).dumps(query).data
+	data = json.loads(data)
+
+	unspsc_segments = []
+	unspsc_dict = {}
+	for item in data:
+		unspsc_segments.append(item['id'])
+		unspsc_dict[item['unspsc'][:2]]=int(item['id'])
+
+	# Get all agenceis 
+	query = Agency.query.all()
+	data = AgencySchemaSimple(many=True).dumps(query).data
+	data = json.loads(data)
+
+	agencies = []
+	for item in data:
+		agencies.append(item['id'])
+	
+	# The suppliers that are going to have matrixes added
+	query = Supplier.query.all() #.limit(5)
+	data = SupplierSchema(many=True).dumps(query).data
+	data = json.loads(data)
+
+	supplier_ids = []
+	for item in data:
+		supplier_ids.append(item['id'])
+	#supplier_ids = [33]
+
+	query = Contract.query.all()
+	data = ContractSchema(many=True).dumps(query).data
+	data = json.loads(data)
+	df = insight_functions.clean_contract_df(data)
+
+	financial_year = 2019
+	financial_quarter = 0
+
+	# Loop over suppliers and add the matrix to the db
+	for supplier_id in supplier_ids:
+		matrixes = insight_functions.supplier_agency_segment_matrix(df, supplier_id, unspsc_segments, unspsc_dict, agencies, financial_year, financial_quarter)
+
+		for matrix in matrixes:
+			# Add the matrix to the db
+			obj=SupplierMatrix.query.filter_by(supplier_id=matrix['supplier_id']).filter_by(financial_year=financial_year).filter_by(financial_quarter=financial_quarter).first()
+			if obj==None:
+				db.create_all()
+				query = SupplierMatrix(matrix_type="agency_segment", supplier_id=supplier_id, json=matrix, financial_year=financial_year, financial_quarter=financial_quarter, created=datetime.now())
+				db.session.add(query)
+				db.session.commit()
+			else:
+				response = OpSchema().dump(obj).data # get the existing op data
+				# Update any changes to the opportunity
+				obj.json = matrix
+				created=datetime.now()
+				db.session.commit()
+
+	data = {"result": True}
+	return jsonify(data)
+
 
 # ------------------------------------ LOGIN / LOGOUT ------------------------------------
 # ----------------------------------------------------------------------------------------
-
-
-
-@app.route("/cache")
-def cache():
-    return str(datetime.now())
 
 
 # --- LANDING PAGE ---
@@ -147,8 +294,7 @@ def landing():
     return render_template('index.html')
 
 
-
-# --- LANDING PAGE ---
+# --- DASHBOARD PAGE ---
 @app.route("/dashboard")
 def dashboard():
     return render_template('index.html')

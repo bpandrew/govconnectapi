@@ -3,7 +3,7 @@ import hashlib, binascii, os
 import humanize
 from datetime import datetime, date, time, timedelta
 from flask import Flask, request, jsonify, session, redirect, url_for, g, Response
-
+import math
 
 # Hash a password for storing in the database
 def hash_password(password):
@@ -46,6 +46,24 @@ def format_currency(value):
 		return output
 	except:
 		return None
+
+# format as a currency
+def format_currency_comma(value, round_=False):
+	try:
+		if round_==True:
+			value = round_thousand(value)
+		else:
+			value = int(value)
+		output = "$"+ humanize.intcomma(value)
+		return output
+
+	except:
+		return None
+
+
+def round_thousand(value):
+	return int(math.ceil(value / 1000.0)) * 1000
+
 
 
 # Generate the dates for the current financial year and the previous

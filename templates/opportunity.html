@@ -97,32 +97,34 @@
 				<ul class="nav nav-tabs">
 					{% if contract_data.class is defined   %} 
 					<li class="nav-item">
-						<a class="nav-link show active" data-toggle="tab" class="showload" id="insight_broad_category_button">Broad Service Category</a>
+						<a class="nav-link show active" data-toggle="tab" class="showload" onclick="insight_button_press('family', null);">Broad Service Category</a>
 					</li>
 					
 					<li class="nav-item">
-						<a class="nav-link show" data-toggle="tab" class="showload" id="insight_general_category_button">General Service Category</a>
+						<a class="nav-link show" data-toggle="tab" class="showload" onclick="insight_button_press('class', null);">General Service Category</a>
 					</li>
 					{% endif %}
 					{% if contract_data.commodity is defined   %} 
 					<li class="nav-item">
-						<a class="nav-link show" data-toggle="tab" class="showload" id="insight_specific_category_button">Specific Service Category</a>
+						<a class="nav-link show" data-toggle="tab" class="showload" onclick="insight_button_press('commodity', null);">Specific Service Category</a>
 					</li>
 					{% endif %}
 				</ul>
 			</div>
 
-
 			<div class="card-header-elements ml-auto p-0 mb-2">
 				<ul class="nav nav-tabs">
 					<li class="nav-item">
-						<a class="nav-link show" data-toggle="tab" class="showload" id="insight_agency_filter_button">{{ data.agency.display_title }}</a>
+						<a class="nav-link show" data-toggle="tab" class="showload" onclick="insight_button_press(null, true);">{{ data.agency.display_title }}</a>
 					</li>
 					<li class="nav-item">
-						<a class="nav-link show active" data-toggle="tab" class="showload" id="insight_all_agencies_button">All Agencies</a>
+						<a class="nav-link show active" data-toggle="tab" class="showload" onclick="insight_button_press(null, false);">All Agencies</a>
 					</li>
 				</ul>
 			</div>
+
+
+						
 
 			{% if contract_data['family']['category_nochange']==True: %}
 			<div class="alert alert-warning alert-dismissible fade show">
@@ -140,20 +142,27 @@
 			{% endif %}
 			{% endif %}
 
+
 			<div class="card d-flex w-100 mb-4">
-				<div class="card-header">
+
+				<div class="card-header no_insight_data">
+					<h4>Insights</h4>
+					<div class="card-subtitle text-muted mb-0">No data available for your selection.</div>
+				</div>
+
+				<div class="card-header insight_data">
 					<h4>Insights</h4>
 					<div class="card-subtitle text-muted mb-0 insight_category_name">{{ contract_data.family['unspsc']['title'] }} category</div>
 				</div>
 				
-				<div class="row no-gutters row-bordered row-border-light h-100">
+				<div class="row no-gutters row-bordered row-border-light h-100 insight_data">
 					<div class="d-flex col-sm-6 align-items-center">
 						<div class="card-body media align-items-center text-dark">
 							<i class="lnr lnr-diamond display-4 d-block text-primary"></i>
 							<span class="media-body d-block ml-3">
-								<span class="text-big mr-1 text-primary" id="insight_avg_value">${{ contract_data.family['avg_value'] }}</span>
+								<span class="text-big mr-1 text-primary" id="insight_avg_value">{{ contract_data.family['avg_value'] }}</span>
 							<br>
-							<small class="text-muted">Average contract value in this category, in {{ data.agency.display_title }}.</small>
+							<small class="text-muted">Average contract value in this category.</small>
 							</span>
 						</div>
 					</div>
@@ -161,9 +170,9 @@
 						<div class="card-body media align-items-center text-dark">
 							<i class="lnr lnr-calendar-full display-4 d-block text-warning"></i>
 							<span class="media-body d-block ml-3">
-								<span class="text-big"><span class="mr-1 text-warning" id="insight_avg_contracts">{{ contract_data.family['avg_contracts_month'] }}</span>Contracts</span>
+								<span class="text-big"><span class="mr-1 text-warning" id="insight_avg_contract">{{ contract_data.family['avg_contracts_month'] }}</span>Contracts</span>
 							<br>
-							<small class="text-muted">Awarded each month in this category. XX% via limited tender.</small>
+							<small class="text-muted">Awarded each month in this category.</small>
 							</span>
 						</div>
 					</div>
@@ -173,7 +182,7 @@
 							<span class="media-body d-block ml-3">
 								<span class="text-big"><span class="mr-1 text-danger" id="insight_no_suppliers">{{ contract_data.family['no_suppliers'] }}</span> Suppliers</span>
 							<br>
-							<small class="text-muted">Provided services in this category to {{ data.agency.display_title }} over the previous two years.</small>
+							<small class="text-muted">Provided services in this category over the previous two years.</small>
 							</span>
 						</div>
 					</div>
@@ -193,7 +202,7 @@
 	</div>
 
 
-	<div class="row">
+	<div class="row insight_data">
 		<div class="col mb-4">
 			<!-- Posts -->			
 			<div class="card mb-4">
@@ -202,9 +211,8 @@
 					<h6 class="card-header-title mb-0">Top suppliers in the <span class="insight_category_name">{{ contract_data.family['unspsc']['title'] }} category</span>.</h6> 
 				</div>
 								
-
 				<div class="card-body">
-						<div class="card-subtitle text-muted mb-3">Outer ring shows supplier revenue, inner ring shows number of contracts awarded.</div>
+						<div class="card-subtitle text-muted mb-3">Outer ring indicates supplier revenue, inner ring indicates number of contracts awarded.</div>
 					<div id="chartdiv" class="chartjs-demo" style="height: 400px; position: relative;"></div>
 				</div>
 			</div>
@@ -236,7 +244,7 @@
 										<td>{{ contract.agency }}</td>
 										<td>{% if contract.division!="nan" %}{{ contract.division }}{% endif %}</td>
 										<td>{{ contract.supplier_name }}</td>
-										<td>${{ contract.contract_value }}</td>
+										<td>{{ contract.contract_value }}</td>
 										<td nowrap>{{ contract.contract_start }}</td>
 										<td nowrap>{{ contract.contract_end }}</td>
 									</tr>
@@ -256,317 +264,155 @@
 			No Data Available for Insights into this Opportunity
 		</div>
 	</div>
-
 	{% endif %}
 
-
-
-
-
-
-
-
-
-		
-	<!-- HTML -->
-
 </div>
+
+
 
 <!-- [ content ] End -->
 
 {% include "footer.html" %}
-
-<script>
-    $(document).ready(function() {
-
-		// Are the results filtered to the agency
-		var agency_filter = false;
-		var agency_filter_id = {{ data.agency.id }};
-
-		var category_filter = "family";
-
-		$("#insight_agency_filter_button").click(function() {
-			agency_filter = true;
-			if (category_filter == "family"){
-				update_table_broad_category();
-			}
-			if (category_filter == "class"){
-				update_table_general_category();
-			}
-			if (category_filter == "commodity"){
-				update_table_specific_category();
-			}
-			
-		});
-
-		$("#insight_all_agencies_button").click(function() {
-			agency_filter = false;
-			if (category_filter == "family"){
-				update_table_broad_category();
-			}
-			if (category_filter == "class"){
-				update_table_general_category();
-			}
-			if (category_filter == "commodity"){
-				update_table_specific_category();
-			}
-		});	
-		
-
-        var table = $('#myTable').DataTable({
-            "scrollX": false,
-            "order": [
-                [6, "desc"]
-            ],
-		}, );
-		
-
-
-		{% if contract_data.family is defined   %} 
-		$("#insight_broad_category_button").click(function() {
-			category_filter = "family";
-			update_table_broad_category();
-		});
-
-		function update_table_broad_category() {
-			// updates the datatable with the broad category items
-			$.fn.dataTable.ext.search.pop();
-			var family_ids = {{ contract_data.family['ids'] }};
-			$.fn.dataTable.ext.search.push(
-				function(settings, data, dataIndex) {
-					var temp_value = parseInt($(table.row(dataIndex).node()).attr('data-unspsc'));
-					var temp_value_agency = parseInt($(table.row(dataIndex).node()).attr('data-agency-id'));
-					n = family_ids.includes(temp_value);
-					if (n==true){
-						if (agency_filter==true){
-							if (agency_filter_id==temp_value_agency){
-								n=true;
-							} else {
-								n=false
-							}
-						}
-					}
-					return n
-				}
-			);
-			table.draw();
-
-			return true;
-		};
-
-		{% endif %}
-		
-
-		{% if contract_data.class is defined   %} 
-		$("#insight_general_category_button").click(function() {
-			category_filter = "class";
-			update_table_general_category();
-		});
-
-		function update_table_general_category() {
-			$.fn.dataTable.ext.search.pop();
-			var family_ids = {{ contract_data.class['ids'] }};
-			$.fn.dataTable.ext.search.push(
-				function(settings, data, dataIndex) {
-					var temp_value = parseInt($(table.row(dataIndex).node()).attr('data-unspsc'));
-					var temp_value_agency = parseInt($(table.row(dataIndex).node()).attr('data-agency-id'));
-					n = family_ids.includes(temp_value);
-					if (n==true){
-						if (agency_filter==true){
-							if (agency_filter_id==temp_value_agency){
-								n=true;
-							} else {
-								n=false
-							}
-						}
-					}
-					return n
-				}
-			);
-			table.draw();
-		};
-
-
-		{% endif %}
-		
-		{% if contract_data.commodity is defined   %} 
-		$("#insight_specific_category_button").click(function() {
-			category_filter = "commodity";
-			update_table_specific_category();
-		});
-
-		function update_table_specific_category() {
-			$.fn.dataTable.ext.search.pop();
-			var family_ids = {{ contract_data.commodity['ids'] }};
-			$.fn.dataTable.ext.search.push(
-				function(settings, data, dataIndex) {
-					var temp_value = parseInt($(table.row(dataIndex).node()).attr('data-unspsc'));
-					var temp_value_agency = parseInt($(table.row(dataIndex).node()).attr('data-agency-id'));
-					n = family_ids.includes(temp_value);
-					if (n==true){
-						if (agency_filter==true){
-							if (agency_filter_id==temp_value_agency){
-								n=true;
-							} else {
-								n=false
-							}
-						}
-					}
-					return n
-				}
-			);
-			table.draw();
-		};
-
-		{% endif %}
-
-    });
-</script>
-
-
-
-
-
-
-
-
 
 <!-- Resources -->
 <script src="https://www.amcharts.com/lib/4/core.js"></script>
 <script src="https://www.amcharts.com/lib/4/charts.js"></script>
 <script src="https://www.amcharts.com/lib/4/themes/animated.js"></script>
 
-<!-- Chart code -->
 <script>
 
+	// load all of the data
+	var insight_data = {{ contract_data.insight_data|safe }};
 
-{% if contract_data.family is defined   %} 
-var family_chart_data = {{ contract_data.family['supplier_pie_chart']|safe }};
-{% endif %}
+	// Are the results filtered to the agency
+	var agency_filter = false;
+	var agency_filter_id = {{ data.agency.id }};
+	var category_filter = "family";
 
-{% if contract_data.class is defined   %} 
-	{% if contract_data.class['supplier_pie_chart'] is defined   %} 
-		var class_chart_data = {{ contract_data.class['supplier_pie_chart']|safe }};
-	{% else %}
-		var class_chart_data = []
-	{% endif %}
-{% endif %}
-
-{% if contract_data.commodity is defined   %} 
-	{% if contract_data.commodity['supplier_pie_chart'] is defined   %} 
-		var commodity_chart_data = {{ contract_data.commodity['supplier_pie_chart']|safe }};
-	{% else %}
-		var commodity_chart_data = []
-	{% endif %}
-{% endif %}
-
-
-
-am4core.ready(function() {
-
-// Themes begin
-am4core.useTheme(am4themes_animated);
-// Themes end
-
-// Create chart instance
-var chart = am4core.create("chartdiv", am4charts.PieChart);
-
-// Let's cut a hole in our Pie chart the size of 40% the radius
-chart.innerRadius = am4core.percent(30);
-
-// Add data
-chart.data = family_chart_data;
-
-
-// Add and configure Series
-var pieSeries = chart.series.push(new am4charts.PieSeries());
-pieSeries.dataFields.value = "no_contracts";
-pieSeries.dataFields.category = "name";
-pieSeries.slices.template.stroke = am4core.color("#fff");
-pieSeries.slices.template.strokeWidth = 2;
-pieSeries.slices.template.strokeOpacity = 1;
-pieSeries.slices.template.tooltipText = "{category}: {value.value} Contract(s)";
-
-// Add a legend
-//chart.legend = new am4charts.Legend();
-//chart.legend.position = "right";
-//chart.legend.fontSize = 10
-//chart.legend.paddingBottom= "0px"
-//chart.legend.scale= 0.8
-
-// Disabling labels and ticks on inner circle
-pieSeries.labels.template.disabled = true;
-pieSeries.ticks.template.disabled = true;
-
-
-// Disable sliding out of slices
-pieSeries.slices.template.states.getKey("hover").properties.shiftRadius = 0;
-pieSeries.slices.template.states.getKey("hover").properties.scale = 0.9;
-
-// Add second series
-var pieSeries2 = chart.series.push(new am4charts.PieSeries());
-pieSeries2.dataFields.value = "earnings";
-pieSeries2.dataFields.category = "name";
-pieSeries2.slices.template.stroke = am4core.color("#fff");
-pieSeries2.slices.template.strokeWidth = 2;
-pieSeries2.slices.template.strokeOpacity = 1;
-pieSeries2.slices.template.states.getKey("hover").properties.shiftRadius = 0;
-pieSeries2.slices.template.states.getKey("hover").properties.scale = 1.1;
-pieSeries2.slices.template.tooltipText = "{category}: ${value.value} Total Revenue";
-pieSeries2.labels.template.text = "{category}: ${value.value}";
-
-
-
-{% if contract_data.family is defined   %} 
-$('#insight_broad_category_button').on('click', function() { 
-	$('#insight_avg_value').text("${{ contract_data.family['avg_value'] }}");
-	$('.insight_category_name').text("{{ contract_data.family['unspsc']['title'] }} category"); 
-	$('#insight_avg_contract').text("{{ contract_data.family['avg_contracts_month'] }}"); 
-	$('#insight_no_suppliers').text("{{ contract_data.family['no_suppliers'] }}"); 
-	{% if contract_data.class is defined %}
-		{% if contract_data.class['supplier_data'] is defined %}
-			$('#insight_top_supplier').text("{{ contract_data.family['supplier_data'][0]['name'] }}"); 
-		{% endif %}
-	{% endif %}
-	chart.data = family_chart_data;
+	var table = $('#myTable').DataTable({
+		"order": [
+			[7, "desc"]
+		],
+	});
 	
-}); 
-{% endif %}
+	function update_table() {
+		// updates the datatable with the broad category items
+		$.fn.dataTable.ext.search.pop();
+		var family_ids = insight_data[category_filter]['ids'] // {{ contract_data.family['ids'] }};
+		$.fn.dataTable.ext.search.push(
+			function(settings, data, dataIndex) {
+				var temp_value = parseInt($(table.row(dataIndex).node()).attr('data-unspsc'));
+				var temp_value_agency = parseInt($(table.row(dataIndex).node()).attr('data-agency-id'));
+				n = family_ids.includes(temp_value);
+				if (n==true){
+					// Filter by agency
+					if (agency_filter==true){
+						if (agency_filter_id==temp_value_agency){
+							n=true;
+						} else {
+							n=false
+						}
+					}
+				}
+				return n
+			}
+		);
+		table.draw();
+		return true;
+	};
 
-{% if contract_data.class is defined   %} 
-$('#insight_general_category_button').on('click', function() { 
-	$('#insight_avg_value').text("${{ contract_data.class['avg_value'] }}"); 
-	$('.insight_category_name').text("{{ contract_data.family['unspsc']['title'] }} > {{ contract_data.class['unspsc']['title'] }} category"); 
-	$('#insight_avg_contract').text("{{ contract_data.class['avg_contracts_month'] }}"); 
-	$('#insight_no_suppliers').text("{{ contract_data.class['no_suppliers'] }}"); 
-	{% if contract_data.class is defined %}
-		{% if contract_data.class['supplier_data'] is defined %}
-			$('#insight_top_supplier').text("{{ contract_data.class['supplier_data'][0]['name'] }}"); 
-		{% endif %}
-	{% endif %}
-	chart.data = class_chart_data;
-});
-{% endif %}
+	function show_hide_insights(data_length) {
+		if (data_length<1){
+			// No data, hide the insight data cards
+			$("div.insight_data").hide();
+			$("div.no_insight_data").show();
+		} else 
+		{
+			$("div.insight_data").show();
+			$("div.no_insight_data").hide();
+		}
+	};
 
-{% if contract_data.commodity is defined   %} 
-$('#insight_specific_category_button').on('click', function() { 
-	$('#insight_avg_value').text("${{ contract_data.commodity['avg_value'] }}"); 
-	$('.insight_category_name').text("{{ contract_data.family['unspsc']['title'] }} > {{ contract_data.class['unspsc']['title'] }} > {{ contract_data.commodity['unspsc']['title'] }} category"); 
-	$('#insight_avg_contract').text("{{ contract_data.commodity['avg_contracts_month'] }}"); 
-	$('#insight_no_suppliers').text("{{ contract_data.commodity['no_suppliers'] }}"); 
-	{% if contract_data.commodity is defined %}
-		{% if contract_data.commodity['supplier_data'] is defined %}
-			$('#insight_top_supplier').text("{{ contract_data.commodity['supplier_data'][0]['name'] }}"); 
-		{% endif %}
-	{% endif %}
-	chart.data = commodity_chart_data;
-});    
-{% endif %}
+	function update_insight_data() {
+		if (agency_filter==false){
+			level = category_filter;
+		} else {
+			level = category_filter + "_filtered";
+		}
+		if (typeof insight_data[level] !== 'undefined') {
+			$('#insight_avg_value').text(insight_data[level]['insight_avg_value']);
+			$('.insight_category_name').text( insight_data[level]['insight_category_name']+" category"); 
+			$('#insight_avg_contract').text(insight_data[level]['insight_avg_contract']); 
+			$('#insight_no_suppliers').text(insight_data[level]['insight_no_suppliers']);
+			$('#insight_top_supplier').text(insight_data[level]['insight_top_supplier']);  
+			chart.data = insight_data[level]['insight_chart_data'];
+			show_hide_insights(chart.data.length); 
+		} else {
+			show_hide_insights(0);
+		}
+	};
+
+	function insight_button_press(level, filter) {
+		if (level!=null){
+			category_filter = level;
+		};
+		if (filter!=null){
+			agency_filter = filter;
+		};
+		update_table();
+		update_insight_data();
+	}; 
 
 
+	<!-- Chart code -->
+	//am4core.ready(function() {
 
-}); // end am4core.ready()
+	// Themes begin
+	am4core.useTheme(am4themes_animated);
+	// Create chart instance
+	var chart = am4core.create("chartdiv", am4charts.PieChart);
+	// Cut a hole in our Pie chart the size of 30% the radius
+	chart.innerRadius = am4core.percent(30);
 
+	// Add data
+	chart.data = insight_data['family']['insight_chart_data'];
+	// Show/hide the chart card
+	show_hide_insights(chart.data.length);
+
+	// Add and configure Series
+	var pieSeries = chart.series.push(new am4charts.PieSeries());
+	pieSeries.dataFields.value = "no_contracts";
+	pieSeries.dataFields.category = "name";
+	pieSeries.slices.template.stroke = am4core.color("#fff");
+	pieSeries.slices.template.strokeWidth = 2;
+	pieSeries.slices.template.strokeOpacity = 1;
+	pieSeries.slices.template.tooltipText = "{category}: {value.value} Contract(s)";
+
+	// Disabling labels and ticks on inner circle
+	pieSeries.labels.template.disabled = true;
+	pieSeries.ticks.template.disabled = true;
+
+	// Disable sliding out of slices
+	pieSeries.slices.template.states.getKey("hover").properties.shiftRadius = 0;
+	pieSeries.slices.template.states.getKey("hover").properties.scale = 0.9;
+
+	// Add second series
+	var pieSeries2 = chart.series.push(new am4charts.PieSeries());
+	pieSeries2.dataFields.value = "earnings";
+	pieSeries2.dataFields.category = "name";
+	pieSeries2.slices.template.stroke = am4core.color("#fff");
+	pieSeries2.slices.template.strokeWidth = 2;
+	pieSeries2.slices.template.strokeOpacity = 1;
+	pieSeries2.slices.template.states.getKey("hover").properties.shiftRadius = 0;
+	pieSeries2.slices.template.states.getKey("hover").properties.scale = 1.1;
+	pieSeries2.slices.template.tooltipText = "{category}: ${value.value} Total Revenue";
+	pieSeries2.labels.template.text = "{category}: ${value.value}";
+		
+	//}); // end am4core.ready()
+
+	function formatNumber(num) {
+		return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
+	}
 
 </script>
 

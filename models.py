@@ -22,6 +22,10 @@ class AgencySchema(ma.ModelSchema):
 	#contracts = ma.Nested("ContractSchema") #, only=("id", "title")
 	divisions = ma.Nested("DivisionSchema", many=True, only=("id", "title", "branches", "display_title"))
 
+class AgencySchemaSimple(ma.ModelSchema):
+	class Meta:
+		model = Agency
+		fields = ("id", "display_title")
 
 
 class Division(db.Model):
@@ -147,7 +151,7 @@ class UnspscSchemaSimple(ma.ModelSchema):
 	class Meta:
 		model = Unspsc
 		#opportunities = ma.Nested("OpSchema", many=True, only=("id", "title"))
-
+		fields = ("id", "unspsc", "title")
 
 
 
@@ -170,6 +174,22 @@ class SupplierSchema(ma.ModelSchema):
 		model = Supplier
 		#fields = ("id", "name", "abn", "image_url", "display_name")
 	addresses = ma.Nested("SupplierAddressSchema", many=True, only=("postal_address", "town_city", "postcode", "country", "correct_at"))
+
+
+
+class SupplierMatrix(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+	json = db.Column(db.JSON)
+	matrix_type = db.Column(db.String)
+	financial_year = db.Column(db.Integer)
+	financial_quarter = db.Column(db.Integer)
+	created = db.Column(db.Date())
+	supplier_id = db.Column(db.Integer, db.ForeignKey("supplier.id"), nullable=True)
+	supplier = db.relationship("Supplier", backref="matrixes")
+
+class SupplierMatrixSchema(ma.ModelSchema):
+	class Meta:
+		model = SupplierMatrix
 
 
 
