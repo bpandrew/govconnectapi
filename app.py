@@ -31,7 +31,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 ma = Marshmallow(app)
 # import all of the database models and schemas
-from models import User, UserSchema, Comment, CommentSchema, Op, OpSchema, OpSimpleSchema, Unspsc, UnspscSchema, UnspscSchemaSimple, Agency, AgencySchema, AgencySchemaSimple, Addenda, AddendaSchema, Contract, ContractSchema, Supplier, SupplierSchema, FilterUnspsc, FilterUnspscSchema, Page, Tag, Son, SonSchema, Employee, EmployeeSchema, Notice, NoticeSchema, Division, DivisionSchema, Branch, BranchSchema, ContractCount, ContractCountSchema, SupplierAddress, SupplierAddressSchema, SupplierMatrix, SupplierMatrixSchema
+from models import User, UserSchema, Comment, CommentSchema, Op, OpSchema, OpSimpleSchema, Unspsc, UnspscSchema, UnspscSchemaSimple, Agency, AgencySchema, AgencySchemaSimple, Addenda, AddendaSchema, Contract, ContractSchema, Supplier, SupplierSchema, FilterUnspsc, FilterUnspscSchema, Page, Tag, Son, SonSchema, Employee, EmployeeSchema, Notice, NoticeSchema, Division, DivisionSchema, Branch, BranchSchema, ContractCount, ContractCountSchema, SupplierAddress, SupplierAddressSchema, SupplierMatrix, SupplierMatrixSchema, Competitor, CompetitorSchema
 
 
 # ------------------------------------ TEMP ------------------------------------
@@ -154,70 +154,88 @@ def all_agencies_segments():
 	return unspsc_segments, agencies
 
 
-@app.route("/matrix_read")
-def matrix_read():
-
-	target_supplier = 152
+@app.route("/competitor_data", methods=['GET'])
+def competitor_data():
+	page=int(request.args.get('page'))
 	
-	# Get Matrices
-	query = SupplierMatrix.query.filter_by(supplier_id=target_supplier).filter_by(matrix_type="agency_segment").first() 
-	data = SupplierMatrixSchema().dumps(query).data
-	data = json.loads(data)
-	json_data = data['json']['data']
-	# find all of the agencies and segments so the matrix can be rebuilt
-	unspscs, agencies = all_agencies_segments()
-	# Rebuild the matrix
-	matrix_a = insight_functions.rebuild_matrix(json_data, unspscs, agencies)
+	query = Competitor.query.order_by(desc(Competitor.score)).paginate(page, 200, False)
+	competitors=query.items
+	result = CompetitorSchema(many=True).dump(competitors).data
+	data = {"data": result, "pages": query.pages}
+	
+	return jsonify(data)
 
-	query = SupplierMatrix.query.filter_by(matrix_type="agency_segment").all()
-	#query = SupplierMatrix.query.filter_by(supplier_id=1314).all()
-	data = SupplierMatrixSchema(many=True).dumps(query).data
-	supplier_matrices = json.loads(data)
 
-	#print(supplier_ids)
+@app.route("/comp_matrix/<target_supplier>", methods=['GET'])
+def comp_matrix(target_supplier):
+	# Finds the competitors for the target supplier, and adds them to the database as q 'competitor' matrix.
 
-	supplier_id = []
-	comp_score = []
-	for supplier in supplier_matrices:
+	#target_supplier = 152
+	
+	#time.sleep(0.5)
+
+	try:
+
 		# Get Matrices
-		if len(supplier['json']['data'])>3:
-			#print("***** YEAHYEAH ")
-			json_data = supplier['json']['data']
-			#print(json_data)
-			matrix_b = insight_functions.rebuild_matrix(json_data, unspscs, agencies)
-			#matrix_b = populate_matrix(supplier, df)
-			#print(supplier['id'])
-			#print("*****")
-			supplier_id.append(supplier['supplier'])
-			comp_score.append( insight_functions.calc_competition(matrix_a, matrix_b) )
+		query = SupplierMatrix.query.filter_by(supplier_id=target_supplier).filter_by(matrix_type="agency_segment").first() 
+		data = SupplierMatrixSchema().dumps(query).data
+		data = json.loads(data)
+		json_data = data['json']['data']
+		# find all of the agencies and segments so the matrix can be rebuilt
+		unspscs, agencies = all_agencies_segments()
+		# Rebuild the matrix
+		matrix_a = insight_functions.rebuild_matrix(json_data, unspscs, agencies)
 
-		#break
+		query = SupplierMatrix.query.filter_by(matrix_type="agency_segment").all()
+		#query = SupplierMatrix.query.filter_by(supplier_id=1314).all()
+		data = SupplierMatrixSchema(many=True).dumps(query).data
+		supplier_matrices = json.loads(data)
 
-	# Create the scores dataframe, sort and filter by competitor score
-	comp_scores = pd.DataFrame()
-	comp_scores['supplier_id'] = supplier_id
-	comp_scores['score'] = comp_score
-	comp_scores.set_index('supplier_id', drop=True, append=False, inplace=True, verify_integrity=False)
-	comp_scores = comp_scores.sort_values(by='score', ascending=0)
-	comp_scores = comp_scores[comp_scores['score']>-1]
-	# convert the dataframe to json to be stored in the DB
-	json_data = comp_scores.to_json(orient='index')
+		#print(supplier_ids)
 
-	# Add the record to the supplier matrix.
-	obj=SupplierMatrix.query.filter_by(supplier_id=target_supplier).filter_by(matrix_type='competitors').first()
-	if obj==None:
-		db.create_all()
-		query = SupplierMatrix(matrix_type="competitors", supplier_id=target_supplier, json=json_data, financial_year=0, financial_quarter=0, created=datetime.now())
-		db.session.add(query)
+		supplier_id = []
+		comp_score = []
+		for supplier in supplier_matrices:
+			# Get Matrices
+			if len(supplier['json']['data'])>3:
+				#print("***** YEAHYEAH ")
+				json_data = supplier['json']['data']
+				#print(json_data)
+				matrix_b = insight_functions.rebuild_matrix(json_data, unspscs, agencies)
+				#matrix_b = populate_matrix(supplier, df)
+				#print(supplier['id'])
+				#print("*****")
+				supplier_id.append(supplier['supplier'])
+				comp_score.append( insight_functions.calc_competition(matrix_a, matrix_b) )
+			#break
+
+		# Create the scores dataframe, sort and filter by competitor score
+		comp_scores = pd.DataFrame()
+		comp_scores['supplier_id'] = supplier_id
+		comp_scores['score'] = comp_score
+		comp_scores.set_index('supplier_id', drop=True, append=False, inplace=True, verify_integrity=False)
+		comp_scores = comp_scores.sort_values(by='score', ascending=0)
+		comp_scores = comp_scores[comp_scores['score']>-1]
+
+		# delete all of the entries fro this supplier, so they can be replaced.
+		query = Competitor.query.filter_by(supplier_id=target_supplier).delete()
 		db.session.commit()
-	else:
-		response = OpSchema().dump(obj).data # get the existing op data
-		# Update any changes to the opportunity
-		obj.json = json_data
-		created=datetime.now()
-		db.session.commit()	
 
-	return json_data
+		#db.create_all()
+		for index, row in comp_scores.iterrows():
+			print(index, row['score'])
+			# Add the record to the competitor table
+			query = Competitor(supplier_id=target_supplier, competitor_id=index, score=row['score'], created=datetime.now())
+			db.session.add(query)
+			db.session.commit()
+	except:
+		pass
+
+	#return "Done"
+	link = "<a href='/comp_matrix/"+ str(int(target_supplier)+1) +"'>Next</a>"
+	link = "<script>window.location.href = '/comp_matrix/"+ str(int(target_supplier)+1) +"';</script>"
+
+	return str(link)
 
 
 @app.route("/matrix")

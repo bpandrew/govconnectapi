@@ -176,7 +176,6 @@ class SupplierSchema(ma.ModelSchema):
 	addresses = ma.Nested("SupplierAddressSchema", many=True, only=("postal_address", "town_city", "postcode", "country", "correct_at"))
 
 
-
 class SupplierMatrix(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	json = db.Column(db.JSON)
@@ -190,6 +189,22 @@ class SupplierMatrix(db.Model):
 class SupplierMatrixSchema(ma.ModelSchema):
 	class Meta:
 		model = SupplierMatrix
+
+
+class Competitor(db.Model):
+	id = db.Column(db.Integer, primary_key=True)
+	created = db.Column(db.Date())
+	score = db.Column(db.Float)
+	supplier_id = db.Column(db.Integer, db.ForeignKey("supplier.id"), nullable=True)
+	supplier = db.relationship("Supplier", foreign_keys=[supplier_id], backref="target_supplier")
+	competitor_id = db.Column(db.Integer, db.ForeignKey("supplier.id"), nullable=True)
+	competitor = db.relationship("Supplier", foreign_keys=[competitor_id], backref="competitor")
+
+class CompetitorSchema(ma.ModelSchema):
+	class Meta:
+		model = Competitor
+	supplier = ma.Nested(SupplierSchema, only=("id", "name", "abn", "country", "display_name"))
+	competitor = ma.Nested(SupplierSchema, only=("id", "name", "abn", "country", "display_name"))
 
 
 
