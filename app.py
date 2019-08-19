@@ -1420,7 +1420,7 @@ def supplier_detail(supplier_id):
 
 			if (row['contract_start']>=lfy_start) and (row['contract_start']<=lfy_end):
 				temp_dict['year'] = "lfy"
-			else:
+			elif (row['contract_start']>=cfy_start) and (row['contract_start']<=cfy_end):
 				temp_dict['year'] = "cfy"
 
 			temp_dict['contract_id']=row['id']
