@@ -94,17 +94,18 @@ def create_matrix(unspscs, agencies):
 
 def populate_matrix(supplier_id, df, unspscs, agencies):
 	# Filter the dataframe
-    df_temp = df[df['supplier.id']==supplier_id]
-    df_temp = df_temp.groupby(['agency.id', 'segment_unspsc_id']).sum()
-    df_matrix = create_matrix(unspscs, agencies) # Create the empty matrix
+	# Check for all contracts for the supplier, and any companies where the supplier is a child
+	df_temp = df[(df['supplier.id']==supplier_id) | (df['supplier.umbrella_id']==supplier_id) ]
+	df_temp = df_temp.groupby(['agency.id', 'segment_unspsc_id']).sum()
+	df_matrix = create_matrix(unspscs, agencies) # Create the empty matrix
 	# populate the matrix
-    for index, row in df_temp.iterrows():
-        agency = "a_"+ str(index[0])
-        unspsc = int(index[1])
-        value = row['contract_value']
-        df_matrix[unspsc][agency] = value
+	for index, row in df_temp.iterrows():
+		agency = "a_"+ str(index[0])
+		unspsc = int(index[1])
+		value = row['contract_value']
+		df_matrix[unspsc][agency] = value
         
-    return df_matrix
+	return df_matrix
 
 
 def matrix_json(supplier_id, df, unspscs, agencies, compress):
@@ -130,7 +131,6 @@ def rebuild_matrix(json_data, unspscs, agencies):
 	np_matrix = db_matrix.stack()
 	dataset = pd.DataFrame(np_matrix)
     
-
 	df_matrix = create_matrix(unspscs, agencies)
     
 	for index, row in dataset.iterrows():

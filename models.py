@@ -170,11 +170,10 @@ class Supplier(db.Model):
 	umbrella = db.Column(db.Integer, nullable=True) #Is this an artificially created supplier to aggragate all of the ABNs
 	umbrella_id = db.Column(db.Integer, nullable=True) #If this supplier sits under an umbrella co. what is the ID
 	
-
 class SupplierSchema(ma.ModelSchema):
 	class Meta:	
 		model = Supplier
-		#fields = ("id", "name", "abn", "image_url", "display_name")
+		#fields = ("id", "name", "abn", "image_url", "display_name", "umbrella", "umbrella_id")
 	addresses = ma.Nested("SupplierAddressSchema", many=True, only=("postal_address", "town_city", "postcode", "country", "correct_at"))
 
 
@@ -191,6 +190,7 @@ class SupplierMatrix(db.Model):
 class SupplierMatrixSchema(ma.ModelSchema):
 	class Meta:
 		model = SupplierMatrix
+	supplier = ma.Nested(SupplierSchema, only=("id", "name", "abn", "country", "display_name", "umbrella", "umbrella_id"))
 
 
 class Competitor(db.Model):
@@ -206,7 +206,7 @@ class CompetitorSchema(ma.ModelSchema):
 	class Meta:
 		model = Competitor
 	supplier = ma.Nested(SupplierSchema, only=("id", "name", "abn", "country", "display_name"))
-	competitor = ma.Nested(SupplierSchema, only=("id", "name", "abn", "country", "display_name"))
+	competitor = ma.Nested(SupplierSchema, only=("id", "name", "abn", "country", "display_name", "umbrella", "umbrella_id"))
 
 
 
@@ -319,7 +319,7 @@ class ContractSchema(ma.ModelSchema):
 	class Meta:
 		model = Contract
 	agency = ma.Nested(AgencySchema, only=("id", "title", "display_title"))
-	supplier = ma.Nested(SupplierSchema, only=("id", "name", "abn", "country", "display_name"))
+	supplier = ma.Nested(SupplierSchema, only=("id", "name", "abn", "country", "display_name", "umbrella", "umbrella_id"))
 	unspsc = ma.Nested(UnspscSchema, only=("id", "title", "unspsc", "level", "level_int", "parent_id"))
 	son = ma.Nested(SonSchema, only=("id", "austender_id"))
 	division = ma.Nested(DivisionSchema, only=("id", "title", "display_title"))
