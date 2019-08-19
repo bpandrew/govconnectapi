@@ -179,62 +179,64 @@ def comp_matrix(target_supplier):
 	query = SupplierMatrix.query.filter_by(supplier_id=target_supplier).filter_by(matrix_type="agency_segment").first() 
 	data = SupplierMatrixSchema().dumps(query).data
 	data = json.loads(data)
-	json_data = data['json']['data']
-	# find all of the agencies and segments so the matrix can be rebuilt
-	unspscs, agencies = all_agencies_segments()
-	# Rebuild the matrix
-	matrix_a = insight_functions.rebuild_matrix(json_data, unspscs, agencies)
+	if len(data)>0:
+		json_data = data['json']['data']
+		# find all of the agencies and segments so the matrix can be rebuilt
+		unspscs, agencies = all_agencies_segments()
+		# Rebuild the matrix
+		matrix_a = insight_functions.rebuild_matrix(json_data, unspscs, agencies)
 
-	query = SupplierMatrix.query.filter_by(matrix_type="agency_segment").all()
-	#query = SupplierMatrix.query.filter_by(supplier_id=78).all()
-	data = SupplierMatrixSchema(many=True).dumps(query).data
-	supplier_matrices = json.loads(data)
+		query = SupplierMatrix.query.filter_by(matrix_type="agency_segment").all()
+		#query = SupplierMatrix.query.filter_by(supplier_id=78).all()
+		data = SupplierMatrixSchema(many=True).dumps(query).data
+		supplier_matrices = json.loads(data)
 
-	supplier_id = []
-	comp_score = []
-	for supplier in supplier_matrices:
-		# Get Matrices
-		if len(supplier['json']['data'])>3:
-			json_data = supplier['json']['data']
+		supplier_id = []
+		comp_score = []
+		for supplier in supplier_matrices:
+			#print(supplier)
+			# Get Matrices
+			if len(supplier['json']['data'])>3:
+				json_data = supplier['json']['data']
 
-			# rebuild the matrix for a single supplier
-			matrix_b = insight_functions.rebuild_matrix(json_data, unspscs, agencies)
-			
-			supplier_id.append(supplier['supplier']['id'])
-			comp_score.append( insight_functions.calc_competition(matrix_a, matrix_b) )
-		#break
+				# rebuild the matrix for a single supplier
+				matrix_b = insight_functions.rebuild_matrix(json_data, unspscs, agencies)
+				
+				supplier_id.append(supplier['supplier']['id'])
+				comp_score.append( insight_functions.calc_competition(matrix_a, matrix_b) )
+			#break
 
-	
-	#print(comp_score)
+		#print(comp_score)
 
-	# Create the scores dataframe, sort and filter by competitor score
-	comp_scores = pd.DataFrame()
-	comp_scores['supplier_id'] = supplier_id
-	comp_scores['score'] = comp_score
-	comp_scores.set_index('supplier_id', drop=True, append=False, inplace=True, verify_integrity=False)
-	comp_scores = comp_scores.sort_values(by='score', ascending=0)
-	comp_scores = comp_scores[comp_scores['score']>-1]
+		# Create the scores dataframe, sort and filter by competitor score
+		comp_scores = pd.DataFrame()
+		comp_scores['supplier_id'] = supplier_id
+		comp_scores['score'] = comp_score
+		comp_scores.set_index('supplier_id', drop=True, append=False, inplace=True, verify_integrity=False)
+		comp_scores = comp_scores.sort_values(by='score', ascending=0)
+		comp_scores = comp_scores[comp_scores['score']>-1]
+		comp_scores = comp_scores[comp_scores['score']!=0]
+		comp_scores = comp_scores[:50]# only save the top 50 competitors for each
 
-	# delete all of the entries fro this supplier, so they can be replaced.
-	query = Competitor.query.filter_by(supplier_id=target_supplier).delete()
-	db.session.commit()
-
-	#db.create_all()
-	for index, row in comp_scores.iterrows():
-		print(index, row['score'])
-		# Add the record to the competitor table
-		query = Competitor(supplier_id=target_supplier, competitor_id=index, score=row['score'], created=datetime.now())
-		db.session.add(query)
+		# delete all of the entries fro this supplier, so they can be replaced.
+		query = Competitor.query.filter_by(supplier_id=target_supplier).delete()
 		db.session.commit()
 
-	#except:
-	#	pass
+		#db.create_all()
+		for index, row in comp_scores.iterrows():
+			print(index, row['score'])
+			# Add the record to the competitor table
+			query = Competitor(supplier_id=target_supplier, competitor_id=index, score=row['score'], created=datetime.now())
+			db.session.add(query)
+			db.session.commit()
 
-	return "Done"
+		#except:
+		#	pass
 
+		#return "Done"
+	
 	link = "<a href='/comp_matrix/"+ str(int(target_supplier)+1) +"'>Next</a>"
 	link = "<script>window.location.href = '/comp_matrix/"+ str(int(target_supplier)+1) +"';</script>"
-
 	return str(link)
 
 
@@ -268,39 +270,27 @@ def matrix(target_supplier):
 	for item in data:
 		agencies.append(item['id'])
 	
-	# The suppliers that are going to have matrixes added
-	#query = Supplier.query.all() #.limit(5)
-	#query = Supplier.query.filter(Supplier.id>=target_supplier).limit(10).all()
-	query = Supplier.query.filter_by(id=target_supplier).all()
-	data = SupplierSchema(many=True).dumps(query).data
+
+	# NEED TO ADD IN A DATE FILTER HERE !!!!!!  SO WE ARE NOT PROCESSING SUCH MASSIVE DATA SETS
+	# FILTER THE SQL HERE..!!!
+	#df_temp = df_temp[(df_temp['supplier.id']==supplier_id) | (df_temp['supplier.umbrella_id']==supplier_id)]
+	query = Contract.query.filter_by(supplier_id=target_supplier).all()
+	data = ContractSchema(many=True).dumps(query).data
 	data = json.loads(data)
 
-	#print(data)
-
 	if len(data)>0:
+		df = insight_functions.clean_contract_df(data)
 
-		supplier_ids = []
-		for item in data:
-			supplier_ids.append(item['id'])
-		#supplier_ids = [33]
+		financial_year = 2020
+		financial_quarter = 0
 
-		# NEED TO ADD IN A DATE FILTER HERE !!!!!!  SO WE ARE NOT PROCESSING SUCH MASSIVE DATA SETS
-		query = Contract.query.filter_by(supplier_id=target_supplier).all()
-		data = ContractSchema(many=True).dumps(query).data
-		data = json.loads(data)
+		# Loop over suppliers and add the matrix to the db
+		#for supplier_id in supplier_ids:
+		matrixes = insight_functions.supplier_agency_segment_matrix(df, target_supplier, unspsc_segments, unspsc_dict, agencies, financial_year, financial_quarter)
 
-		if len(data)>0:
-			df = insight_functions.clean_contract_df(data)
-
-			financial_year = 2020
-			financial_quarter = 0
-
-			# Loop over suppliers and add the matrix to the db
-			#for supplier_id in supplier_ids:
-			matrixes = insight_functions.supplier_agency_segment_matrix(df, target_supplier, unspsc_segments, unspsc_dict, agencies, financial_year, financial_quarter)
-
-			if matrixes!=None:
-				for matrix in matrixes:
+		if matrixes!=None:
+			for matrix in matrixes:
+				if len(matrix['data'])>2:
 					# Add the matrix to the db
 					obj=SupplierMatrix.query.filter_by(supplier_id=matrix['supplier_id']).filter_by(financial_year=financial_year).filter_by(financial_quarter=financial_quarter).first()
 					if obj==None:
@@ -315,16 +305,13 @@ def matrix(target_supplier):
 						created=datetime.now()
 						db.session.commit()
 
-		if loop==1:
-			link = "<a href='/matrix/"+ str(int(target_supplier)+1) +"?loop="+ str(loop) +"'>Next</a>"
-			link = "<script>window.location.href = '/matrix/"+ str(int(target_supplier)+1) +"?loop="+ str(loop) +"';</script>"
-			return str(link)
-		else:
-			return "Done"
-	else:
+	if loop==1:
 		link = "<a href='/matrix/"+ str(int(target_supplier)+1) +"?loop="+ str(loop) +"'>Next</a>"
 		link = "<script>window.location.href = '/matrix/"+ str(int(target_supplier)+1) +"?loop="+ str(loop) +"';</script>"
 		return str(link)
+	else:
+		return "Done"
+
 
 	#data = {"result": True}
 	#return jsonify(data)

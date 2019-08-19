@@ -56,25 +56,27 @@ def supplier_agency_segment_matrix(df, supplier_id, unspsc_segments, unspsc_dict
 		# Lookup the ID of the segment from the dictionary
 		df['segment_unspsc_id'] = df.apply(lambda row: unspsc_dict[row['segment_unspsc']], axis=1)
 
+		df_temp = df.copy()
+		
 		# filter the dataframe by financial year and/or financial quarter
-		df_temp = df[ (df['financial_year']==financial_year) ]
+		df_temp = df_temp[ (df_temp['financial_year']==financial_year) ]
 		if financial_quarter!=0:
 			df_temp = df_temp[ (df_temp['financial_quarter']==financial_quarter) ]
 
 		matrixes = [] # holds all of the generated matrixes, so it can be passed back and added to the db
 		# Generate the Matrix for the supplier
 
-		df_temp = df_temp[(df_temp['supplier.id']==supplier_id) | (df_temp['supplier.umbrella_id']==supplier_id)]
 		df_temp = df_temp.groupby(['agency.id', 'segment_unspsc_id']).sum()
-		json_dict = {"supplier_id":supplier_id, "data":{}}
+
+		json_dict = {}
+		#json_dict = {"supplier_id":supplier_id, "data":{}}
 		for index, row in df_temp.iterrows(): 
-			json_dict['data']['a_'+str(index[0])]={}
+			json_dict['a_'+str(index[0])]={}
 		for index, row in df_temp.iterrows():     
-			json_dict['data']['a_'+str(index[0])][index[1]]=row['contract_value']
+			json_dict['a_'+str(index[0])][index[1]]=row['contract_value']
 		json.dumps(json_dict)
 
-		#matrix = matrix_json(supplier_id, df_temp, unspsc_segments, agencies, True)
-		matrixes.append({"supplier_id":supplier_id, "data":json.dumps(json_dict)})
+		matrixes.append( {"supplier_id":supplier_id, "data":json.dumps(json_dict)} )
 		#print(json.dumps(json_dict))
 
 		return matrixes
@@ -104,6 +106,8 @@ def create_matrix(unspscs, agencies):
 	return df_matrix
 
 
+# -------------- DELETE BELOW
+
 def populate_matrix(supplier_id, df, unspscs, agencies):
 	# Filter the dataframe
 	# Check for all contracts for the supplier, and any companies where the supplier is a child
@@ -126,6 +130,8 @@ def matrix_json(supplier_id, df, unspscs, agencies, compress):
 		matrix = compress_matrix(matrix) # remove all of the rows and columns with no activity for storage in the db
 	json_data = matrix.to_json(orient='index')
 	return json_data
+
+# -------------- DELETE ABOVE
 
 
 def compress_matrix(matrix):
@@ -155,7 +161,7 @@ def rebuild_matrix(json_data, unspscs, agencies):
 
 
 def calc_competition(matrix_a, matrix_b):
-    value_weighting_factor = 3
+    value_weighting_factor = 1
 
     agency_sum = np.sum(matrix_a, axis=1)
     total_earnings = np.sum(agency_sum)
@@ -184,7 +190,7 @@ def opportunity(data, agency_id, category_dict):
 		i=0
 		for i in range(2):
 
-			# If it is the second time through, filter by agency.
+			# If it is the second time through, filter by agency and save the details/grapshs to be used in javascript variabes
 			if i>0:
 				category['level'] = category['level']+"_filtered"
 				df_op = df_op[df_op['agency.id']==agency_id]
