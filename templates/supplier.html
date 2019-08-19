@@ -4,7 +4,10 @@
 
 
 <div class="container-fluid flex-grow-1 container-p-y">
-    <h4 class="font-weight-bold py-3 mb-0">Supplier Details</h4>
+	{% if session['admin']==1%}
+	<a href="/admin/supplier/{{ data.supplier_details['id'] }}"><button type="button" class="btn btn-round btn-outline-danger">Edit</button></a>
+	{% endif %}				
+	<h4 class="font-weight-bold py-3 mb-0">Supplier Details</h4>
     <div class="text-muted small mt-0 mb-4 d-block breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="#"><i class="feather icon-home"></i></a></li>
@@ -26,8 +29,11 @@
 							{% endif %}
 						</div>
 						<div class="col">
-							<h4 class="font-weight-bold mb-4">{{ data.supplier_details['display_name'] }} <a href="/admin/supplier/{{ data.supplier_details['id'] }}"><i class="fas fa-edit"></i></a></h4>
-							<div class="text-muted mb-4">
+							<h4 class="font-weight-bold mb-4">{{ data.supplier_details['display_name'] }}</h4>
+							<div class=" mb-4">
+								{% if data.supplier_details['umbrella']==1 %}
+								<b><i class="fas fa-umbrella mt-0 mb-4"></i> Umbrella Supplier</b>
+								{% endif %}	
 								{% if data.analysis_json|length >0 %} 
 								<p>{{data.supplier_details['display_name']}} earned {{data.analysis_json['sum_contracts_prev_fy']}} in government revenue last financial year. 
 									{% if data.analysis_json['highest_revenue_prev_fy']|length >0 %}   
@@ -53,8 +59,12 @@
 			<div class="card mb-4">
                 <hr class="border-light m-0" style="margin-bottom: -10px">
 
+				{% if data.supplier_details['umbrella']!=1 %}
                 <div class="card-body">
-                    <h6 class="my-3">Entity Details</h6>
+					<h6 class="my-3">Entity Details</h6>
+					{% if data.supplier_details['umbrella_id']!=None %}
+					<p>This supplier is one of several that together form '{{data.supplier_details['umbrella_name']}}'.<br><a href="/supplier/{{data.supplier_details['umbrella_id']}}">Show the aggregated results for the {{data.supplier_details['umbrella_name']}} Umbrella Supplier.</a></p>
+					{% endif %}
                     <div class="row mb-2">
                         <div class="col-md-5 text-muted">ABN:</div>
                         <div class="col-md-7">
@@ -75,7 +85,21 @@
                             Yes/No
                         </div>
                     </div>
-                </div>
+				</div>
+				{% else %}
+				<div class="card-body">
+					<h6 class="my-3">Umbrella Supplier Details</h6>
+					<p>The following suppliers are considered to be under the umbrella of '{{data.supplier_details['display_name']}}'. The activity of the suppliers below is aggregated together under this umbrella supplier.</p>
+					{% for supplier in data.children_suppliers %}
+					<div class="row mb-2">
+						<div class="col-md-6">
+							<a href="/supplier/{{ supplier['id']}}">{{ supplier['display_name']}}</a>
+						</div>
+						<div class="col-md-6 text-muted">(ABN: {{supplier['abn']}})</div>
+					</div>
+					{% endfor %}
+				</div>
+				{% endif %}
             </div>
 		</div>
     </div>

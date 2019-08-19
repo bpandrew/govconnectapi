@@ -29,8 +29,16 @@ class AddUser(FlaskForm):
 
 
 class SupplierAdmin(FlaskForm):
+	# Form to edit an existing supplier
 	image = FileField()
 	display_name = StringField('Display Name', validators=[
 		DataRequired(message='Enter an tile to be displayed for this supplier.'),
 		])
+	umbrella_id = StringField('Umbrella ID')
 	submit = SubmitField('Save and Upload')
+
+
+class CreateUmbrellaSupplier(FlaskForm):
+	# Form to create an umbrella supplier
+    supplier_name = StringField('Supplier Name', validators=[DataRequired()])
+    submit = SubmitField('Create Account')

@@ -9,7 +9,7 @@
 			<h4>SUPPLIER ADMIN</h4>
 		</div>
 		<div class="d-flex justify-content-center align-items-center">
-			<h6>{{data['name']}}</h6>
+			<h6>{{data['name'].upper()}}</h6>
 		</div>
         <!-- [ Logo ] End -->
 
@@ -25,6 +25,10 @@
 			<div class="form-group">
 				<label class="form-label">Display Name</label> {{ form.display_name(class_="form-control") }}
 				<div class="clearfix">{% for error in form.display_name.errors %}<span class="error_text">{{ error }}</span>{% endfor %}</div>
+			</div>
+			<div class="form-group">
+				<label class="form-label">Umbrella ID</label> {{ form.umbrella_id(class_="form-control") }}
+				<div class="clearfix">{% for error in form.umbrella_id.errors %}<span class="error_text">{{ error }}</span>{% endfor %}</div>
 			</div>
             <div class="d-flex justify-content-between align-items-center m-0">
                 <button type="submit" form="form1" value="Submit" class="btn btn-primary btn-block mt-4">Save Changes</button>

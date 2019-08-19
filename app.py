@@ -322,36 +322,40 @@ def dashboard():
 from forms import LoginForm
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    # Load the form
-    form = LoginForm()
-    # Check for errors
-    data = {}
+	# Load the form
+	form = LoginForm()
+	# Check for errors
+	data = {}
 	
-    data['error'] = request.args.get('error')
-    if form.validate_on_submit():
-        # hash the password
-        password = functions.hash_password(form.password.data)
+	data['error'] = request.args.get('error')
+	if form.validate_on_submit():
+		# hash the password
+		password = functions.hash_password(form.password.data)
 
-        obj = User.query.filter_by(email=form.email.data).filter_by(password=password).first()
-        result = json.loads(UserSchema().dumps(obj).data)
-        if obj!=None:
-            session['first_name'] = result['first_name']
-            session['user_id'] = result['id']
-            session['user_token'] = result['token']
-            return redirect(url_for('op'))
-        else:
-            return redirect(url_for('login')+"?error=1")
+		obj = User.query.filter_by(email=form.email.data).filter_by(password=password).first()
+		result = json.loads(UserSchema().dumps(obj).data)
+		if obj!=None:
+			session['first_name'] = result['first_name']
+			session['last_name'] = result['last_name']
+			session['user_id'] = result['id']
+			session['user_token'] = result['token']
+			session['admin'] = result['admin']
+			return redirect(url_for('op'))
+		else:
+			return redirect(url_for('login')+"?error=1")
 
-    return render_template('login.html', form=form, data=data)
+	return render_template('login.html', form=form, data=data)
 
 
 # --- LOGOUT PAGE ---
 @app.route("/logout")
 def logout():
-    session['first_name'] = None
-    session['user_id'] = None
-    session['user_token'] = None
-    return redirect(url_for('login'))
+	session['first_name'] = None
+	session['last_name'] = None
+	session['user_id'] = None
+	session['user_token'] = None
+	session['admin'] = None
+	return redirect(url_for('login'))
 
 
 # ----------------------------------------- USERS ----------------------------------------
@@ -1332,13 +1336,36 @@ def supplier_detail(supplier_id):
 		
 	data['supplier_details'] = result
 
+	# If the supplier has an parent umbrella supplier, find all the details for the parent
+	if data['supplier_details']['umbrella_id']!=None:
+		query = Supplier.query.filter_by(id=data['supplier_details']['umbrella_id']).first()
+		result = SupplierSchema().dumps(query).data
+		result = json.loads(result)
+		data['supplier_details']['umbrella_name'] = result['display_name']
+	
+	# If the supplier is an umbrella supplier, find all of the children
+	if data['supplier_details']['umbrella']==1:
+		children_suppliers_list = []
+		query = Supplier.query.filter_by(umbrella_id=supplier_id).all()
+		result = SupplierSchema(many=True).dumps(query).data
+		result = json.loads(result)
+		data['children_suppliers'] = result
+		for item in data['children_suppliers']:
+			children_suppliers_list.append(item['id'])
+	else:
+		data['children_suppliers'] = None
+
     # --------------------  ANALYSIS  ------------------------
 
 	#QUERY_ENDPOINT = session['endpoint']+"contracts?paginate=no&supplier_id="+ str(supplier_id)
 	#uResponse = requests.get(url = QUERY_ENDPOINT)
 	#query_data = json.loads(uResponse.text)
 
-	supplier_contracts = Contract.query.filter_by(supplier_id=supplier_id)
+	# If the supplier is an umbrella supplier, find the results for all of the children
+	if data['supplier_details']['umbrella']==1:
+		supplier_contracts = Contract.query.filter(Contract.supplier_id.in_((children_suppliers_list))).all()
+	else:
+		supplier_contracts = Contract.query.filter_by(supplier_id=supplier_id)
 	result = ContractSchema(many=True).dumps(supplier_contracts).data
 	result = json.loads(result)
 
@@ -1729,15 +1756,21 @@ def filter_unspsc_add():
 # ------------------------------------ ADMIN ------------------------------------
 # ---------------------------------------------------------------------------------
 
+# --- DASHBOARD PAGE ---
+@app.route("/admin")
+def admin():
+    return render_template('admin.html')
+
+
+
 from forms import SupplierAdmin
 
 @app.route("/admin/supplier/<supplier_id>", methods=['GET', 'POST'])
 def admin_supplier(supplier_id):
+	# --- This Admin page edits an existing Supplier ---
 	form = SupplierAdmin()
 	query=Supplier.query.filter_by(id=supplier_id).first()
 	result = SupplierSchema().dump(query).data
-
-	
 
 	if form.validate_on_submit():
 		f = form.image.data
@@ -1756,15 +1789,36 @@ def admin_supplier(supplier_id):
 		query = Supplier.query.filter_by(id=supplier_id).first()
 		if query!=None:
 			query.display_name = form.display_name.data
+			if form.umbrella_id.data!="":
+				query.umbrella_id = form.umbrella_id.data
 			db.session.commit()
 
 		return redirect('/supplier/'+supplier_id)
 
 	form.display_name.default = result['display_name']
+	form.umbrella_id.default = result['umbrella_id']
 	form.process()
 
 	return render_template('admin_supplier.html', data=result, form=form)
 
+
+
+from forms import CreateUmbrellaSupplier
+@app.route("/admin/umbrella_supplier", methods=['GET', 'POST'])
+def admin_umbrella_supplier():
+	# --- This Admin page creates an umbrella Supplier ---
+	form = CreateUmbrellaSupplier()
+
+	if form.validate_on_submit():
+		# Add the Umbrella Supplier
+		db.create_all()
+		supplier_name = Supplier(name=form.supplier_name.data, display_name=form.supplier_name.data, abn='Multiple', country="N/A", umbrella=1)
+		db.session.add(supplier_name)
+		db.session.commit()
+
+		return redirect(url_for('admin'))
+
+	return render_template('admin_umbrella_supplier.html', form=form)
 
 
 

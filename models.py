@@ -167,7 +167,9 @@ class Supplier(db.Model):
 	display_name = db.Column(db.String())
 	country = db.Column(db.String())
 	image_url = db.Column(db.String(), nullable=True)
-
+	umbrella = db.Column(db.Integer, nullable=True) #Is this an artificially created supplier to aggragate all of the ABNs
+	umbrella_id = db.Column(db.Integer, nullable=True) #If this supplier sits under an umbrella co. what is the ID
+	
 
 class SupplierSchema(ma.ModelSchema):
 	class Meta:	

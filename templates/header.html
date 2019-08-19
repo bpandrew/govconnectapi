@@ -152,7 +152,10 @@
                             <div class="demo-navbar-user nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">
                                     <span class="d-inline-flex flex-lg-row-reverse align-items-center align-middle">
-                                        <span class="px-1 mr-lg-2 ml-2 ml-lg-0">Benjamin Andrew</span>
+										{% if session['admin']==1%}
+										(Administrator)
+										{% endif %}
+                                        <span class="px-1 mr-lg-2 ml-2 ml-lg-0">{{ session['first_name'] }} {{ session['last_name'] }}</span>
                                     </span>
                                 </a>
                                 <div class="dropdown-menu dropdown-menu-right">
