@@ -33,7 +33,7 @@
                 <div class="media-body px-3 py-4">
                     <div class="d-flex justify-content-between align-items-center mb-1">
                         <div>
-                            <strong class="text-primary text-large"><a href="/supplier/{{ data.supplier.id }}" class="showload">{{ data.supplier.name }}</a></strong>
+                            <strong class="text-primary text-large"><a href="/supplier/{{ data.supplier.id }}" class="showload">{{ data.supplier.display_name }}</a></strong>
                             <br>ABN:&nbsp;&nbsp;{{ data.supplier.abn }}
                         </div>
                     </div>
@@ -51,11 +51,11 @@
                 <h6 class="card-header">Contract Overview</h6>
                 <div class="card-body">
                     <p>
-                        <b>{{ data.supplier.name }}</b> was awarded a {{data.contract_value}} contract via {{ data.procurement_method.lower() }} in the <b>{{ data.agency.title }}{% if data.division!=None %}, {{data.division['title']}}{% endif%}{% if data.branch!=None
+                        <b>{{ data.supplier.display_name }}</b> was awarded a {{data.contract_value}} contract via {{ data.procurement_method.lower() }} in the <b>{{ data.agency.title }}{% if data.division!=None %}, {{data.division['title']}}{% endif%}{% if data.branch!=None
                         %}, {{data.branch['title']}} {% endif%}</b> for '{{ data.description }}'. </p>
                     <p>This contract {{ data.contract_closing }}.</p>
                     <p>
-                        <h5>Earnings</h5>{{ data.supplier.name }} earned {{data.insights['sum_contracts_prev_fy']}} from the {{ data.agency.title }} last financial year. {{data.insights['sum_contracts_current_fy']}} has been earned to date this financial
+                        <h5>Earnings</h5>{{ data.supplier.display_name }} earned {{data.insights['sum_contracts_prev_fy']}} from the {{ data.agency.title }} last financial year. {{data.insights['sum_contracts_current_fy']}} has been earned to date this financial
                         year.
                     </p>
                 </div>

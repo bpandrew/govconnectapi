@@ -270,7 +270,7 @@ def matrix(target_supplier):
 	
 	# The suppliers that are going to have matrixes added
 	#query = Supplier.query.all() #.limit(5)
-	query = Supplier.query.filter(Supplier.id>=target_supplier).limit(15).all()
+	query = Supplier.query.filter(Supplier.id>=target_supplier).limit(1).all()
 	#query = Supplier.query.filter_by(id=target_supplier).all()
 	data = SupplierSchema(many=True).dumps(query).data
 	data = json.loads(data)
@@ -313,8 +313,8 @@ def matrix(target_supplier):
 					db.session.commit()
 
 		if loop==1:
-			link = "<a href='/matrix/"+ str(int(target_supplier)+15) +"?loop="+ str(loop) +"'>Next</a>"
-			link = "<script>window.location.href = '/matrix/"+ str(int(target_supplier)+15) +"?loop="+ str(loop) +"';</script>"
+			link = "<a href='/matrix/"+ str(int(target_supplier)+1) +"?loop="+ str(loop) +"'>Next</a>"
+			link = "<script>window.location.href = '/matrix/"+ str(int(target_supplier)+1) +"?loop="+ str(loop) +"';</script>"
 			return str(link)
 		else:
 			return "Done"
