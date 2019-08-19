@@ -55,7 +55,6 @@ def supplier_agency_segment_matrix(df, supplier_id, unspsc_segments, unspsc_dict
 	# Lookup the ID of the segment from the dictionary
 	df['segment_unspsc_id'] = df.apply(lambda row: unspsc_dict[row['segment_unspsc']], axis=1)
 
-	#df_temp = df.copy()
 	# filter the dataframe by financial year and/or financial quarter
 	df_temp = df[ (df['financial_year']==financial_year) ]
 	if financial_quarter!=0:
@@ -63,9 +62,19 @@ def supplier_agency_segment_matrix(df, supplier_id, unspsc_segments, unspsc_dict
 
 	matrixes = [] # holds all of the generated matrixes, so it can be passed back and added to the db
 	# Generate the Matrix for the supplier
-	matrix = matrix_json(supplier_id, df_temp, unspsc_segments, agencies, True)
-	matrixes.append({"supplier_id":supplier_id, "data":matrix})
-	print(matrix)
+
+	df_temp = df_temp[(df_temp['supplier.id']==supplier_id) | (df_temp['supplier.umbrella_id']==supplier_id)]
+	df_temp = df_temp.groupby(['agency.id', 'segment_unspsc_id']).sum()
+	json_dict = {"supplier_id":supplier_id, "data":{}}
+	for index, row in df_temp.iterrows(): 
+		json_dict['data']['a_'+str(index[0])]={}
+	for index, row in df_temp.iterrows():     
+		json_dict['data']['a_'+str(index[0])][index[1]]=row['contract_value']
+	json.dumps(json_dict)
+
+	#matrix = matrix_json(supplier_id, df_temp, unspsc_segments, agencies, True)
+	matrixes.append({"supplier_id":supplier_id, "data":json.dumps(json_dict)})
+	print(json.dumps(json_dict))
 
 	return matrixes
 
