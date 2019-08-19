@@ -270,8 +270,8 @@ def matrix(target_supplier):
 	
 	# The suppliers that are going to have matrixes added
 	#query = Supplier.query.all() #.limit(5)
-	query = Supplier.query.filter(Supplier.id>=target_supplier).limit(10).all()
-	#query = Supplier.query.filter_by(id=target_supplier).all()
+	#query = Supplier.query.filter(Supplier.id>=target_supplier).limit(10).all()
+	query = Supplier.query.filter_by(id=target_supplier).all()
 	data = SupplierSchema(many=True).dumps(query).data
 	data = json.loads(data)
 
@@ -285,41 +285,46 @@ def matrix(target_supplier):
 		#supplier_ids = [33]
 
 		# NEED TO ADD IN A DATE FILTER HERE !!!!!!  SO WE ARE NOT PROCESSING SUCH MASSIVE DATA SETS
-		query = Contract.query.all()
+		query = Contract.query.filter_by(supplier_id=target_supplier).all()
 		data = ContractSchema(many=True).dumps(query).data
 		data = json.loads(data)
-		df = insight_functions.clean_contract_df(data)
 
-		financial_year = 2020
-		financial_quarter = 0
+		if len(data)>0:
+			df = insight_functions.clean_contract_df(data)
 
-		# Loop over suppliers and add the matrix to the db
-		for supplier_id in supplier_ids:
-			matrixes = insight_functions.supplier_agency_segment_matrix(df, supplier_id, unspsc_segments, unspsc_dict, agencies, financial_year, financial_quarter)
+			financial_year = 2020
+			financial_quarter = 0
 
-			for matrix in matrixes:
-				# Add the matrix to the db
-				obj=SupplierMatrix.query.filter_by(supplier_id=matrix['supplier_id']).filter_by(financial_year=financial_year).filter_by(financial_quarter=financial_quarter).first()
-				if obj==None:
-					db.create_all()
-					query = SupplierMatrix(matrix_type="agency_segment", supplier_id=supplier_id, json=matrix, financial_year=financial_year, financial_quarter=financial_quarter, created=datetime.now())
-					db.session.add(query)
-					db.session.commit()
-				else:
-					response = OpSchema().dump(obj).data # get the existing op data
-					# Update any changes to the opportunity
-					obj.json = matrix
-					created=datetime.now()
-					db.session.commit()
+			# Loop over suppliers and add the matrix to the db
+			#for supplier_id in supplier_ids:
+			matrixes = insight_functions.supplier_agency_segment_matrix(df, target_supplier, unspsc_segments, unspsc_dict, agencies, financial_year, financial_quarter)
+
+			if matrixes!=None:
+				for matrix in matrixes:
+					# Add the matrix to the db
+					obj=SupplierMatrix.query.filter_by(supplier_id=matrix['supplier_id']).filter_by(financial_year=financial_year).filter_by(financial_quarter=financial_quarter).first()
+					if obj==None:
+						db.create_all()
+						query = SupplierMatrix(matrix_type="agency_segment", supplier_id=target_supplier, json=matrix, financial_year=financial_year, financial_quarter=financial_quarter, created=datetime.now())
+						db.session.add(query)
+						db.session.commit()
+					else:
+						response = OpSchema().dump(obj).data # get the existing op data
+						# Update any changes to the opportunity
+						obj.json = matrix
+						created=datetime.now()
+						db.session.commit()
 
 		if loop==1:
-			link = "<a href='/matrix/"+ str(int(target_supplier)+10) +"?loop="+ str(loop) +"'>Next</a>"
-			link = "<script>window.location.href = '/matrix/"+ str(int(target_supplier)+10) +"?loop="+ str(loop) +"';</script>"
+			link = "<a href='/matrix/"+ str(int(target_supplier)+1) +"?loop="+ str(loop) +"'>Next</a>"
+			link = "<script>window.location.href = '/matrix/"+ str(int(target_supplier)+1) +"?loop="+ str(loop) +"';</script>"
 			return str(link)
 		else:
 			return "Done"
 	else:
-		return "Done"
+		link = "<a href='/matrix/"+ str(int(target_supplier)+1) +"?loop="+ str(loop) +"'>Next</a>"
+		link = "<script>window.location.href = '/matrix/"+ str(int(target_supplier)+1) +"?loop="+ str(loop) +"';</script>"
+		return str(link)
 
 	#data = {"result": True}
 	#return jsonify(data)
