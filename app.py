@@ -313,8 +313,8 @@ def matrix(target_supplier):
 					db.session.commit()
 
 		if loop==1:
-			link = "<a href='/matrix/"+ str(int(target_supplier)+15) +"'>Next</a>"
-			link = "<script>window.location.href = '/matrix/"+ str(int(target_supplier)+15) +"';</script>"
+			link = "<a href='/matrix/"+ str(int(target_supplier)+15) +"?loop="+ str(loop) +"'>Next</a>"
+			link = "<script>window.location.href = '/matrix/"+ str(int(target_supplier)+15) +"?loop="+ str(loop) +"';</script>"
 			return str(link)
 		else:
 			return "Done"
