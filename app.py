@@ -269,14 +269,26 @@ def matrix(target_supplier):
 	agencies = []
 	for item in data:
 		agencies.append(item['id'])
-	
 
+
+	search_suppliers = [target_supplier]
+
+	# Find all of the children if it is an umbrella
+	query = Supplier.query.filter_by(umbrella_id=target_supplier).all()
+	data = SupplierSchema(many=True).dumps(query).data
+	data = json.loads(data)
+	for item in data:
+		# Add the IDs of the children to the search
+		if item['id'] not in search_suppliers:
+			search_suppliers.append(item['id'])
+
+	
 	# NEED TO ADD IN A DATE FILTER HERE !!!!!!  SO WE ARE NOT PROCESSING SUCH MASSIVE DATA SETS
-	# FILTER THE SQL HERE..!!!
-	#df_temp = df_temp[(df_temp['supplier.id']==supplier_id) | (df_temp['supplier.umbrella_id']==supplier_id)]
-	query = Contract.query.filter_by(supplier_id=target_supplier).all()
+	query = Contract.query.filter(Contract.supplier_id.in_(search_suppliers)).all()
 	data = ContractSchema(many=True).dumps(query).data
 	data = json.loads(data)
+
+	#print(data)
 
 	if len(data)>0:
 		df = insight_functions.clean_contract_df(data)

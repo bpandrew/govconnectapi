@@ -64,12 +64,10 @@ def supplier_agency_segment_matrix(df, supplier_id, unspsc_segments, unspsc_dict
 			df_temp = df_temp[ (df_temp['financial_quarter']==financial_quarter) ]
 
 		matrixes = [] # holds all of the generated matrixes, so it can be passed back and added to the db
-		# Generate the Matrix for the supplier
 
 		df_temp = df_temp.groupby(['agency.id', 'segment_unspsc_id']).sum()
 
 		json_dict = {}
-		#json_dict = {"supplier_id":supplier_id, "data":{}}
 		for index, row in df_temp.iterrows(): 
 			json_dict['a_'+str(index[0])]={}
 		for index, row in df_temp.iterrows():     
