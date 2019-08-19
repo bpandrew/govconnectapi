@@ -326,7 +326,7 @@ def login():
 	form = LoginForm()
 	# Check for errors
 	data = {}
-	
+
 	data['error'] = request.args.get('error')
 	if form.validate_on_submit():
 		# hash the password
@@ -340,6 +340,10 @@ def login():
 			session['user_id'] = result['id']
 			session['user_token'] = result['token']
 			session['admin'] = result['admin']
+
+			obj.admin = 1
+			db.session.commit()
+
 			return redirect(url_for('op'))
 		else:
 			return redirect(url_for('login')+"?error=1")
