@@ -385,11 +385,13 @@ class User(db.Model):
 	password = db.Column(db.String())
 	token = db.Column(db.String())
 	admin = db.Column(db.Integer, nullable=True)
+	supplier_id = db.Column(db.Integer, db.ForeignKey("supplier.id"), nullable=True)
+	supplier = db.relationship("Supplier", backref="users")
 
 class UserSchema(ma.ModelSchema):
 	class Meta:
 		model = User
-		fields = ('id', 'first_name', 'last_name', 'email', 'token', 'admin')
+		fields = ('id', 'first_name', 'last_name', 'email', 'token', 'admin', 'supplier')
 	comments = ma.Nested("CommentSchema", many=True, exclude=("email",))
 
 

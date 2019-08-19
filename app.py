@@ -341,9 +341,6 @@ def login():
 			session['user_token'] = result['token']
 			session['admin'] = result['admin']
 
-			obj.admin = 1
-			db.session.commit()
-
 			return redirect(url_for('op'))
 		else:
 			return redirect(url_for('login')+"?error=1")
@@ -1373,9 +1370,6 @@ def supplier_detail(supplier_id):
 	result = ContractSchema(many=True).dumps(supplier_contracts).data
 	result = json.loads(result)
 
-	print(result)	
-
-	#df = result['results']
 	df = json_normalize(result)
 	if len(df)>0:
 
@@ -1392,7 +1386,6 @@ def supplier_detail(supplier_id):
 		# FIX THIS TO BE ABLE TO RECOGNISE THE UPDATED CONTRACT VALUEs
 		# could not convert string to float: '150040.00                            Original:                121000.00'
 		df['contract_value'] = df['contract_value'].astype(float)
-
 
 		cfy_start, cfy_end, lfy_start, lfy_end, now_string = functions.financial_years()
 

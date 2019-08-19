@@ -64,7 +64,7 @@
 					<h6 class="my-3">Entity Details</h6>
 					{% if data.supplier_details['umbrella_id']!=None %}
 					<p>This supplier is one of several that together form '{{data.supplier_details['umbrella_name']}}'.<br><a href="/supplier/{{data.supplier_details['umbrella_id']}}">Show the aggregated results for the {{data.supplier_details['umbrella_name']}} Umbrella Supplier.</a></p>
-					{% endif %}
+					{% endif %}	
                     <div class="row mb-2">
                         <div class="col-md-5 text-muted">ABN:</div>
                         <div class="col-md-7">
@@ -351,7 +351,7 @@
 
                 // Total over all pages
                 total = api
-                    .column(4)
+                    .column(4, {'search': 'applied'})
                     .data()
                     .reduce(function(a, b) {
                         return intVal(a) + intVal(b);
@@ -360,7 +360,8 @@
                 // Total over this page
                 pageTotal = api
                     .column(4, {
-                        page: 'current'
+						page: 'current',
+						search: 'applied'
                     })
                     .data()
                     .reduce(function(a, b) {
@@ -369,7 +370,7 @@
 
                 // Update footer
                 $(api.column(4).footer()).html(
-                    '$' + pageTotal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + ' <br><small>( $' + total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + ' total)</small>'
+                    '$' + pageTotal.toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + ' <br><small>( $' + total.toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + ' total)</small>'
                 );
             }
         });
