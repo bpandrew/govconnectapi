@@ -198,10 +198,11 @@ def comp_matrix(target_supplier, count):
 	#time.sleep(0.5)
 
 	#try:
-	# Get Matrices
-	# FIX THE FINANCIAL YEAR FILTER HERE !!!
+	# Get Matrix for the target supplier
 	query = SupplierMatrix.query.filter_by(supplier_id=target_supplier).filter_by(matrix_type="agency_segment").filter_by(financial_year=int(year)).first() 
 	data = SupplierMatrixSchema().dumps(query).data
+	print("Target Supplier Data:")
+	print(data)
 	data = json.loads(data)
 	if len(data)>0:
 		json_data = data['json']['data']
@@ -216,6 +217,9 @@ def comp_matrix(target_supplier, count):
 		#query = SupplierMatrix.query.filter_by(supplier_id=78).all()
 		data = SupplierMatrixSchema(many=True).dumps(query).data
 
+		print("Comparison Supplier Data:")
+		print(data)
+
 		if len(data)==2:
 			return "Done"
 
@@ -226,17 +230,17 @@ def comp_matrix(target_supplier, count):
 		for supplier in supplier_matrices:
 			#print(supplier)
 			# Get Matrices
-			try:
-				if len(supplier['json']['data'])>3:
-					json_data = supplier['json']['data']
+			#try:
+			if len(supplier['json']['data'])>3:
+				json_data = supplier['json']['data']
 
-					# rebuild the matrix for a single supplier
-					matrix_b = insight_functions.rebuild_matrix(json_data, unspscs, agencies)
-					
-					supplier_id.append(supplier['supplier']['id'])
-					comp_score.append( insight_functions.calc_competition(matrix_a, matrix_b) )
-			except:
-				print("something broke on line 209 of app.py")
+				# rebuild the matrix for a single supplier
+				matrix_b = insight_functions.rebuild_matrix(json_data, unspscs, agencies)
+				
+				supplier_id.append(supplier['supplier']['id'])
+				comp_score.append( insight_functions.calc_competition(matrix_a, matrix_b) )
+			#except:
+			#	print("something broke on line 209 of app.py")
 			#break
 
 		#print(comp_score)
