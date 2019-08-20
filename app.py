@@ -196,14 +196,17 @@ def comp_matrix(target_supplier):
 		for supplier in supplier_matrices:
 			#print(supplier)
 			# Get Matrices
-			if len(supplier['json']['data'])>3:
-				json_data = supplier['json']['data']
+			try:
+				if len(supplier['json']['data'])>3:
+					json_data = supplier['json']['data']
 
-				# rebuild the matrix for a single supplier
-				matrix_b = insight_functions.rebuild_matrix(json_data, unspscs, agencies)
-				
-				supplier_id.append(supplier['supplier']['id'])
-				comp_score.append( insight_functions.calc_competition(matrix_a, matrix_b) )
+					# rebuild the matrix for a single supplier
+					matrix_b = insight_functions.rebuild_matrix(json_data, unspscs, agencies)
+					
+					supplier_id.append(supplier['supplier']['id'])
+					comp_score.append( insight_functions.calc_competition(matrix_a, matrix_b) )
+			except:
+				print("something broke on line 209 of app.py")
 			#break
 
 		#print(comp_score)
@@ -892,7 +895,10 @@ def contract_add():
 	original_contract_value = data['original_contract_value']
 	procurement_method = data['procurement_method']
 	description = data['description']
-	publish_date = data['publish_date']
+	try:
+		publish_date = data['publish_date']
+	except:
+		publish_date = contract_start
 	category_temp_title = data['category']
 	agency_id = data['agency_id']
 	supplier_id = data['supplier_id']
