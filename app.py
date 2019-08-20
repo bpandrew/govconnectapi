@@ -160,13 +160,15 @@ def competitor_data():
 	
 	query = Competitor.query.order_by(desc(Competitor.score)).filter_by(supplier_id=supplier_id).all()
 	result = CompetitorSchema(many=True).dump(query).data
-	data = {"data": result, "pages": result}
+	data = {"data": result}
 	
 	return jsonify(data)
 
 
 @app.route("/comp_matrix/<target_supplier>/<count>", methods=['GET'])
 def comp_matrix(target_supplier, count):
+
+	year=int(request.args.get('year'))
 
 	#count=int(request.args.get('count'))
 	# Finds the competitors for the target supplier, and adds them to the database as q 'competitor' matrix.
@@ -181,7 +183,7 @@ def comp_matrix(target_supplier, count):
 	#try:
 	# Get Matrices
 	# FIX THE FINANCIAL YEAR FILTER HERE !!!
-	query = SupplierMatrix.query.filter_by(supplier_id=target_supplier).filter_by(matrix_type="agency_segment").filter_by(financial_year=2020).first() 
+	query = SupplierMatrix.query.filter_by(supplier_id=target_supplier).filter_by(matrix_type="agency_segment").filter_by(financial_year=int(year)).first() 
 	data = SupplierMatrixSchema().dumps(query).data
 	data = json.loads(data)
 	if len(data)>0:
@@ -252,7 +254,7 @@ def comp_matrix(target_supplier, count):
 	
 	#return redirect("/comp_matrix/"+ str(target_supplier) +"/"+str(int(count)+100))
 
-	link = "<script>window.location.href = '/comp_matrix/"+ str(target_supplier) +"/"+str(int(count)+100)+"';</script>"
+	link = "<script>window.location.href = '/comp_matrix/"+ str(target_supplier) +"/"+str(int(count)+100)+"?year="+ str(year) +"';</script>"
 	#link = "<a href='/comp_matrix/"+ str(int(target_supplier)+1) +"'>Next</a>"
 	#link = "<script>window.location.href = '/comp_matrix/"+ str(int(target_supplier)+1) +"';</script>"
 	return str(link)
@@ -265,6 +267,8 @@ def matrix(target_supplier):
 		loop=int(request.args.get('loop'))
 	except:
 		loop=0
+
+	year=int(request.args.get('year'))
 	# Creates the matrix for the supplier for a year/financial quarter.
 	# Automagically loops through from the supplier_id provided, until it gets to the end.
 	
@@ -311,7 +315,7 @@ def matrix(target_supplier):
 	if len(data)>0:
 		df = insight_functions.clean_contract_df(data)
 
-		financial_year = 2020
+		financial_year = year
 		financial_quarter = 0
 
 		# Loop over suppliers and add the matrix to the db
@@ -337,7 +341,7 @@ def matrix(target_supplier):
 
 	if loop==1:
 		link = "<a href='/matrix/"+ str(int(target_supplier)+1) +"?loop="+ str(loop) +"'>Next</a>"
-		link = "<script>window.location.href = '/matrix/"+ str(int(target_supplier)+1) +"?loop="+ str(loop) +"';</script>"
+		link = "<script>window.location.href = '/matrix/"+ str(int(target_supplier)+1) +"?loop="+ str(loop) +"&year="+ str(year) +"';</script>"
 		return str(link)
 	else:
 		return "Done"
@@ -1380,6 +1384,7 @@ def suppliers_data():
 
 @app.route("/supplier/<supplier_id>", methods=['GET'])
 def supplier_detail(supplier_id):
+	# Get all of the details for the supplier
 	supplier = Supplier.query.filter_by(id=supplier_id).first()
 	result = SupplierSchema().dumps(supplier).data
 	result = json.loads(result)
@@ -1387,6 +1392,11 @@ def supplier_detail(supplier_id):
 	data = {}
 		
 	data['supplier_details'] = result
+
+	# Get all of the suppiers competitors
+	query = Competitor.query.order_by(desc(Competitor.score)).filter_by(supplier_id=supplier_id).all()
+	result = CompetitorSchema(many=True).dump(query).data
+	data['competitors'] = result
 
 	# If the supplier has an parent umbrella supplier, find all the details for the parent
 	if data['supplier_details']['umbrella_id']!=None:

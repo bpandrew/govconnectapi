@@ -191,6 +191,29 @@
 	</div>
 	{% endif %}
 
+
+	<div class="row">
+		<div class="col-xl-8">
+			<div class="card mb-4">
+                <hr class="border-light m-0" style="margin-bottom: -10px">
+				
+				<div class="card-body">
+					<h6 class="my-3">Competitors</h6>
+					<p>The following suppliers are considered to be competitors.</p>
+					{% for competitor in data.competitors %}
+					<div class="row mb-2">
+						<div class="col-md-6">
+							<a href="/supplier/{{ competitor['competitor']['id']}}">{{ competitor['competitor']['display_name']}}</a>
+						</div>
+						<div class="col-md-6 text-muted">Score: {{competitor['score']}}</div>
+					</div>
+					{% endfor %}
+				</div>
+
+            </div>
+		</div>
+	</div>
+
 </div>
 
 <!-- [ content ] End -->
