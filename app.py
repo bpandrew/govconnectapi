@@ -156,12 +156,11 @@ def all_agencies_segments():
 
 @app.route("/competitor_data", methods=['GET'])
 def competitor_data():
-	page=int(request.args.get('page'))
+	supplier_id=int(request.args.get('supplier_id'))
 	
-	query = Competitor.query.order_by(desc(Competitor.score)).paginate(page, 200, False)
-	competitors=query.items
-	result = CompetitorSchema(many=True).dump(competitors).data
-	data = {"data": result, "pages": query.pages}
+	query = Competitor.query.order_by(desc(Competitor.score)).filter_by(supplier_id=supplier_id).all()
+	result = CompetitorSchema(many=True).dump(query).data
+	data = {"data": result, "pages": result}
 	
 	return jsonify(data)
 
@@ -173,7 +172,7 @@ def comp_matrix(target_supplier, count):
 	# Finds the competitors for the target supplier, and adds them to the database as q 'competitor' matrix.
 
 	# If it is the first time through. Delete all of the entries for this supplier, so they can be replaced.
-	if count==0:
+	if int(count)==0:
 		query = Competitor.query.filter_by(supplier_id=target_supplier).delete()
 		db.session.commit()
 
@@ -193,7 +192,7 @@ def comp_matrix(target_supplier, count):
 		matrix_a = insight_functions.rebuild_matrix(json_data, unspscs, agencies)
 
 		#Limit this to compare n competitors
-		query = SupplierMatrix.query.filter(SupplierMatrix.matrix_type=="agency_segment").filter(SupplierMatrix.supplier_id>=int(count)).filter(SupplierMatrix.supplier_id<int(count)+100).order_by(SupplierMatrix.supplier_id).limit(100).all()
+		query = SupplierMatrix.query.filter(SupplierMatrix.matrix_type=="agency_segment").filter(SupplierMatrix.supplier_id>=int(count)).order_by(SupplierMatrix.supplier_id).limit(100).all()
 		#query = SupplierMatrix.query.filter_by(matrix_type="agency_segment").all()
 		#query = SupplierMatrix.query.filter_by(supplier_id=78).all()
 		data = SupplierMatrixSchema(many=True).dumps(query).data
@@ -235,11 +234,16 @@ def comp_matrix(target_supplier, count):
 
 		#db.create_all()
 		for index, row in comp_scores.iterrows():
-			print(index, row['score'])
-			# Add the record to the competitor table
-			query = Competitor(supplier_id=target_supplier, competitor_id=index, score=row['score'], created=datetime.now())
-			db.session.add(query)
-			db.session.commit()
+			#print(index, row['score'])
+			if index>(int(count)+100):
+				count=int(index)
+			# Check the record does not exist
+			query = Competitor.query.filter_by(supplier_id=target_supplier).filter_by(competitor_id=index).first() 
+			if query==None:
+				# Add the record to the competitor table
+				query = Competitor(supplier_id=target_supplier, competitor_id=index, score=row['score'], created=datetime.now())
+				db.session.add(query)
+				db.session.commit()
 
 		#except:
 		#	pass
