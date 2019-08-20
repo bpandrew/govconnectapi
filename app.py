@@ -155,7 +155,7 @@ def all_agencies_segments():
 
 	unspsc_families = []
 	for item in data:
-		unspsc_families.append(item['id'])
+		unspsc_segments.append(item['id'])
 		unspsc_dict[item['unspsc'][:4]]=int(item['id'])
 
 
@@ -201,24 +201,22 @@ def comp_matrix(target_supplier, count):
 	# Get Matrix for the target supplier
 	query = SupplierMatrix.query.filter_by(supplier_id=target_supplier).filter_by(matrix_type="agency_segment").filter_by(financial_year=int(year)).first() 
 	data = SupplierMatrixSchema().dumps(query).data
-	print("Target Supplier Data:")
-	print(data)
+
 	data = json.loads(data)
 	if len(data)>0:
 		json_data = data['json']['data']
+
+		#return "Done"
 		# find all of the agencies and segments so the matrix can be rebuilt
 		unspscs, agencies = all_agencies_segments()
+		#print(unspscs)
 		# Rebuild the matrix
 		matrix_a = insight_functions.rebuild_matrix(json_data, unspscs, agencies)
 
 		#Limit this to compare n competitors
 		query = SupplierMatrix.query.filter(SupplierMatrix.matrix_type=="agency_segment").filter(SupplierMatrix.supplier_id>=int(count)).order_by(SupplierMatrix.supplier_id).limit(100).all()
-		#query = SupplierMatrix.query.filter_by(matrix_type="agency_segment").all()
 		#query = SupplierMatrix.query.filter_by(supplier_id=78).all()
 		data = SupplierMatrixSchema(many=True).dumps(query).data
-
-		print("Comparison Supplier Data:")
-		print(data)
 
 		if len(data)==2:
 			return "Done"
@@ -228,22 +226,19 @@ def comp_matrix(target_supplier, count):
 		supplier_id = []
 		comp_score = []
 		for supplier in supplier_matrices:
-			#print(supplier)
 			# Get Matrices
 			#try:
 			if len(supplier['json']['data'])>3:
 				json_data = supplier['json']['data']
 
-				# rebuild the matrix for a single supplier
 				matrix_b = insight_functions.rebuild_matrix(json_data, unspscs, agencies)
-				
+
 				supplier_id.append(supplier['supplier']['id'])
+
 				comp_score.append( insight_functions.calc_competition(matrix_a, matrix_b) )
 			#except:
 			#	print("something broke on line 209 of app.py")
 			#break
-
-		#print(comp_score)
 
 		# Create the scores dataframe, sort and filter by competitor score
 		comp_scores = pd.DataFrame()
@@ -252,7 +247,7 @@ def comp_matrix(target_supplier, count):
 		comp_scores.set_index('supplier_id', drop=True, append=False, inplace=True, verify_integrity=False)
 		comp_scores = comp_scores.sort_values(by='score', ascending=0)
 		comp_scores = comp_scores[comp_scores['score']>-1]
-		#comp_scores = comp_scores[comp_scores['score']!=0]
+		comp_scores = comp_scores[comp_scores['score']!=0]
 		#comp_scores = comp_scores[:50]# only save the top 50 competitors for each
 
 		print(comp_scores)

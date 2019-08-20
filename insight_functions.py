@@ -189,30 +189,32 @@ def rebuild_matrix(json_data, unspscs, agencies):
 	db_matrix.index = db_matrix.index.astype(str)
 	np_matrix = db_matrix.stack()
 	dataset = pd.DataFrame(np_matrix)
-
-	#print(dataset)
     
 	df_matrix = create_matrix(unspscs, agencies)
+
+	#df_matrix = pd.DataFrame()
     
 	for index, row in dataset.iterrows():
 		agency = str(index[0])
 		unspsc = int(index[1])
 		value = row[0]
+		#print(agency, unspsc, value)
 		df_matrix.loc[agency][unspsc] = value   
 
+	#print(compress_matrix(df_matrix))
 	return df_matrix
 
 
 def calc_competition(matrix_a, matrix_b):
-    value_weighting_factor = 1
+	value_weighting_factor = 1
+	agency_sum = np.sum(matrix_a, axis=1)
+	total_earnings = np.sum(agency_sum)
 
-    agency_sum = np.sum(matrix_a, axis=1)
-    total_earnings = np.sum(agency_sum)
-    # Generate the matrix holding all the scores
-    score_matrix = ((matrix_b-matrix_a)/matrix_a)*((matrix_a/total_earnings)**value_weighting_factor)
-    agency_competitiom_sum = np.sum(score_matrix, axis=1)
-    competitor_score = np.sum(agency_competitiom_sum)
-    return competitor_score
+	# Generate the matrix holding all the scores
+	score_matrix = ((matrix_b-matrix_a)/matrix_a)*((matrix_a/total_earnings)**value_weighting_factor)
+	agency_competitiom_sum = np.sum(score_matrix, axis=1)
+	competitor_score = np.sum(agency_competitiom_sum)
+	return competitor_score
 
 
 
