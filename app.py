@@ -247,9 +247,12 @@ def comp_matrix(target_supplier, count):
 		comp_scores['score'] = comp_score
 		comp_scores.set_index('supplier_id', drop=True, append=False, inplace=True, verify_integrity=False)
 		comp_scores = comp_scores.sort_values(by='score', ascending=0)
-		comp_scores = comp_scores[comp_scores['score']>-0.8]
-		comp_scores = comp_scores[comp_scores['score']!=0]
-		comp_scores = comp_scores[:50]# only save the top 50 competitors for each
+		comp_scores = comp_scores[comp_scores['score']>-1]
+		#comp_scores = comp_scores[comp_scores['score']!=0]
+		#comp_scores = comp_scores[:50]# only save the top 50 competitors for each
+
+		print(comp_scores)
+
 
 		#db.create_all()
 		for index, row in comp_scores.iterrows():
