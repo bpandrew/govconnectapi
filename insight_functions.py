@@ -44,42 +44,85 @@ def clean_contract_df(data):
 
 
 
-
 def supplier_agency_segment_matrix(df, supplier_id, unspsc_segments, unspsc_dict, agencies, financial_year, financial_quarter):
 	# A matrix for each supplier, showing total revenue by agency (y) and segment (x).
 
 	try:
-		# Find the UNSPSC Segment ID and add it to the dataframe
-		df['segment_unspsc'] = df.apply(lambda row: row['unspsc.unspsc'][:2], axis=1)
-		# Remove the contracts where there is no segment
-		df = df[df['segment_unspsc']!=""]
-		# Lookup the ID of the segment from the dictionary
-		df['segment_unspsc_id'] = df.apply(lambda row: unspsc_dict[row['segment_unspsc']], axis=1)
-
-		df_temp = df.copy()
-		
-		# filter the dataframe by financial year and/or financial quarter
-		df_temp = df_temp[ (df_temp['financial_year']==financial_year) ]
-		if financial_quarter!=0:
-			df_temp = df_temp[ (df_temp['financial_quarter']==financial_quarter) ]
-
-		matrixes = [] # holds all of the generated matrixes, so it can be passed back and added to the db
-
-		df_temp = df_temp.groupby(['agency.id', 'segment_unspsc_id']).sum()
-
-		json_dict = {}
-		for index, row in df_temp.iterrows(): 
-			json_dict['a_'+str(index[0])]={}
-		for index, row in df_temp.iterrows():     
-			json_dict['a_'+str(index[0])][index[1]]=row['contract_value']
-		json.dumps(json_dict)
-
-		matrixes.append( {"supplier_id":supplier_id, "data":json.dumps(json_dict)} )
-		#print(json.dumps(json_dict))
-
-		return matrixes
+		print(df['unspsc.unspsc'])
 	except:
 		return None
+	
+	df['segment_unspsc'] = df.apply(lambda row: row['unspsc.unspsc'][:2], axis=1)
+	df['family_unspsc'] = df.apply(lambda row: row['unspsc.unspsc'][:4], axis=1)
+	# Remove the contracts where there is no segment
+	df = df[df['segment_unspsc']!=""]
+	df = df[df['family_unspsc']!=""]
+	# Lookup the ID of the segment from the dictionary
+	for i in df.index:
+		try:
+			df.at[i, 'segment_unspsc_id'] = int(unspsc_dict[ df.at[i, 'segment_unspsc'] ])
+		except:
+			df.at[i, 'segment_unspsc_id'] = 0
+	# Lookup the ID of the family from the dictionary
+	for i in df.index:
+		try:
+			df.at[i, 'family_unspsc_id'] = int(unspsc_dict[ df.at[i, 'family_unspsc'] ])
+		except:
+			df.at[i, 'family_unspsc_id'] = 0
+
+	df['family_unspsc_id'] = df['family_unspsc_id'].astype(int)
+	df['segment_unspsc_id'] = df['segment_unspsc_id'].astype(int)
+
+	#df['segment_unspsc_id'] = df.apply(lambda row: unspsc_dict[row['segment_unspsc']], axis=1)
+	#df['family_unspsc_id'] = df.apply(lambda row: unspsc_dict[row['family_unspsc']],  axis=1)
+
+	df_temp = df.copy()
+	
+	# filter the dataframe by financial year and/or financial quarter
+	df_temp = df_temp[ (df_temp['financial_year']==financial_year) ]
+	if financial_quarter!=0:
+		df_temp = df_temp[ (df_temp['financial_quarter']==financial_quarter) ]
+
+	matrixes = [] # holds all of the generated matrixes, so it can be passed back and added to the db
+
+	# CHANGED! Added family_unspsc_id
+	df_temp = df_temp.groupby(['agency.id', 'segment_unspsc_id', 'family_unspsc_id']).sum()
+	#df_temp = df_temp.groupby(['agency.id', 'family_unspsc_id']).sum()
+	print(df_temp)
+
+	json_dict = {}
+	for index, row in df_temp.iterrows(): 
+		json_dict['a_'+str(index[0])]={}
+	for index, row in df_temp.iterrows():
+		if index[2]==0:
+			print("added to the segment"+ str(index[2]))
+			try:
+				json_dict['a_'+str(index[0])][index[1]]=json_dict['a_'+str(index[0])][index[1]]+row['contract_value']
+			except:
+				json_dict['a_'+str(index[0])][index[1]]=row['contract_value']
+		else:
+			try:
+				json_dict['a_'+str(index[0])][index[2]]=json_dict['a_'+str(index[0])][index[2]]+row['contract_value']
+			except:
+				json_dict['a_'+str(index[0])][index[2]]=row['contract_value']
+
+		
+
+		#try:    
+		#	json_dict['a_'+str(index[0])][index[2]]=json_dict['a_'+str(index[0])][index[2]]+row['contract_value']
+		#	print("added family") 
+		#except:
+		#	print("created family") 
+		#	json_dict['a_'+str(index[0])][index[2]]=row['contract_value']
+
+	#json.dumps(json_dict)
+
+	matrixes.append( {"supplier_id":supplier_id, "data":json.dumps(json_dict)} )
+	print(json.dumps(json_dict))
+
+	return matrixes
+	#except:
+	#	return None
 
 
 

@@ -273,6 +273,7 @@ def matrix(target_supplier):
 	# Automagically loops through from the supplier_id provided, until it gets to the end.
 	
 	# Get UNSPSC Segments
+	#query = Unspsc.query.filter(Unspsc.level_int.in_([1])).all()
 	query = Unspsc.query.filter_by(level_int=1).all()
 	data = UnspscSchemaSimple(many=True).dumps(query).data
 	data = json.loads(data)
@@ -282,6 +283,17 @@ def matrix(target_supplier):
 	for item in data:
 		unspsc_segments.append(item['id'])
 		unspsc_dict[item['unspsc'][:2]]=int(item['id'])
+		#unspsc_dict[item['unspsc'][:4]]=int(item['id'])
+
+	query = Unspsc.query.filter_by(level_int=2).all()
+	data = UnspscSchemaSimple(many=True).dumps(query).data
+	data = json.loads(data)
+
+	unspsc_families = []
+	for item in data:
+		unspsc_families.append(item['id'])
+		unspsc_dict[item['unspsc'][:4]]=int(item['id'])
+
 
 	# Get all agenceis 
 	query = Agency.query.all()
