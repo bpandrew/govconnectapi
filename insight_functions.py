@@ -139,7 +139,7 @@ def create_matrix(unspscs, agencies):
 		data[item] = empty_arr
 
 	df_matrix = pd.DataFrame(data)
-	df_matrix['agency'] = "a_"+ df_matrix['agency'].astype(str)
+	#df_matrix['agency'] = "a_"+ df_matrix['agency'].astype(str)
 	
 	# set the agency as the index column
 	df_matrix.set_index('agency', drop=True, append=False, inplace=True, verify_integrity=False)
@@ -196,10 +196,11 @@ def rebuild_matrix(json_data, unspscs, agencies):
     
 	for index, row in dataset.iterrows():
 		agency = str(index[0])
-		unspsc = int(index[1])
+		unspsc = str(index[1])
 		value = row[0]
 		#print(agency, unspsc, value)
-		df_matrix.loc[agency][unspsc] = value   
+		df_matrix[unspsc][agency] = value
+		#df_matrix.loc[agency][unspsc] = value   
 
 	#print(compress_matrix(df_matrix))
 	return df_matrix

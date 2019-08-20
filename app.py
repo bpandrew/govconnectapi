@@ -187,15 +187,10 @@ def comp_matrix(target_supplier, count):
 
 	year=int(request.args.get('year'))
 
-	#count=int(request.args.get('count'))
-	# Finds the competitors for the target supplier, and adds them to the database as q 'competitor' matrix.
-
 	# If it is the first time through. Delete all of the entries for this supplier, so they can be replaced.
 	if int(count)==0:
 		query = Competitor.query.filter_by(supplier_id=target_supplier).delete()
 		db.session.commit()
-
-	#time.sleep(0.5)
 
 	#try:
 	# Get Matrix for the target supplier
@@ -204,34 +199,64 @@ def comp_matrix(target_supplier, count):
 
 	data = json.loads(data)
 	if len(data)>0:
-		json_data = data['json']['data']
 
-		#return "Done"
+		json_dict = json.loads(data['json']['data'])
+		matrix_a_unspsc = []
+		matrix_a_agencies = []
+		
+		for agency in json_dict:
+			matrix_a_agencies.append(agency)
+			for unspsc in json_dict[agency]:
+				matrix_a_unspsc.append(str(unspsc))
+
+		matrix_a_json_data = data['json']['data']
+
+		#json_data = data['json']['data']
 		# find all of the agencies and segments so the matrix can be rebuilt
-		unspscs, agencies = all_agencies_segments()
-		#print(unspscs)
+		#unspscs, agencies = all_agencies_segments()
+		#print(agencies)
 		# Rebuild the matrix
-		matrix_a = insight_functions.rebuild_matrix(json_data, unspscs, agencies)
+		#matrix_a = insight_functions.rebuild_matrix(json_data, unspscs, agencies)
 
 		#Limit this to compare n competitors
 		query = SupplierMatrix.query.filter(SupplierMatrix.matrix_type=="agency_segment").filter(SupplierMatrix.supplier_id>=int(count)).order_by(SupplierMatrix.supplier_id).limit(10).all()
-		#query = SupplierMatrix.query.filter_by(supplier_id=78).all()
 		data = SupplierMatrixSchema(many=True).dumps(query).data
-
+		# if there are no more suppliers to compare
 		if len(data)==2:
 			return "Done"
-
 		supplier_matrices = json.loads(data)
 
+		# Arrays to create a dataframe when this batch is complete
 		supplier_id = []
 		comp_score = []
+
 		for supplier in supplier_matrices:
 			# Get Matrices
 			#try:
-			if len(supplier['json']['data'])>3:
-				json_data = supplier['json']['data']
 
-				matrix_b = insight_functions.rebuild_matrix(json_data, unspscs, agencies)
+			if len(supplier['json']['data'])>3:
+
+				json_dict = json.loads(supplier['json']['data'])
+
+				unspscs = []
+				agencies = []
+				
+				for item in matrix_a_unspsc:
+					unspscs.append(item)
+				for item in matrix_a_agencies:
+					agencies.append(item)
+				
+				for agency in json_dict:
+					agencies.append(agency)
+					for unspsc in json_dict[agency]:
+						unspscs.append(str(unspsc))
+
+				#json_data = supplier['json']['data']
+
+				matrix_a = insight_functions.rebuild_matrix(matrix_a_json_data, unspscs, agencies)
+
+				matrix_b_json_data = supplier['json']['data']
+				matrix_b = insight_functions.rebuild_matrix(matrix_b_json_data, unspscs, agencies)
 
 				supplier_id.append(supplier['supplier']['id'])
 
@@ -246,11 +271,14 @@ def comp_matrix(target_supplier, count):
 		comp_scores['score'] = comp_score
 		comp_scores.set_index('supplier_id', drop=True, append=False, inplace=True, verify_integrity=False)
 		comp_scores = comp_scores.sort_values(by='score', ascending=0)
+		print("SCORE")
+		print(comp_scores)
+		
 		comp_scores = comp_scores[comp_scores['score']>-1]
 		comp_scores = comp_scores[comp_scores['score']!=0]
 		#comp_scores = comp_scores[:50]# only save the top 50 competitors for each
 
-		print(comp_scores)
+		
 
 
 		#db.create_all()
