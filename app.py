@@ -271,7 +271,7 @@ def comp_matrix(target_supplier, count):
 		comp_scores['score'] = comp_score
 		comp_scores.set_index('supplier_id', drop=True, append=False, inplace=True, verify_integrity=False)
 		comp_scores = comp_scores.sort_values(by='score', ascending=0)
-		comp_scores = comp_scores[comp_scores['score']>-1]
+		comp_scores = comp_scores[comp_scores['score']>-0.8]
 		comp_scores = comp_scores[comp_scores['score']!=0]
 		#comp_scores = comp_scores[:50]# only save the top 50 competitors for each
 
@@ -296,7 +296,7 @@ def comp_matrix(target_supplier, count):
 	
 	#return redirect("/comp_matrix/"+ str(target_supplier) +"/"+str(int(count)+100))
 
-	link = "<script>window.location.href = '/comp_matrix/"+ str(target_supplier) +"/"+str(int(count)+10)+"?year="+ str(year) +"';</script>"
+	link = "<script>window.location.href = '/comp_matrix/"+ str(target_supplier) +"/"+str(int(count)+100)+"?year="+ str(year) +"';</script>"
 	#link = "<a href='/comp_matrix/"+ str(int(target_supplier)+1) +"'>Next</a>"
 	#link = "<script>window.location.href = '/comp_matrix/"+ str(int(target_supplier)+1) +"';</script>"
 	return str(link)
