@@ -219,7 +219,7 @@ def comp_matrix(target_supplier, count):
 		#matrix_a = insight_functions.rebuild_matrix(json_data, unspscs, agencies)
 
 		#Limit this to compare n competitors
-		query = SupplierMatrix.query.filter(SupplierMatrix.matrix_type=="agency_segment").filter(SupplierMatrix.supplier_id>=int(count)).order_by(SupplierMatrix.supplier_id).limit(10).all()
+		query = SupplierMatrix.query.filter(SupplierMatrix.matrix_type=="agency_segment").filter(SupplierMatrix.supplier_id>=int(count)).order_by(SupplierMatrix.supplier_id).limit(100).all()
 		data = SupplierMatrixSchema(many=True).dumps(query).data
 		# if there are no more suppliers to compare
 		if len(data)==2:
@@ -271,16 +271,11 @@ def comp_matrix(target_supplier, count):
 		comp_scores['score'] = comp_score
 		comp_scores.set_index('supplier_id', drop=True, append=False, inplace=True, verify_integrity=False)
 		comp_scores = comp_scores.sort_values(by='score', ascending=0)
-		print("SCORE")
-		print(comp_scores)
-		
 		comp_scores = comp_scores[comp_scores['score']>-1]
 		comp_scores = comp_scores[comp_scores['score']!=0]
 		#comp_scores = comp_scores[:50]# only save the top 50 competitors for each
 
 		
-
-
 		#db.create_all()
 		for index, row in comp_scores.iterrows():
 			#print(index, row['score'])
