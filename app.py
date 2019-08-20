@@ -136,11 +136,28 @@ def all_agencies_segments():
 	data = UnspscSchemaSimple(many=True).dumps(query).data
 	data = json.loads(data)
 
+	#unspsc_segments = []
+	#unspsc_dict = {}
+	#for item in data:
+	#	unspsc_segments.append(item['id'])
+	#	unspsc_dict[item['unspsc'][:2]]=int(item['id'])
+
 	unspsc_segments = []
 	unspsc_dict = {}
 	for item in data:
 		unspsc_segments.append(item['id'])
 		unspsc_dict[item['unspsc'][:2]]=int(item['id'])
+		#unspsc_dict[item['unspsc'][:4]]=int(item['id'])
+
+	query = Unspsc.query.filter_by(level_int=2).all()
+	data = UnspscSchemaSimple(many=True).dumps(query).data
+	data = json.loads(data)
+
+	unspsc_families = []
+	for item in data:
+		unspsc_families.append(item['id'])
+		unspsc_dict[item['unspsc'][:4]]=int(item['id'])
+
 
 	# Get all agenceis 
 	query = Agency.query.all()

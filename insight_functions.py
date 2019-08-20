@@ -189,6 +189,8 @@ def rebuild_matrix(json_data, unspscs, agencies):
 	db_matrix.index = db_matrix.index.astype(str)
 	np_matrix = db_matrix.stack()
 	dataset = pd.DataFrame(np_matrix)
+
+	#print(dataset)
     
 	df_matrix = create_matrix(unspscs, agencies)
     
