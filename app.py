@@ -289,6 +289,11 @@ def matrix(target_supplier):
 		loop=0
 
 	year=int(request.args.get('year'))
+
+	if int(target_supplier)==0:
+		query = SupplierMatrix.query.delete() #.filter_by(supplier_id=target_supplier)
+		db.session.commit()
+
 	# Creates the matrix for the supplier for a year/financial quarter.
 	# Automagically loops through from the supplier_id provided, until it gets to the end.
 	
@@ -325,10 +330,10 @@ def matrix(target_supplier):
 		agencies.append(item['id'])
 
 
-	search_suppliers = [target_supplier]
+	search_suppliers = [int(target_supplier)]
 
 	# Find all of the children if it is an umbrella
-	query = Supplier.query.filter_by(umbrella_id=target_supplier).all()
+	query = Supplier.query.filter_by(umbrella_id=int(target_supplier)).all()
 	data = SupplierSchema(many=True).dumps(query).data
 	data = json.loads(data)
 	for item in data:
