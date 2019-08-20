@@ -214,7 +214,7 @@ def comp_matrix(target_supplier, count):
 		matrix_a = insight_functions.rebuild_matrix(json_data, unspscs, agencies)
 
 		#Limit this to compare n competitors
-		query = SupplierMatrix.query.filter(SupplierMatrix.matrix_type=="agency_segment").filter(SupplierMatrix.supplier_id>=int(count)).order_by(SupplierMatrix.supplier_id).limit(100).all()
+		query = SupplierMatrix.query.filter(SupplierMatrix.matrix_type=="agency_segment").filter(SupplierMatrix.supplier_id>=int(count)).order_by(SupplierMatrix.supplier_id).limit(10).all()
 		#query = SupplierMatrix.query.filter_by(supplier_id=78).all()
 		data = SupplierMatrixSchema(many=True).dumps(query).data
 
@@ -273,7 +273,7 @@ def comp_matrix(target_supplier, count):
 	
 	#return redirect("/comp_matrix/"+ str(target_supplier) +"/"+str(int(count)+100))
 
-	link = "<script>window.location.href = '/comp_matrix/"+ str(target_supplier) +"/"+str(int(count)+100)+"?year="+ str(year) +"';</script>"
+	link = "<script>window.location.href = '/comp_matrix/"+ str(target_supplier) +"/"+str(int(count)+10)+"?year="+ str(year) +"';</script>"
 	#link = "<a href='/comp_matrix/"+ str(int(target_supplier)+1) +"'>Next</a>"
 	#link = "<script>window.location.href = '/comp_matrix/"+ str(int(target_supplier)+1) +"';</script>"
 	return str(link)
