@@ -166,17 +166,23 @@ def competitor_data():
 	return jsonify(data)
 
 
-@app.route("/comp_matrix/<target_supplier>", methods=['GET'])
-def comp_matrix(target_supplier):
+@app.route("/comp_matrix/<target_supplier>/<count>", methods=['GET'])
+def comp_matrix(target_supplier, count):
+
+	#count=int(request.args.get('count'))
 	# Finds the competitors for the target supplier, and adds them to the database as q 'competitor' matrix.
 
-	#target_supplier = 152
-	
+	# If it is the first time through. Delete all of the entries for this supplier, so they can be replaced.
+	if count==0:
+		query = Competitor.query.filter_by(supplier_id=target_supplier).delete()
+		db.session.commit()
+
 	#time.sleep(0.5)
 
 	#try:
 	# Get Matrices
-	query = SupplierMatrix.query.filter_by(supplier_id=target_supplier).filter_by(matrix_type="agency_segment").first() 
+	# FIX THE FINANCIAL YEAR FILTER HERE !!!
+	query = SupplierMatrix.query.filter_by(supplier_id=target_supplier).filter_by(matrix_type="agency_segment").filter_by(financial_year=2020).first() 
 	data = SupplierMatrixSchema().dumps(query).data
 	data = json.loads(data)
 	if len(data)>0:
@@ -186,9 +192,15 @@ def comp_matrix(target_supplier):
 		# Rebuild the matrix
 		matrix_a = insight_functions.rebuild_matrix(json_data, unspscs, agencies)
 
-		query = SupplierMatrix.query.filter_by(matrix_type="agency_segment").all()
+		#Limit this to compare n competitors
+		query = SupplierMatrix.query.filter(SupplierMatrix.matrix_type=="agency_segment").filter(SupplierMatrix.supplier_id>=int(count)).filter(SupplierMatrix.supplier_id<int(count)+100).order_by(SupplierMatrix.supplier_id).limit(100).all()
+		#query = SupplierMatrix.query.filter_by(matrix_type="agency_segment").all()
 		#query = SupplierMatrix.query.filter_by(supplier_id=78).all()
 		data = SupplierMatrixSchema(many=True).dumps(query).data
+
+		if len(data)==2:
+			return "Done"
+
 		supplier_matrices = json.loads(data)
 
 		supplier_id = []
@@ -217,13 +229,9 @@ def comp_matrix(target_supplier):
 		comp_scores['score'] = comp_score
 		comp_scores.set_index('supplier_id', drop=True, append=False, inplace=True, verify_integrity=False)
 		comp_scores = comp_scores.sort_values(by='score', ascending=0)
-		comp_scores = comp_scores[comp_scores['score']>-1]
+		comp_scores = comp_scores[comp_scores['score']>-0.8]
 		comp_scores = comp_scores[comp_scores['score']!=0]
 		comp_scores = comp_scores[:50]# only save the top 50 competitors for each
-
-		# delete all of the entries fro this supplier, so they can be replaced.
-		query = Competitor.query.filter_by(supplier_id=target_supplier).delete()
-		db.session.commit()
 
 		#db.create_all()
 		for index, row in comp_scores.iterrows():
@@ -238,8 +246,11 @@ def comp_matrix(target_supplier):
 
 		#return "Done"
 	
-	link = "<a href='/comp_matrix/"+ str(int(target_supplier)+1) +"'>Next</a>"
-	link = "<script>window.location.href = '/comp_matrix/"+ str(int(target_supplier)+1) +"';</script>"
+	#return redirect("/comp_matrix/"+ str(target_supplier) +"/"+str(int(count)+100))
+
+	link = "<script>window.location.href = '/comp_matrix/"+ str(target_supplier) +"/"+str(int(count)+100)+"';</script>"
+	#link = "<a href='/comp_matrix/"+ str(int(target_supplier)+1) +"'>Next</a>"
+	#link = "<script>window.location.href = '/comp_matrix/"+ str(int(target_supplier)+1) +"';</script>"
 	return str(link)
 
 
