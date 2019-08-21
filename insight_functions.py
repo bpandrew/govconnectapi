@@ -157,10 +157,14 @@ def populate_matrix(supplier_id, df, unspscs, agencies):
 	df_matrix = create_matrix(unspscs, agencies) # Create the empty matrix
 	# populate the matrix
 	for index, row in df_temp.iterrows():
-		agency = "a_"+ str(index[0])
-		unspsc = int(index[1])
-		value = row['contract_value']
-		df_matrix[unspsc][agency] = value
+		try:
+			agency = "a_"+ str(index[0])
+			unspsc = int(index[1])
+			value = row['contract_value']
+			df_matrix[unspsc][agency] = value
+		except:
+			print("missing unspsc id:"+unspsc)
+			pass
         
 	return df_matrix
 

@@ -185,6 +185,8 @@ def competitor_data():
 @app.route("/comp_matrix/<target_supplier>/<count>", methods=['GET'])
 def comp_matrix(target_supplier, count):
 
+	time.sleep(0.05)
+
 	year=int(request.args.get('year'))
 
 	# If it is the first time through. Delete all of the entries for this supplier, so they can be replaced.
@@ -269,7 +271,7 @@ def comp_matrix(target_supplier, count):
 
 			#print(score[0])
 			# If matrix_b shows they are even the slightest competitor, do a deep dive into the agencies
-			if score>-0.8:
+			if score>-1:
 				for agency in matrix_a_agencies:
 					#print(agency)
 					matrix_a = insight_functions.rebuild_matrix(matrix_a_json_data, matrix_a_unspsc, [agency])
