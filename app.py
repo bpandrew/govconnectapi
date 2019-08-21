@@ -262,25 +262,25 @@ def comp_matrix(target_supplier, count):
 			matrix_b = insight_functions.rebuild_matrix(matrix_b_json_data, unspscs, agencies)
 			
 			# Loop through all the scores and add them to the dataframe arrays
-			score, agency_id = insight_functions.calc_competition(matrix_a, matrix_b, None)
+			score = insight_functions.calc_competition(matrix_a, matrix_b)
 			supplier_id.append(supplier['supplier']['id'])
 			comp_score.append( score )
-			agency_ids.append( agency_id )
+			agency_ids.append( 0 )
 
 			#print(score[0])
 			# If matrix_b shows they are even the slightest competitor, do a deep dive into the agencies
 			if score>-0.8:
 				for agency in matrix_a_agencies:
 					#print(agency)
-					matrix_a = insight_functions.rebuild_matrix(matrix_a_json_data, unspscs, [agency])
-					matrix_b = insight_functions.rebuild_matrix(matrix_b_json_data, unspscs, [agency])
+					matrix_a = insight_functions.rebuild_matrix(matrix_a_json_data, matrix_a_unspsc, [agency])
+					matrix_b = insight_functions.rebuild_matrix(matrix_b_json_data, matrix_a_unspsc, [agency])
 
 					#if np.sum(matrix_b, axis=1)>0:
 					# Loop through all the scores and add them to the dataframe arrays
-					score, agency_id = insight_functions.calc_competition(matrix_a, matrix_b, agency)
+					score = insight_functions.calc_competition(matrix_a, matrix_b)
 					supplier_id.append(supplier['supplier']['id'])
 					comp_score.append( score )
-					agency_ids.append( agency_id )
+					agency_ids.append( agency )
 
 
 		# Create the scores dataframe, sort and filter by competitor score
@@ -301,7 +301,7 @@ def comp_matrix(target_supplier, count):
 			if row['agency_id']==0:
 				agency_id = None
 			else:
-				agency_id=row['agency_id']
+				agency_id=row['agency_id'].replace("a_", "")
 
 			# Check the record does not exist
 			query = Competitor.query.filter_by(supplier_id=target_supplier).filter_by(competitor_id=index).filter_by(agency_id=agency_id).first() 
@@ -314,7 +314,7 @@ def comp_matrix(target_supplier, count):
 		#except:
 		#	pass
 
-	link = "<script>window.location.href = '/comp_matrix/"+ str(target_supplier) +"/"+str(int(count)+1)+"?year="+ str(year) +"&rand="+ str(count) +"';</script>"
+	link = "<script>window.location.href = '/comp_matrix/"+ str(target_supplier) +"/"+str(int(count)+1)+"?year="+ str(year) +"';</script>"
 	return str(link)
 
 
