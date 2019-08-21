@@ -228,6 +228,7 @@ def comp_matrix(target_supplier, count):
 
 		# Arrays to create a dataframe when this batch is complete
 		supplier_id = []
+		agency_ids = []
 		comp_score = []
 
 		for supplier in supplier_matrices:
@@ -247,20 +248,45 @@ def comp_matrix(target_supplier, count):
 					agencies.append(item)
 				
 				for agency in json_dict:
-					agencies.append(agency)
+					if agency not in agencies:
+						agencies.append(agency)
 					for unspsc in json_dict[agency]:
-						unspscs.append(str(unspsc))
+						if unspsc not in unspscs:
+							unspscs.append(str(unspsc))
 
-				#json_data = supplier['json']['data']
+
+				
+				matrix_b_json_data = supplier['json']['data']
 
 				matrix_a = insight_functions.rebuild_matrix(matrix_a_json_data, unspscs, agencies)
-
-				matrix_b_json_data = supplier['json']['data']
 				matrix_b = insight_functions.rebuild_matrix(matrix_b_json_data, unspscs, agencies)
+				
+				# Loop through all the scores and add them to the dataframe arrays
+				score, agency_id = insight_functions.calc_competition(matrix_a, matrix_b, None)
+				for item in score:
+					supplier_id.append(supplier['supplier']['id'])
+					comp_score.append( item )
+				for item in agency_id:
+					agency_ids.append( item )
 
-				supplier_id.append(supplier['supplier']['id'])
+				#print(score[0])
+				if score[0]>-1:
+					for agency in matrix_a_agencies:
+						#print(agency)
+						matrix_a = insight_functions.rebuild_matrix(matrix_a_json_data, unspscs, [agency])
+						matrix_b = insight_functions.rebuild_matrix(matrix_b_json_data, unspscs, [agency])
+						
+						# Loop through all the scores and add them to the dataframe arrays
+						score, agency_id = insight_functions.calc_competition(matrix_a, matrix_b, agency)
+						for item in score:
+							supplier_id.append(supplier['supplier']['id'])
+							comp_score.append( item )
+						for item in agency_id:
+							agency_ids.append( item )
 
-				comp_score.append( insight_functions.calc_competition(matrix_a, matrix_b) )
+
+
+				
 			#except:
 			#	print("something broke on line 209 of app.py")
 			#break
@@ -269,9 +295,10 @@ def comp_matrix(target_supplier, count):
 		comp_scores = pd.DataFrame()
 		comp_scores['supplier_id'] = supplier_id
 		comp_scores['score'] = comp_score
+		comp_scores['agency_id'] = agency_ids
 		comp_scores.set_index('supplier_id', drop=True, append=False, inplace=True, verify_integrity=False)
 		comp_scores = comp_scores.sort_values(by='score', ascending=0)
-		comp_scores = comp_scores[comp_scores['score']>-0.8]
+		comp_scores = comp_scores[comp_scores['score']>-0.9]
 		comp_scores = comp_scores[comp_scores['score']!=0]
 		#comp_scores = comp_scores[:50]# only save the top 50 competitors for each
 
@@ -281,11 +308,18 @@ def comp_matrix(target_supplier, count):
 			#print(index, row['score'])
 			if index>(int(count)+100):
 				count=int(index)
+
+			# if the agency_id is 0, it means all agencyies were used in the analysis. Make it None to allow it to be inserted in the DB
+			if row['agency_id']==0:
+				agency_id = None
+			else:
+				agency_id=row['agency_id']
+
 			# Check the record does not exist
-			query = Competitor.query.filter_by(supplier_id=target_supplier).filter_by(competitor_id=index).first() 
+			query = Competitor.query.filter_by(supplier_id=target_supplier).filter_by(competitor_id=index).filter_by(agency_id=agency_id).first() 
 			if query==None:
 				# Add the record to the competitor table
-				query = Competitor(supplier_id=target_supplier, competitor_id=index, score=row['score'], created=datetime.now())
+				query = Competitor(supplier_id=target_supplier, competitor_id=index, score=row['score'], agency_id=agency_id, created=datetime.now())
 				db.session.add(query)
 				db.session.commit()
 

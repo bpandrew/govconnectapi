@@ -206,8 +206,12 @@ def rebuild_matrix(json_data, unspscs, agencies):
 	return df_matrix
 
 
-def calc_competition(matrix_a, matrix_b):
+def calc_competition(matrix_a, matrix_b, agency_filter):
 	value_weighting_factor = 1
+
+	agency_ids = []
+	competitor_scores = []
+
 	agency_sum = np.sum(matrix_a, axis=1)
 	total_earnings = np.sum(agency_sum)
 
@@ -215,7 +219,16 @@ def calc_competition(matrix_a, matrix_b):
 	score_matrix = ((matrix_b-matrix_a)/matrix_a)*((matrix_a/total_earnings)**value_weighting_factor)
 	agency_competitiom_sum = np.sum(score_matrix, axis=1)
 	competitor_score = np.sum(agency_competitiom_sum)
-	return competitor_score
+	
+	if agency_filter==None:
+		agency_id = 0
+	else:
+		agency_id = int(agency_filter.replace("a_", ""))
+
+	agency_ids.append(agency_id)
+	competitor_scores.append(competitor_score)
+
+	return competitor_scores, agency_ids
 
 
 

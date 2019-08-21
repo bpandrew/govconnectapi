@@ -201,12 +201,15 @@ class Competitor(db.Model):
 	supplier = db.relationship("Supplier", foreign_keys=[supplier_id], backref="target_supplier")
 	competitor_id = db.Column(db.Integer, db.ForeignKey("supplier.id"), nullable=True)
 	competitor = db.relationship("Supplier", foreign_keys=[competitor_id], backref="competitor")
+	agency_id = db.Column(db.Integer, db.ForeignKey("agency.id"), nullable=True) # When Agency ID = None, all agencies have been included in the analysis
+	agency = db.relationship("Agency", foreign_keys=[agency_id], backref="competitors")
 
 class CompetitorSchema(ma.ModelSchema):
 	class Meta:
 		model = Competitor
 	supplier = ma.Nested(SupplierSchema, only=("id", "name", "abn", "country", "display_name"))
 	competitor = ma.Nested(SupplierSchema, only=("id", "name", "abn", "country", "display_name", "umbrella", "umbrella_id"))
+	agency = ma.Nested(AgencySchema, only=("id", "display_title"))
 
 
 
