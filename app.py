@@ -263,14 +263,12 @@ def comp_matrix(target_supplier, count):
 				
 				# Loop through all the scores and add them to the dataframe arrays
 				score, agency_id = insight_functions.calc_competition(matrix_a, matrix_b, None)
-				for item in score:
-					supplier_id.append(supplier['supplier']['id'])
-					comp_score.append( item )
-				for item in agency_id:
-					agency_ids.append( item )
+				supplier_id.append(supplier['supplier']['id'])
+				comp_score.append( score )
+				agency_ids.append( agency_id )
 
 				#print(score[0])
-				if score[0]>-1:
+				if score>-1:
 					for agency in matrix_a_agencies:
 						#print(agency)
 						matrix_a = insight_functions.rebuild_matrix(matrix_a_json_data, unspscs, [agency])
@@ -278,11 +276,9 @@ def comp_matrix(target_supplier, count):
 						
 						# Loop through all the scores and add them to the dataframe arrays
 						score, agency_id = insight_functions.calc_competition(matrix_a, matrix_b, agency)
-						for item in score:
-							supplier_id.append(supplier['supplier']['id'])
-							comp_score.append( item )
-						for item in agency_id:
-							agency_ids.append( item )
+						supplier_id.append(supplier['supplier']['id'])
+						comp_score.append( score )
+						agency_ids.append( agency_id )
 
 
 
@@ -297,16 +293,18 @@ def comp_matrix(target_supplier, count):
 		comp_scores['score'] = comp_score
 		comp_scores['agency_id'] = agency_ids
 		comp_scores.set_index('supplier_id', drop=True, append=False, inplace=True, verify_integrity=False)
-		comp_scores = comp_scores.sort_values(by='score', ascending=0)
-		comp_scores = comp_scores[comp_scores['score']>-0.9]
-		comp_scores = comp_scores[comp_scores['score']!=0]
+		#comp_scores = comp_scores.sort_values(by='score', ascending=0)
+		#comp_scores = comp_scores[comp_scores['score']>-0.95]
+		#comp_scores = comp_scores[comp_scores['score']!=0]
 		#comp_scores = comp_scores[:50]# only save the top 50 competitors for each
 
 		
 		#db.create_all()
 		for index, row in comp_scores.iterrows():
 			#print(index, row['score'])
-			if index>(int(count)+100):
+
+			# Skip ahead to the next relevant record
+			if index>(int(count)+2):
 				count=int(index)
 
 			# if the agency_id is 0, it means all agencyies were used in the analysis. Make it None to allow it to be inserted in the DB
@@ -317,7 +315,7 @@ def comp_matrix(target_supplier, count):
 
 			# Check the record does not exist
 			query = Competitor.query.filter_by(supplier_id=target_supplier).filter_by(competitor_id=index).filter_by(agency_id=agency_id).first() 
-			if query==None:
+			if (query==None) and (row['score']!=0) and (row['score']>-0.95):
 				# Add the record to the competitor table
 				query = Competitor(supplier_id=target_supplier, competitor_id=index, score=row['score'], agency_id=agency_id, created=datetime.now())
 				db.session.add(query)

@@ -228,7 +228,7 @@ def calc_competition(matrix_a, matrix_b, agency_filter):
 	agency_ids.append(agency_id)
 	competitor_scores.append(competitor_score)
 
-	return competitor_scores, agency_ids
+	return competitor_score, agency_id
 
 
 
