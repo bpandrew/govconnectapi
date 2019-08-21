@@ -219,74 +219,68 @@ def comp_matrix(target_supplier, count):
 		#matrix_a = insight_functions.rebuild_matrix(json_data, unspscs, agencies)
 
 		#Limit this to compare n competitors
-		query = SupplierMatrix.query.filter(SupplierMatrix.matrix_type=="agency_segment").filter(SupplierMatrix.supplier_id>=int(count)).order_by(SupplierMatrix.supplier_id).limit(1).all()
-		data = SupplierMatrixSchema(many=True).dumps(query).data
-		# if there are no more suppliers to compare
-		if len(data)==2:
-			return "Done"
-		supplier_matrices = json.loads(data)
+		query = SupplierMatrix.query.filter_by(supplier_id=int(count)).filter_by(matrix_type="agency_segment").filter_by(financial_year=int(year)).first() 
+		#query = SupplierMatrix.query.filter(SupplierMatrix.matrix_type=="agency_segment").filter(SupplierMatrix.supplier_id==int(count)).order_by(SupplierMatrix.supplier_id).limit(1).all()
+		data = SupplierMatrixSchema().dumps(query).data
 
 		# Arrays to create a dataframe when this batch is complete
 		supplier_id = []
 		agency_ids = []
 		comp_score = []
 
-		for supplier in supplier_matrices:
-			# Get Matrices
-			#try:
-
+		# Get Matrices
+		supplier = json.loads(data)
+		try:
 			if len(supplier['json']['data'])>3:
+				continue_=True
+			else:
+				continue_ = False
+		except:
+			continue_ = False
 
-				json_dict = json.loads(supplier['json']['data'])
+		if continue_==True:
+			json_dict = json.loads(supplier['json']['data'])
 
-				unspscs = []
-				agencies = []
-				
-				for item in matrix_a_unspsc:
-					unspscs.append(item)
-				for item in matrix_a_agencies:
-					agencies.append(item)
-				
-				for agency in json_dict:
-					if agency not in agencies:
-						agencies.append(agency)
-					for unspsc in json_dict[agency]:
-						if unspsc not in unspscs:
-							unspscs.append(str(unspsc))
+			unspscs = []
+			agencies = []
+			
+			for item in matrix_a_unspsc:
+				unspscs.append(item)
+			for item in matrix_a_agencies:
+				agencies.append(item)
+			
+			for agency in json_dict:
+				if agency not in agencies:
+					agencies.append(agency)
+				for unspsc in json_dict[agency]:
+					if unspsc not in unspscs:
+						unspscs.append(str(unspsc))
+			
+			matrix_b_json_data = supplier['json']['data']
 
+			matrix_a = insight_functions.rebuild_matrix(matrix_a_json_data, unspscs, agencies)
+			matrix_b = insight_functions.rebuild_matrix(matrix_b_json_data, unspscs, agencies)
+			
+			# Loop through all the scores and add them to the dataframe arrays
+			score, agency_id = insight_functions.calc_competition(matrix_a, matrix_b, None)
+			supplier_id.append(supplier['supplier']['id'])
+			comp_score.append( score )
+			agency_ids.append( agency_id )
 
-				
-				matrix_b_json_data = supplier['json']['data']
+			#print(score[0])
+			# If matrix_b shows they are even the slightest competitor, do a deep dive into the agencies
+			if score>-1:
+				for agency in matrix_a_agencies:
+					#print(agency)
+					matrix_a = insight_functions.rebuild_matrix(matrix_a_json_data, unspscs, [agency])
+					matrix_b = insight_functions.rebuild_matrix(matrix_b_json_data, unspscs, [agency])
+					
+					# Loop through all the scores and add them to the dataframe arrays
+					score, agency_id = insight_functions.calc_competition(matrix_a, matrix_b, agency)
+					supplier_id.append(supplier['supplier']['id'])
+					comp_score.append( score )
+					agency_ids.append( agency_id )
 
-				matrix_a = insight_functions.rebuild_matrix(matrix_a_json_data, unspscs, agencies)
-				matrix_b = insight_functions.rebuild_matrix(matrix_b_json_data, unspscs, agencies)
-				
-				# Loop through all the scores and add them to the dataframe arrays
-				score, agency_id = insight_functions.calc_competition(matrix_a, matrix_b, None)
-				supplier_id.append(supplier['supplier']['id'])
-				comp_score.append( score )
-				agency_ids.append( agency_id )
-
-				#print(score[0])
-				# If matrix_b shows they are even the slightest competitor, do a deep dive into the agencies
-				if score>-1:
-					for agency in matrix_a_agencies:
-						#print(agency)
-						matrix_a = insight_functions.rebuild_matrix(matrix_a_json_data, unspscs, [agency])
-						matrix_b = insight_functions.rebuild_matrix(matrix_b_json_data, unspscs, [agency])
-						
-						# Loop through all the scores and add them to the dataframe arrays
-						score, agency_id = insight_functions.calc_competition(matrix_a, matrix_b, agency)
-						supplier_id.append(supplier['supplier']['id'])
-						comp_score.append( score )
-						agency_ids.append( agency_id )
-
-
-
-				
-			#except:
-			#	print("something broke on line 209 of app.py")
-			#break
 
 		# Create the scores dataframe, sort and filter by competitor score
 		comp_scores = pd.DataFrame()
@@ -294,19 +288,13 @@ def comp_matrix(target_supplier, count):
 		comp_scores['score'] = comp_score
 		comp_scores['agency_id'] = agency_ids
 		comp_scores.set_index('supplier_id', drop=True, append=False, inplace=True, verify_integrity=False)
-		#comp_scores = comp_scores.sort_values(by='score', ascending=0)
-		#comp_scores = comp_scores[comp_scores['score']>-0.95]
-		#comp_scores = comp_scores[comp_scores['score']!=0]
-		#comp_scores = comp_scores[:50]# only save the top 50 competitors for each
-
 		
-		#db.create_all()
 		for index, row in comp_scores.iterrows():
 			#print(index, row['score'])
 
 			# Skip ahead to the next relevant record
-			if index>(int(count)+1):
-				count=int(index)
+			#if index>(int(count)+1):
+			#	count=int(index)
 
 			# if the agency_id is 0, it means all agencyies were used in the analysis. Make it None to allow it to be inserted in the DB
 			if row['agency_id']==0:
@@ -325,13 +313,7 @@ def comp_matrix(target_supplier, count):
 		#except:
 		#	pass
 
-		#return "Done"
-	
-	#return redirect("/comp_matrix/"+ str(target_supplier) +"/"+str(int(count)+100))
-
-	link = "<script>window.location.href = '/comp_matrix/"+ str(target_supplier) +"/"+str(int(count)+1)+"?year="+ str(year) +"';</script>"
-	#link = "<a href='/comp_matrix/"+ str(int(target_supplier)+1) +"'>Next</a>"
-	#link = "<script>window.location.href = '/comp_matrix/"+ str(int(target_supplier)+1) +"';</script>"
+	link = "<script>window.location.href = '/comp_matrix/"+ str(target_supplier) +"/"+str(int(count)+1)+"?year="+ str(year) +"&rand="+ str(count) +"';</script>"
 	return str(link)
 
 
@@ -753,7 +735,7 @@ def contracts_data():
 		query = Contract.query.order_by(desc(Contract.publish_date)).paginate(1, 1, False)
 		data = {"data": {}, "pages": query.pages}
 	else: # return the dataset
-		query = Contract.query.paginate(page, 200, False)
+		query = Contract.query.paginate(page, 300, False)
 		items=query.items
 		result = ContractSchema(many=True).dump(items).data
 		data = {"data": result, "pages": query.pages}
@@ -1463,7 +1445,7 @@ def suppliers():
 @app.route("/suppliers_data", methods=['GET', 'POST'])
 def suppliers_data():
 	page=int(request.args.get('page'))
-	query = Supplier.query.paginate(page, 200, False)
+	query = Supplier.query.paginate(page, 300, False)
 	suppliers=query.items
 	
 	result = SupplierSchema(many=True).dump(suppliers).data
@@ -1716,7 +1698,7 @@ def latest_notice_update():
 @app.route("/staff_data", methods=['GET', 'POST'])
 def staff_data():
 	page=int(request.args.get('page'))
-	query = Employee.query.paginate(page, 200, False)
+	query = Employee.query.paginate(page, 300, False)
 	aps_staff=query.items
 	result = EmployeeSchema(many=True).dump(aps_staff).data
 	for item in result:
