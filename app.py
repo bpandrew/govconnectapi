@@ -274,8 +274,8 @@ def comp_matrix(target_supplier, count):
 			if score>-1:
 				for agency in matrix_a_agencies:
 					#print(agency)
-					matrix_a = insight_functions.rebuild_matrix(matrix_a_json_data, matrix_a_unspsc, [agency])
-					matrix_b = insight_functions.rebuild_matrix(matrix_b_json_data, matrix_a_unspsc, [agency])
+					matrix_a = insight_functions.rebuild_matrix(matrix_a_json_data, unspscs, [agency])
+					matrix_b = insight_functions.rebuild_matrix(matrix_b_json_data, unspscs, [agency])
 
 					#if np.sum(matrix_b, axis=1)>0:
 					# Loop through all the scores and add them to the dataframe arrays

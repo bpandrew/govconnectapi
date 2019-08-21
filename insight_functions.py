@@ -79,7 +79,7 @@ def supplier_agency_segment_matrix(df, supplier_id, unspsc_segments, unspsc_dict
 	df_temp = df.copy()
 	
 	# filter the dataframe by financial year and/or financial quarter
-	df_temp = df_temp[ (df_temp['financial_year']>=financial_year) ]
+	df_temp = df_temp[ (df_temp['financial_year']==financial_year) ]
 	if financial_quarter!=0:
 		df_temp = df_temp[ (df_temp['financial_quarter']==financial_quarter) ]
 
