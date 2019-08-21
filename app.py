@@ -219,7 +219,7 @@ def comp_matrix(target_supplier, count):
 		#matrix_a = insight_functions.rebuild_matrix(json_data, unspscs, agencies)
 
 		#Limit this to compare n competitors
-		query = SupplierMatrix.query.filter(SupplierMatrix.matrix_type=="agency_segment").filter(SupplierMatrix.supplier_id>=int(count)).order_by(SupplierMatrix.supplier_id).limit(2).all()
+		query = SupplierMatrix.query.filter(SupplierMatrix.matrix_type=="agency_segment").filter(SupplierMatrix.supplier_id>=int(count)).order_by(SupplierMatrix.supplier_id).limit(1).all()
 		data = SupplierMatrixSchema(many=True).dumps(query).data
 		# if there are no more suppliers to compare
 		if len(data)==2:
@@ -268,6 +268,7 @@ def comp_matrix(target_supplier, count):
 				agency_ids.append( agency_id )
 
 				#print(score[0])
+				# If matrix_b shows they are even the slightest competitor, do a deep dive into the agencies
 				if score>-1:
 					for agency in matrix_a_agencies:
 						#print(agency)
@@ -304,7 +305,7 @@ def comp_matrix(target_supplier, count):
 			#print(index, row['score'])
 
 			# Skip ahead to the next relevant record
-			if index>(int(count)+2):
+			if index>(int(count)+1):
 				count=int(index)
 
 			# if the agency_id is 0, it means all agencyies were used in the analysis. Make it None to allow it to be inserted in the DB
@@ -328,7 +329,7 @@ def comp_matrix(target_supplier, count):
 	
 	#return redirect("/comp_matrix/"+ str(target_supplier) +"/"+str(int(count)+100))
 
-	link = "<script>window.location.href = '/comp_matrix/"+ str(target_supplier) +"/"+str(int(count)+2)+"?year="+ str(year) +"';</script>"
+	link = "<script>window.location.href = '/comp_matrix/"+ str(target_supplier) +"/"+str(int(count)+1)+"?year="+ str(year) +"';</script>"
 	#link = "<a href='/comp_matrix/"+ str(int(target_supplier)+1) +"'>Next</a>"
 	#link = "<script>window.location.href = '/comp_matrix/"+ str(int(target_supplier)+1) +"';</script>"
 	return str(link)
