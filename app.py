@@ -1684,7 +1684,8 @@ def playingfield():
 	data = {}
 
 	# Get this from the Session.
-	supplier_id = 2915
+	#supplier_id = 2915
+	supplier_id= int(request.args.get('id'))
 	financial_year = 2019
 
 	# Get all of the suppiers competitors
