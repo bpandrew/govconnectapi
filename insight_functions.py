@@ -199,12 +199,16 @@ def rebuild_matrix(json_data, unspscs, agencies):
 	#df_matrix = pd.DataFrame()
     
 	for index, row in dataset.iterrows():
-		agency = str(index[0])
-		unspsc = str(index[1])
-		value = row[0]
-		#print(agency, unspsc, value)
-		df_matrix[unspsc][agency] = value
-		#df_matrix.loc[agency][unspsc] = value   
+		try:
+			agency = str(index[0])
+			unspsc = str(index[1])
+			value = row[0]
+			#print(agency, unspsc, value)
+			df_matrix[unspsc][agency] = value
+			#df_matrix.loc[agency][unspsc] = value  
+		except:
+			print("missing unspsc id:"+unspsc)
+			pass 
 
 	#print(compress_matrix(df_matrix))
 	return df_matrix
