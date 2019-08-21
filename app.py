@@ -269,12 +269,13 @@ def comp_matrix(target_supplier, count):
 
 			#print(score[0])
 			# If matrix_b shows they are even the slightest competitor, do a deep dive into the agencies
-			if score>-1:
+			if score>-0.8:
 				for agency in matrix_a_agencies:
 					#print(agency)
 					matrix_a = insight_functions.rebuild_matrix(matrix_a_json_data, unspscs, [agency])
 					matrix_b = insight_functions.rebuild_matrix(matrix_b_json_data, unspscs, [agency])
-					
+
+					#if np.sum(matrix_b, axis=1)>0:
 					# Loop through all the scores and add them to the dataframe arrays
 					score, agency_id = insight_functions.calc_competition(matrix_a, matrix_b, agency)
 					supplier_id.append(supplier['supplier']['id'])
