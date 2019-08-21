@@ -1474,11 +1474,6 @@ def supplier_detail(supplier_id):
 		
 	data['supplier_details'] = result
 
-	# Get all of the suppiers competitors
-	query = Competitor.query.order_by(desc(Competitor.score)).filter_by(supplier_id=supplier_id).all()
-	result = CompetitorSchema(many=True).dump(query).data
-	data['competitors'] = result
-
 	# If the supplier has an parent umbrella supplier, find all the details for the parent
 	if data['supplier_details']['umbrella_id']!=None:
 		query = Supplier.query.filter_by(id=data['supplier_details']['umbrella_id']).first()
@@ -1673,6 +1668,62 @@ def suppliers_add():
 
 		response = SupplierSchema().dump(supplier).data
 		return functions.json_response('Success - Supplier Already Exists', response)
+
+
+
+
+# ------------------------------------ PLAYING FIELD ------------------------------------
+# ---------------------------------------------------------------------------------
+
+
+
+# --- DASHBOARD PAGE ---
+@app.route("/playingfield")
+def playingfield():
+
+	data = {}
+
+	# Get this from the Session.
+	supplier_id = 2915
+	financial_year = 2019
+
+	# Get all of the suppiers competitors
+	query = Competitor.query.order_by(desc(Competitor.score)).filter_by(supplier_id=supplier_id).all()
+	result = CompetitorSchema(many=True).dump(query).data
+	data['competitors'] = result
+
+	data['heatmap'] = []
+
+	query = SupplierMatrix.query.filter_by(supplier_id=supplier_id).filter_by(financial_year=financial_year).first()
+	result = SupplierMatrixSchema().dump(query).data
+	json_dict = json.loads(result['json']['data'])
+	
+	for agency in json_dict:
+		dict_temp = {}
+
+		agency_id = agency.replace("a_", "")
+		query = Agency.query.filter_by(id=agency_id).first()
+		result = AgencySchema().dump(query).data
+		
+		dict_temp['agency'] = result['display_title']
+		for unspsc in json_dict[agency]:
+
+			query = Unspsc.query.filter_by(id=unspsc).first()
+			result = UnspscSchema().dump(query).data
+			dict_temp['unspsc'] = result['title']
+
+			value = json_dict[agency][unspsc]
+			dict_temp['value'] = int(value)
+			print(unspsc)
+
+		data['heatmap'].append(dict_temp)
+
+	print(data['heatmap'])
+
+	print(json_dict)
+
+	return render_template('playingfield.html', data=data)
+
 
 
 

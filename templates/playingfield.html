@@ -1,0 +1,159 @@
+{% include "header.html" %}
+
+<!-- [ content ] Start -->
+
+<div class="container-fluid flex-grow-1 container-p-y">			
+	<h4 class="font-weight-bold py-3 mb-0">Playing Field Insights</h4>
+    <div class="text-muted small mt-0 mb-4 d-block breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="#"><i class="feather icon-home"></i></a></li>
+            <li class="breadcrumb-item"><a href="/playingfield">Playing Field</a></li>
+        </ol>
+    </div>
+
+	<div class="row">
+		<div class="col-xl-12">
+			<div class="card mb-4">
+				<hr class="border-light m-0" style="margin-bottom: -10px">
+				
+				<div class="card-body">
+					<h6 class="my-3">Strategic Competitors / Partners</h6>
+					<p>These suppliers are providing similar services to the same customer base within agencies as Deloitte.</p>
+					{% for competitor in data.competitors %}
+					<div class="row mb-2">
+						<div class="col-md-4">
+							<a href="/supplier/{{ competitor['competitor']['id']}}">{{ competitor['competitor']['display_name']}}</a>
+						</div>
+						{% if competitor['score']<=0 %}
+						<div class="col-md-4 text-muted"><div class="badge badge-success">Lagging {{competitor['score']|round(2)}}</div></div>
+						{% endif %}
+						{% if competitor['score']>0 %}
+						<div class="col-md-4 text-muted"><div class="badge badge-danger">Leading {{competitor['score']|round(2)}}</div></div>
+						{% endif %}
+						{% if competitor['agency']!=None %}
+							<div class="col-md-4 text-muted">{{competitor['agency']['display_title']}}</div>
+						{% else %}
+							<div class="col-md-4 text-muted">All</div>
+						{% endif %}
+					</div>
+					{% endfor %}
+				</div>
+
+            </div>
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="col-xl-12">
+			<div class="card mb-4">
+				<div class="card-body">
+					<div id="chartdiv" class="chartjs-demo" style="display: block; max-width: 100%; height: 500px;"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</div>
+
+<!-- [ content ] End -->
+
+{% include "footer.html" %}
+
+<!-- Chart code -->
+<script>
+am4core.ready(function() {
+
+// Themes begin
+am4core.useTheme(am4themes_animated);
+// Themes end
+
+var chart = am4core.create("chartdiv", am4charts.XYChart);
+chart.maskBullets = false;
+
+var xAxis = chart.xAxes.push(new am4charts.CategoryAxis());
+var yAxis = chart.yAxes.push(new am4charts.CategoryAxis());
+
+xAxis.dataFields.category = "unspsc";
+yAxis.dataFields.category = "agency";
+yAxis.renderer.labels.template.fontSize = 11;
+xAxis.renderer.labels.template.rotation = 270;
+xAxis.renderer.labels.template.fontSize = 11;
+
+var label = xAxis.renderer.labels.template;
+label.wrap = true;
+label.maxWidth = 150;
+
+xAxis.renderer.grid.template.disabled = true;
+xAxis.renderer.minGridDistance = 40;
+
+yAxis.renderer.grid.template.disabled = true;
+yAxis.renderer.inversed = true;
+yAxis.renderer.minGridDistance = 30;
+
+
+var series = chart.series.push(new am4charts.ColumnSeries());
+series.dataFields.categoryX = "unspsc";
+series.dataFields.categoryY = "agency";
+series.dataFields.value = "value";
+series.sequencedInterpolation = true;
+series.defaultState.transitionDuration = 3000;
+
+var bgColor = new am4core.InterfaceColorSet().getFor("background");
+
+var columnTemplate = series.columns.template;
+columnTemplate.strokeWidth = 1;
+columnTemplate.strokeOpacity = 0.2;
+columnTemplate.stroke = bgColor;
+columnTemplate.tooltipText = "{unspsc}, {agency}: ${value.workingValue.formatNumber('#.')}";
+columnTemplate.width = am4core.percent(100);
+columnTemplate.height = am4core.percent(100);
+
+series.heatRules.push({
+	target: columnTemplate,
+	property: "fill",
+	min: am4core.color(bgColor),
+	max: chart.colors.getIndex(0)
+});
+
+// heat legend
+var heatLegend = chart.bottomAxesContainer.createChild(am4charts.HeatLegend);
+heatLegend.width = am4core.percent(100);
+heatLegend.series = series;
+heatLegend.valueAxis.renderer.labels.template.fontSize = 11;
+heatLegend.valueAxis.renderer.minGridDistance = 150;
+
+// heat legend behavior
+series.columns.template.events.on("over", function(event) {
+	handleHover(event.target);
+})
+
+series.columns.template.events.on("hit", function(event) {
+	handleHover(event.target);
+})
+
+function handleHover(column) {
+	if (!isNaN(column.dataItem.value)) {
+	heatLegend.valueAxis.showTooltipAt(column.dataItem.value)
+	}
+	else {
+	heatLegend.valueAxis.hideTooltip();
+	}
+}
+
+series.columns.template.events.on("out", function(event) {
+	heatLegend.valueAxis.hideTooltip();
+})
+
+var bullet2 = series.bullets.push(new am4charts.LabelBullet());
+bullet2.label.text = "${value}";
+bullet2.label.fill = am4core.color("#000000");
+bullet2.zIndex = 1;
+bullet2.fontSize = 12;
+bullet2.interactionsEnabled = false;
+
+chart.data = {{ data['heatmap']|safe }};
+
+}); // end am4core.ready()
+</script>
+
+

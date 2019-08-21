@@ -191,36 +191,6 @@
 	</div>
 	{% endif %}
 
-
-	<div class="row">
-		<div class="col-xl-12">
-			<div class="card mb-4">
-                <hr class="border-light m-0" style="margin-bottom: -10px">
-				
-				<div class="card-body">
-					<h6 class="my-3">Competitors</h6>
-					<p>The following suppliers are considered to be competitors.</p>
-					{% for competitor in data.competitors %}
-					<div class="row mb-2">
-						<div class="col-md-4">
-							<a href="/supplier/{{ competitor['competitor']['id']}}">{{ competitor['competitor']['display_name']}}</a>
-						</div>
-						<div class="col-md-4 text-muted">Score: {{competitor['score']}}</div>
-						{% if competitor['agency']!=None %}
-							<div class="col-md-4 text-muted">{{competitor['agency']['display_title']}}</div>
-						{% else %}
-							<div class="col-md-4 text-muted">All</div>
-						{% endif %}
-					</div>
-					{% endfor %}
-				</div>
-
-            </div>
-		</div>
-	</div>
-
-	{{ data.competitors }}
-
 </div>
 
 <!-- [ content ] End -->
