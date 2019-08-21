@@ -397,24 +397,28 @@ def matrix(target_supplier):
 
 		# Loop over suppliers and add the matrix to the db
 		#for supplier_id in supplier_ids:
-		matrixes = insight_functions.supplier_agency_segment_matrix(df, target_supplier, unspsc_segments, unspsc_dict, agencies, financial_year, financial_quarter)
+		try:
+			matrixes = insight_functions.supplier_agency_segment_matrix(df, target_supplier, unspsc_segments, unspsc_dict, agencies, financial_year, financial_quarter)
 
-		if matrixes!=None:
-			for matrix in matrixes:
-				if len(matrix['data'])>2:
-					# Add the matrix to the db
-					obj=SupplierMatrix.query.filter_by(supplier_id=matrix['supplier_id']).filter_by(financial_year=financial_year).filter_by(financial_quarter=financial_quarter).first()
-					if obj==None:
-						db.create_all()
-						query = SupplierMatrix(matrix_type="agency_segment", supplier_id=target_supplier, json=matrix, financial_year=financial_year, financial_quarter=financial_quarter, created=datetime.now())
-						db.session.add(query)
-						db.session.commit()
-					else:
-						response = OpSchema().dump(obj).data # get the existing op data
-						# Update any changes to the opportunity
-						obj.json = matrix
-						created=datetime.now()
-						db.session.commit()
+			if matrixes!=None:
+				for matrix in matrixes:
+					if len(matrix['data'])>2:
+						# Add the matrix to the db
+						obj=SupplierMatrix.query.filter_by(supplier_id=matrix['supplier_id']).filter_by(financial_year=financial_year).filter_by(financial_quarter=financial_quarter).first()
+						if obj==None:
+							db.create_all()
+							query = SupplierMatrix(matrix_type="agency_segment", supplier_id=target_supplier, json=matrix, financial_year=financial_year, financial_quarter=financial_quarter, created=datetime.now())
+							db.session.add(query)
+							db.session.commit()
+						else:
+							response = OpSchema().dump(obj).data # get the existing op data
+							# Update any changes to the opportunity
+							obj.json = matrix
+							created=datetime.now()
+							db.session.commit()
+		except:
+			print("some sort of error creating the matrix for the user.  Line 400 app.py")
+			pass
 
 	if loop==1:
 		link = "<a href='/matrix/"+ str(int(target_supplier)+1) +"?loop="+ str(loop) +"'>Next</a>"
