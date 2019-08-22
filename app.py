@@ -1672,6 +1672,15 @@ def suppliers_add():
 def playingfield_heatmap_data():
 	target_id= int(request.args.get('target_id'))
 	competition_id= int(request.args.get('competition_id'))
+	try:
+		filter_overlap = int(request.args.get('filter_overlap'))
+	except:
+		filter_overlap = 0
+	try:
+		baseline = int(request.args.get('baseline'))
+	except:
+		baseline = 0
+
 
 	financial_year = 2019
 
@@ -1694,78 +1703,123 @@ def playingfield_heatmap_data():
 
 		matrix_a_json_data = data['json']['data']
 
-		query = SupplierMatrix.query.filter_by(supplier_id=competition_id).filter_by(matrix_type="agency_segment").filter_by(financial_year=int(financial_year)).first() 
-		data = SupplierMatrixSchema().dumps(query).data
-		data = json.loads(data)
-		competitor_name = data['supplier']['display_name']
-		json_dict = json.loads(data['json']['data'])
+		if baseline!=1:
+			query = SupplierMatrix.query.filter_by(supplier_id=competition_id).filter_by(matrix_type="agency_segment").filter_by(financial_year=int(financial_year)).first() 
+			data = SupplierMatrixSchema().dumps(query).data
+			data = json.loads(data)
+			competitor_name = data['supplier']['display_name']
+			json_dict = json.loads(data['json']['data'])
 
-		for agency in json_dict:
-			if agency not in agencies:
-				agencies.append(agency)
-			for unspsc in json_dict[agency]:
-				if unspsc not in unspscs:
-					unspscs.append(str(unspsc))
+			for agency in json_dict:
+				if agency not in agencies:
+					agencies.append(agency)
+				for unspsc in json_dict[agency]:
+					if unspsc not in unspscs:
+						unspscs.append(str(unspsc))
 
-		matrix_b_json_data = data['json']['data']
+			matrix_b_json_data = data['json']['data']
 
 		matrix_a = insight_functions.rebuild_matrix(matrix_a_json_data, unspscs, agencies)
-		matrix_b = insight_functions.rebuild_matrix(matrix_b_json_data, unspscs, agencies)
 
-		matrix_c = matrix_a-matrix_b
+		# ----- BASELINE HERE
+		if baseline==1:
 
+			chart_data = []
 
-		chart_data = []
+			for item in matrix_a:
+				for i in range(len(matrix_a[item])):
+					if (matrix_a[item][i]!=0):
+						chart_dict = {}	
 
-		for item in matrix_c:
-			for i in range(len(matrix_c[item])):
-				chart_dict = {}
-				winning = 0
-				competition = 0
-				#print("agency:"+ str(matrix_c[item].index[i]))
-				#print("unspsc:"+ str(item))
-				#print("value:"+ str(matrix_c[item][i]))
-				if (matrix_c[item][i]!=0):
-
-					if (matrix_c[item][i]==matrix_a[item][i]) and (matrix_c[item][i]!=0):
-						#print("No competition")
-						description = target_supplier_name +" generated "+ functions.format_currency(matrix_a[item][i]) +" [bold]unchallenged[/] by "+ competitor_name +" in this service category and agency."
+						description = ""
 						competition = 0
-					if (matrix_c[item][i]<matrix_a[item][i]) and (matrix_c[item][i]!=0) and (matrix_c[item][i]<0):
-						#print("Competitor playing and winning")
-						description = competitor_name +" generated "+ functions.format_currency(matrix_b[item][i]) +" in this service category and agency; [bold]More[/] than the "+ functions.format_currency(matrix_a[item][i]) +" "+ target_supplier_name +" generated."
-						winning = -1
-						competition = 1
-					if (matrix_c[item][i]==(matrix_b[item][i]*-1)) and (matrix_c[item][i]!=0):
-						#print("Competitor playing where you are not.")
-						description = competitor_name +" generated "+ functions.format_currency(matrix_b[item][i]) +" [bold]unchallenged[/] by "+ target_supplier_name +" in this service category and agency."
-						competition = -1
-						winning = -1
-					if (matrix_c[item][i]<matrix_a[item][i]) and (matrix_c[item][i]!=0) and (matrix_c[item][i]>0):
-						#print("Competitor playing but losing")
-						description = competitor_name +" generated "+ functions.format_currency(matrix_b[item][i]) +" in this service category and agency; [bold]Less[/] than the "+ functions.format_currency(matrix_a[item][i]) +" "+ target_supplier_name +" generated."
-						winning = 1
-						competition = 1
-					#print("---")
+						winning = 0
+						agency_id = matrix_a[item].index[i].replace("a_", "")
+						query = Agency.query.filter_by(id=agency_id).first()
+						result = AgencySchema().dump(query).data
+						agency_name = result['display_title']
 
-					agency_id = matrix_c[item].index[i].replace("a_", "")
-					query = Agency.query.filter_by(id=agency_id).first()
-					result = AgencySchema().dump(query).data
-					agency_name = result['display_title']
+						query = Unspsc.query.filter_by(id=item).first()
+						result = UnspscSchema().dump(query).data
+						unspsc_title = result['title']
 
-					query = Unspsc.query.filter_by(id=item).first()
-					result = UnspscSchema().dump(query).data
-					unspsc_title = result['title']
+						if (filter_overlap==1) and (competition==0):
+							# Do not show the areas where there is no competition between the two suppliers
+							pass
+						else:
+							chart_dict['agency'] = agency_name
+							chart_dict['unspsc'] = unspsc_title
+							value = int(matrix_a[item][i])
+							chart_dict['value'] = value
+							chart_dict['competition'] = competition
+							chart_dict['winning'] = winning
+							chart_dict['description'] = description
 
-					chart_dict['agency'] = agency_name
-					chart_dict['unspsc'] = unspsc_title
-					value = int(matrix_c[item][i])
-					chart_dict['value'] = value
-					chart_dict['competition'] = competition
-					chart_dict['winning'] = winning
-					chart_dict['description'] = description
+							chart_data.append(chart_dict)
 
-					chart_data.append(chart_dict)
+		else:
+
+			matrix_b = insight_functions.rebuild_matrix(matrix_b_json_data, unspscs, agencies)
+
+			matrix_c = matrix_a-matrix_b
+
+			
+
+			chart_data = []
+
+			for item in matrix_c:
+				for i in range(len(matrix_c[item])):
+					chart_dict = {}
+					winning = 0
+					competition = 0
+					#print("agency:"+ str(matrix_c[item].index[i]))
+					#print("unspsc:"+ str(item))
+					#print("value:"+ str(matrix_c[item][i]))
+					if (matrix_c[item][i]!=0):
+
+						if (matrix_c[item][i]==matrix_a[item][i]) and (matrix_c[item][i]!=0):
+							#print("No competition")
+							description = target_supplier_name +" generated "+ functions.format_currency(matrix_a[item][i]) +" [bold]unchallenged[/] by "+ competitor_name +" in this service category and agency."
+							competition = 0
+						if (matrix_c[item][i]<matrix_a[item][i]) and (matrix_c[item][i]!=0) and (matrix_c[item][i]<0):
+							#print("Competitor playing and winning")
+							description = competitor_name +" generated "+ functions.format_currency(matrix_b[item][i]) +" in this service category and agency; [bold]More[/] than the "+ functions.format_currency(matrix_a[item][i]) +" "+ target_supplier_name +" generated."
+							winning = -1
+							competition = 1
+						if (matrix_c[item][i]==(matrix_b[item][i]*-1)) and (matrix_c[item][i]!=0):
+							#print("Competitor playing where you are not.")
+							description = competitor_name +" generated "+ functions.format_currency(matrix_b[item][i]) +" [bold]unchallenged[/] by "+ target_supplier_name +" in this service category and agency."
+							competition = -1
+							winning = -1
+						if (matrix_c[item][i]<matrix_a[item][i]) and (matrix_c[item][i]!=0) and (matrix_c[item][i]>0):
+							#print("Competitor playing but losing")
+							description = competitor_name +" generated "+ functions.format_currency(matrix_b[item][i]) +" in this service category and agency; [bold]Less[/] than the "+ functions.format_currency(matrix_a[item][i]) +" "+ target_supplier_name +" generated."
+							winning = 1
+							competition = 1
+						#print("---")
+
+						agency_id = matrix_c[item].index[i].replace("a_", "")
+						query = Agency.query.filter_by(id=agency_id).first()
+						result = AgencySchema().dump(query).data
+						agency_name = result['display_title']
+
+						query = Unspsc.query.filter_by(id=item).first()
+						result = UnspscSchema().dump(query).data
+						unspsc_title = result['title']
+
+						if (filter_overlap==1) and (competition==0):
+							# Do not show the areas where there is no competition between the two suppliers
+							pass
+						else:
+							chart_dict['agency'] = agency_name
+							chart_dict['unspsc'] = unspsc_title
+							value = int(matrix_c[item][i])
+							chart_dict['value'] = value
+							chart_dict['competition'] = competition
+							chart_dict['winning'] = winning
+							chart_dict['description'] = description
+
+							chart_data.append(chart_dict)
 
 		#print(matrix_a)
 		#print("*****")
@@ -1796,6 +1850,8 @@ def playingfield():
 
 	data = {}
 
+	session['supplier_name'] = "Deloitte"
+
 	# Get this from the Session.
 	#supplier_id = 2915
 	supplier_id= int(request.args.get('id'))
@@ -1812,32 +1868,6 @@ def playingfield():
 	query = SupplierMatrix.query.filter_by(supplier_id=supplier_id).filter_by(financial_year=financial_year).filter_by(matrix_type="agency_segment").first()
 	result = SupplierMatrixSchema().dump(query).data
 	json_dict = json.loads(result['json']['data'])
-	print(json_dict)
-	
-	data['heatmap_agency_count'] = 0
-	for agency in json_dict:
-		data['heatmap_agency_count'] = data['heatmap_agency_count'] + 1
-		dict_temp = {}
-
-		agency_id = agency.replace("a_", "")
-		query = Agency.query.filter_by(id=agency_id).first()
-		result = AgencySchema().dump(query).data
-		
-		agency_name = result['display_title']
-		for unspsc in json_dict[agency]:
-			# Loop through and add a heat map record for each agency/unspsc combo
-			dict_temp = {}
-			dict_temp['agency'] = agency_name
-
-			query = Unspsc.query.filter_by(id=unspsc).first()
-			result = UnspscSchema().dump(query).data
-			dict_temp['unspsc'] = result['title']
-
-			value = json_dict[agency][unspsc]
-			dict_temp['value'] = int(value)
-			#print(unspsc)
-
-			data['heatmap'].append(dict_temp)
 
 	#print(data['heatmap'])
 	#print(json_dict)
