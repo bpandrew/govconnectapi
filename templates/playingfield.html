@@ -186,7 +186,7 @@ chart.data = [{'agency': 'Department of Industry, Innovation and Science', 'unsp
 
 	function updateHeatmap(competitor_id, display_name) {
 		$("#heatMapTitle").text("Deloitte vs "+display_name);
-		$.get('/playingfield_heatmap_data?target_id=2915&competition_id='+competitor_id,  // url
+		$.get('/playingfield_heatmap_data?target_id={{data['supplier_id']}}&competition_id='+competitor_id,  // url
 		function (data, textStatus, jqXHR) {  // success callback
 			chart.data = data['heatMapData'];
 		});
