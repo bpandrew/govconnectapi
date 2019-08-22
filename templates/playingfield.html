@@ -11,47 +11,62 @@
         </ol>
     </div>
 
-	<div class="row">
-		<div class="col-xl-12">
-			<div class="card mb-4">
-				<hr class="border-light m-0" style="margin-bottom: -10px">
-				
-				<div class="card-body">
-					<h6 class="my-3">Strategic Competitors / Partners</h6>
-					<p>These suppliers are providing similar services to the same customer base within agencies as Deloitte.</p>
-					{% for competitor in data.competitors %}
-					<div class="row mb-2">
-						<div class="col-md-4">
-							<a href="/supplier/{{ competitor['competitor']['id']}}">{{ competitor['competitor']['display_name']}}</a>
-						</div>
-						{% if competitor['score']<=0 %}
-						<div class="col-md-4 text-muted"><div class="badge badge-success">Lagging {{competitor['score']|round(2)}}</div></div>
-						{% endif %}
-						{% if competitor['score']>0 %}
-						<div class="col-md-4 text-muted"><div class="badge badge-danger">Leading {{competitor['score']|round(2)}}</div></div>
-						{% endif %}
-						{% if competitor['agency']!=None %}
-							<div class="col-md-4 text-muted">{{competitor['agency']['display_title']}}</div>
-						{% else %}
-							<div class="col-md-4 text-muted">All</div>
-						{% endif %}
-					</div>
-					{% endfor %}
+	<div class="card mb-4">
+			<div class="card-header with-elements pb-0">
+				<h6 class="card-header-title mb-0">Strategic Competitors / Partners</h6> 
+			</div>
+			<div class="card-body">
+				<p>These suppliers are providing similar services to the same customer base within agencies as Deloitte.</p>
+				<div class="card-datatable table-responsive" style="margin-top: -25px">
+					<table id="myTable" class="table table-hover card-table">
+						<thead style="font-size:small">
+						<tr>
+							<th>Supplier</th>
+							<th>Score</th>  
+							<th>Agency</th>                       
+						</tr>
+						</thead>
+						<tbody style="font-size:small">
+							{% for competitor in data.competitors %}
+							<tr data-agency="{{competitor['agency']['display_title']}}">
+								<td><a href="javascript:;" onclick="updateHeatmap('{{ competitor['competitor']['id']}}', '{{ competitor['competitor']['display_name']}}');">{{ competitor['competitor']['display_name']}}</a></td>
+								
+								{% if competitor['score']<=0 %}
+								<td><div class="badge badge-success">Lagging {{competitor['score']|round(2)}}</div></td>
+								{% endif %}
+								{% if competitor['score']>0 %}
+								<td><div class="badge badge-danger">Leading {{competitor['score']|round(2)}}</div></td>
+								{% endif %}
+								{% if competitor['agency']!=None %}
+								<td>{{competitor['agency']['display_title']}}</td>
+								{% else %}
+								<td>All</td>
+								{% endif %}
+							</tr>
+							{% endfor %}
+
+						</tbody>
+					</table>
 				</div>
-
-            </div>
+			</div>
 		</div>
-	</div>
+
+
 
 	<div class="row">
 		<div class="col-xl-12">
 			<div class="card mb-4">
+				<div class="card-header with-elements pb-0">
+					<h4><div id="heatMapTitle" class="card-header-title mb-0">Baseline Activity</div></h4>
+				</div>
 				<div class="card-body">
-					<div id="chartdiv" class="chartjs-demo" style="display: block; max-width: 100%; height: 500px;"></div>
+					<div id="chartdiv" class="chartjs-demo" style="display: block; max-width: 100%; height: {{ (data['heatmap_agency_count']*45)+200 }}px;"></div>
 				</div>
 			</div>
 		</div>
 	</div>
+
+	<a href="javascript:;" onclick="updateHeatmap('322');">Update chart</a>
 
 </div>
 
@@ -59,9 +74,19 @@
 
 {% include "footer.html" %}
 
+<script>
+	$(document).ready(function() {
+		$('#myTable').DataTable({
+			"order": [
+				[0, "desc"]
+			],
+		}, );
+	});
+</script>
+
 <!-- Chart code -->
 <script>
-am4core.ready(function() {
+//am4core.ready(function() {
 
 // Themes begin
 am4core.useTheme(am4themes_animated);
@@ -75,28 +100,44 @@ var yAxis = chart.yAxes.push(new am4charts.CategoryAxis());
 
 xAxis.dataFields.category = "unspsc";
 yAxis.dataFields.category = "agency";
-yAxis.renderer.labels.template.fontSize = 11;
+yAxis.renderer.labels.template.fontSize = 12;
 xAxis.renderer.labels.template.rotation = 270;
-xAxis.renderer.labels.template.fontSize = 11;
+xAxis.renderer.labels.template.fontSize = 12;
 
 var label = xAxis.renderer.labels.template;
-label.wrap = true;
-label.maxWidth = 150;
+//label.wrap = true;
+//label.maxWidth = 150;
+label.verticalCenter = "middle"
+label.horizontalCenter = "right"
+label.truncate = true;
+label.maxWidth = 200;
+label.tooltipText = "{category}";
 
 xAxis.renderer.grid.template.disabled = true;
-xAxis.renderer.minGridDistance = 40;
+xAxis.renderer.minGridDistance = 10;
 
 yAxis.renderer.grid.template.disabled = true;
 yAxis.renderer.inversed = true;
-yAxis.renderer.minGridDistance = 30;
+yAxis.renderer.minGridDistance = 10;
 
 
 var series = chart.series.push(new am4charts.ColumnSeries());
 series.dataFields.categoryX = "unspsc";
 series.dataFields.categoryY = "agency";
 series.dataFields.value = "value";
+series.dataFields.winning = "winning";
+series.dataFields.competition = "competition";
+series.dataFields.description = "description";
 series.sequencedInterpolation = true;
 series.defaultState.transitionDuration = 3000;
+
+// Make the tooltip white background with black text
+series.tooltip.getFillFromObject = false;
+series.tooltip.background.fill = am4core.color("#fff");
+series.tooltip.label.fill = am4core.color("#000");
+series.tooltip.pointerOrientation = "vertical";
+series.tooltip.maxWidth = 40;
+
 
 var bgColor = new am4core.InterfaceColorSet().getFor("background");
 
@@ -104,56 +145,58 @@ var columnTemplate = series.columns.template;
 columnTemplate.strokeWidth = 1;
 columnTemplate.strokeOpacity = 0.2;
 columnTemplate.stroke = bgColor;
-columnTemplate.tooltipText = "{unspsc}, {agency}: ${value.workingValue.formatNumber('#.')}";
+columnTemplate.tooltipText = "{description}";
 columnTemplate.width = am4core.percent(100);
 columnTemplate.height = am4core.percent(100);
 
-series.heatRules.push({
-	target: columnTemplate,
-	property: "fill",
-	min: am4core.color(bgColor),
-	max: chart.colors.getIndex(0)
-});
-
-// heat legend
-var heatLegend = chart.bottomAxesContainer.createChild(am4charts.HeatLegend);
-heatLegend.width = am4core.percent(100);
-heatLegend.series = series;
-heatLegend.valueAxis.renderer.labels.template.fontSize = 11;
-heatLegend.valueAxis.renderer.minGridDistance = 150;
-
-// heat legend behavior
-series.columns.template.events.on("over", function(event) {
-	handleHover(event.target);
-})
-
-series.columns.template.events.on("hit", function(event) {
-	handleHover(event.target);
-})
-
-function handleHover(column) {
-	if (!isNaN(column.dataItem.value)) {
-	heatLegend.valueAxis.showTooltipAt(column.dataItem.value)
-	}
-	else {
-	heatLegend.valueAxis.hideTooltip();
-	}
-}
-
-series.columns.template.events.on("out", function(event) {
-	heatLegend.valueAxis.hideTooltip();
-})
 
 var bullet2 = series.bullets.push(new am4charts.LabelBullet());
-bullet2.label.text = "${value}";
+bullet2.label.text = "Δ$ {value}";
 bullet2.label.fill = am4core.color("#000000");
 bullet2.zIndex = 1;
 bullet2.fontSize = 12;
 bullet2.interactionsEnabled = false;
 
-chart.data = {{ data['heatmap']|safe }};
+series.columns.template.column.adapter.add("fill", function(fill, target) {
+  if (target.dataItem) {
+    if (target.dataItem.winning == 1 && target.dataItem.competition == 1) {
+		// winning playing
+    	return am4core.color("#67CA9C")
+    }
+    else if (target.dataItem.winning == -1 && target.dataItem.competition == 1) {
+		// losing and playing
+		return am4core.color("#DE5B62")
+	}
+	else if (target.dataItem.winning == -1 && target.dataItem.competition == -1) {
+		// losing without playing
+      return am4core.color("#F99552")
+    }
+    else {
+      return am4core.color("#efefef");
+    }
+  }
+  return fill;
+});
 
-}); // end am4core.ready()
+var backup_data = [{'agency': 'Department of Industry, Innovation and Science', 'unspsc': 'Humanitarian aid and relief', 'value': 221540, 'competition': 0, 'winning': 0, 'description': 'KPMG generated $221,540.0 [bold]unchallenged[/] by Pepworldwide Pty Ltd in this service category and agency.'}, {'agency': 'Department of Industry, Innovation and Science', 'unspsc': 'Education and training services', 'value': -4176, 'competition': 1, 'winning': -1, 'description': 'Pepworldwide Pty Ltd generated $17,350.0 in this service category and agency; [bold]More[/] than the $13,174.0 KPMG generated.'}, {'agency': "Department of Veterans' Affairs", 'unspsc': 'Management advisory services', 'value': 3851088, 'competition': 0, 'winning': 0, 'description': 'KPMG generated $3.9 million [bold]unchallenged[/] by Pepworldwide Pty Ltd in this service category and agency.'}, {'agency': 'Australian Prudential Regulation Authority', 'unspsc': 'Management advisory services', 'value': 99000, 'competition': 0, 'winning': 0, 'description': 'KPMG generated $99,000.0 [bold]unchallenged[/] by Pepworldwide Pty Ltd in this service category and agency.'}, {'agency': 'Department of Jobs and Small Business', 'unspsc': 'Public administration and finance services', 'value': 14822, 'competition': 0, 'winning': 0, 'description': 'KPMG generated $14,822.0 [bold]unchallenged[/] by Pepworldwide Pty Ltd in this service category and agency.'}, {'agency': 'Department of Education and Training', 'unspsc': 'Accounting and bookkeeping services', 'value': 94909, 'competition': 0, 'winning': 0, 'description': 'KPMG generated $94,909.0 [bold]unchallenged[/] by Pepworldwide Pty Ltd in this service category and agency.'}, {'agency': 'Clean Energy Regulator', 'unspsc': 'Accounting and bookkeeping services', 'value': 73192, 'competition': 0, 'winning': 0, 'description': 'KPMG generated $73,192.0 [bold]unchallenged[/] by Pepworldwide Pty Ltd in this service category and agency.'}, {'agency': 'Office of the Director of Public Prosecutions', 'unspsc': 'Accounting and bookkeeping services', 'value': 443100, 'competition': 0, 'winning': 0, 'description': 'KPMG generated $443,100.0 [bold]unchallenged[/] by Pepworldwide Pty Ltd in this service category and agency.'}];
+
+//chart.data = [{'agency': 'Australian Competition and Consumer Commission', 'unspsc': 'Accounting and bookkeeping services', 'value': 19950}, {'agency': 'Department of Industry, Innovation and Science', 'unspsc': 'Work related organizations', 'value': 57200}, {'agency': "Department of Veterans' Affairs", 'unspsc': 'Management advisory services', 'value': 39000}, {'agency': 'Department of the Environment and Energy', 'unspsc': 'Management advisory services', 'value': 766739}, {'agency': 'Department of Human Services', 'unspsc': 'Computer services', 'value': 176000}, {'agency': 'Csiro', 'unspsc': 'Management advisory services', 'value': 567261}, {'agency': 'Bureau of Meteorology', 'unspsc': 'Accounting and bookkeeping services', 'value': 230736}, {'agency': 'Department of Foreign Affairs and Trade', 'unspsc': 'Accounting and bookkeeping services', 'value': 1220010}, {'agency': 'Department of Home Affairs', 'unspsc': 'Computer services', 'value': 149133}, {'agency': 'Australian Electoral Commission', 'unspsc': 'Management advisory services', 'value': 513939}, {'agency': 'Department of Finance', 'unspsc': 'Accounting and bookkeeping services', 'value': 168361}, {'agency': 'Australian Federal Police', 'unspsc': 'Writing and translations', 'value': 220000}, {'agency': 'Office of National Intelligence', 'unspsc': 'Management advisory services', 'value': 1063820}, {'agency': 'Department of Jobs and Small Business', 'unspsc': 'Public administration and finance services', 'value': 36058}, {'agency': 'Digital Transformation Agency', 'unspsc': 'Human resources services', 'value': 569205}, {'agency': 'Department of Agriculture and Water Resources', 'unspsc': 'Humanitarian aid and relief', 'value': 79530}, {'agency': 'Department of Social Services', 'unspsc': 'Humanitarian aid and relief', 'value': 154140}, {'agency': 'Australian Securities and Investments Commission', 'unspsc': 'Accounting and bookkeeping services', 'value': 855371}, {'agency': 'Austrade', 'unspsc': 'Economics', 'value': 274429}, {'agency': 'Australian Digital Health Agency', 'unspsc': 'Computer services', 'value': 374999}, {'agency': 'Geoscience Australia', 'unspsc': 'Accounting and bookkeeping services', 'value': 32399}, {'agency': 'Department of Infrastructure, Regional Development and Cities', 'unspsc': 'Components for information technology or broadcasting or telecommunications', 'value': 2184162}, {'agency': 'Department of the Prime Minister and Cabinet', 'unspsc': 'Public administration and finance services', 'value': 55000}, {'agency': 'Australian Taxation Office', 'unspsc': 'Accounting and bookkeeping services', 'value': 28640}, {'agency': 'Department of Defence', 'unspsc': 'Education and training services', 'value': 15180}, {'agency': 'Department of Education and Training', 'unspsc': 'Humanitarian aid and relief', 'value': 1096924}, {'agency': 'Department of Health', 'unspsc': 'Business administration services', 'value': 261269}, {'agency': 'Australian Sports Anti-Doping Authority', 'unspsc': 'Public administration and finance services', 'value': 143073}, {'agency': 'Australian Financial Security Authority', 'unspsc': 'Management advisory services', 'value': 68200}, {'agency': "Attorney-General's Department", 'unspsc': 'Economics', 'value': 987392}, {'agency': 'Australian Criminal Intelligence Commission', 'unspsc': 'Accounting and bookkeeping services', 'value': 1688060}, {'agency': 'Australian Prudential Regulation Authority', 'unspsc': 'Management advisory services', 'value': 418000}, {'agency': 'Department of the Treasury', 'unspsc': 'Economics', 'value': 149775}, {'agency': 'National Mental Health Commission', 'unspsc': 'Accounting and bookkeeping services', 'value': 119630}, {'agency': 'Clean Energy Regulator', 'unspsc': 'Business administration services', 'value': 159500}, {'agency': 'National Archives of Australia', 'unspsc': 'Business administration services', 'value': 28600}, {'agency': 'Future Fund Management Agency', 'unspsc': 'Human resources services', 'value': 24910}, {'agency': 'Department of Foreign Affairs and Trade - Australian Aid Program', 'unspsc': 'Public administration and finance services', 'value': 68291}, {'agency': 'Australian National Audit Office', 'unspsc': 'Accounting and bookkeeping services', 'value': 731075}, {'agency': 'Office of the Director of Public Prosecutions', 'unspsc': 'Management advisory services', 'value': 72047}];
+chart.data = [{'agency': 'Department of Industry, Innovation and Science', 'unspsc': 'Humanitarian aid and relief', 'value': 221540, 'competition': 0, 'winning': 0, 'description': 'KPMG generates revenue unchallenged by Oakton Services Pty Limited in this category.'}, {'agency': 'Department of Industry, Innovation and Science', 'unspsc': 'Education and training services', 'value': 13174, 'competition': 0, 'winning': 0, 'description': 'KPMG generates<br> revenue unchallenged by Oakton Services Pty Limited in this category.'}, {'agency': "Department of Veterans' Affairs", 'unspsc': 'Management advisory services', 'value': 1901088, 'competition': 1, 'winning': 1, 'description': 'Oakton Services Pty Limited provides services in this category, but has generated less revenue than KPMG<br>Next line'}, {'agency': 'Australian Prudential Regulation Authority', 'unspsc': 'Management advisory services', 'value': 99000, 'competition': 0, 'winning': 0, 'description': 'KPMG generates revenue unchallenged by Oakton Services Pty Limited in this category.'}, {'agency': 'Department of Home Affairs', 'unspsc': 'Management advisory services', 'value': -330000, 'competition': -1, 'winning': -1, 'description': 'Oakton Services Pty Limited generates revenue unchallenged by KPMG in this category.'}, {'agency': 'Department of Jobs and Small Business', 'unspsc': 'Public administration and finance services', 'value': 14822, 'competition': 0, 'winning': 0, 'description': 'KPMG generates revenue unchallenged by Oakton Services Pty Limited in this category.'}, {'agency': 'Department of Education and Training', 'unspsc': 'Accounting and bookkeeping services', 'value': 94909, 'competition': 0, 'winning': 0, 'description': 'KPMG generates revenue unchallenged by Oakton Services Pty Limited in this category.'}, {'agency': 'Clean Energy Regulator', 'unspsc': 'Accounting and bookkeeping services', 'value': 73192, 'competition': 0, 'winning': 0, 'description': 'KPMG generates revenue unchallenged by Oakton Services Pty Limited in this category.'}, {'agency': 'Office of the Director of Public Prosecutions', 'unspsc': 'Accounting and bookkeeping services', 'value': 443100, 'competition': 0, 'winning': 0, 'description': 'KPMG generates revenue unchallenged by Oakton Services Pty Limited in this category.'}];
+//chart.data = {{ data['heatmap']|safe }};
+
+	function updateHeatmap(competitor_id, display_name) {
+		$("#heatMapTitle").text("Deloitte vs "+display_name);
+		$.get('/playingfield_heatmap_data?target_id=2915&competition_id='+competitor_id,  // url
+		function (data, textStatus, jqXHR) {  // success callback
+			chart.data = data['heatMapData'];
+		});
+	}
+
+//}); // end am4core.ready()
+
+
 </script>
+
+
 
 

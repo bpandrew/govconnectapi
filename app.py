@@ -213,16 +213,8 @@ def comp_matrix(target_supplier, count):
 
 		matrix_a_json_data = data['json']['data']
 
-		#json_data = data['json']['data']
-		# find all of the agencies and segments so the matrix can be rebuilt
-		#unspscs, agencies = all_agencies_segments()
-		#print(agencies)
-		# Rebuild the matrix
-		#matrix_a = insight_functions.rebuild_matrix(json_data, unspscs, agencies)
-
 		#Limit this to compare n competitors
 		query = SupplierMatrix.query.filter_by(supplier_id=int(count)).filter_by(matrix_type="agency_segment").filter_by(financial_year=int(year)).first() 
-		#query = SupplierMatrix.query.filter(SupplierMatrix.matrix_type=="agency_segment").filter(SupplierMatrix.supplier_id==int(count)).order_by(SupplierMatrix.supplier_id).limit(1).all()
 		data = SupplierMatrixSchema().dumps(query).data
 
 		# Arrays to create a dataframe when this batch is complete
@@ -1675,6 +1667,126 @@ def suppliers_add():
 # ------------------------------------ PLAYING FIELD ------------------------------------
 # ---------------------------------------------------------------------------------
 
+# --- DASHBOARD PAGE ---
+@app.route("/playingfield_heatmap_data")
+def playingfield_heatmap_data():
+	target_id= int(request.args.get('target_id'))
+	competition_id= int(request.args.get('competition_id'))
+
+	financial_year = 2019
+
+	# Get Matrix for the target supplier
+	query = SupplierMatrix.query.filter_by(supplier_id=target_id).filter_by(matrix_type="agency_segment").filter_by(financial_year=int(financial_year)).first() 
+	data = SupplierMatrixSchema().dumps(query).data
+	data = json.loads(data)
+
+	target_supplier_name = data['supplier']['display_name']
+	if len(data)>0:
+
+		json_dict = json.loads(data['json']['data'])
+		unspscs = []
+		agencies = []
+		
+		for agency in json_dict:
+			agencies.append(agency)
+			for unspsc in json_dict[agency]:
+				unspscs.append(str(unspsc))
+
+		matrix_a_json_data = data['json']['data']
+
+		query = SupplierMatrix.query.filter_by(supplier_id=competition_id).filter_by(matrix_type="agency_segment").filter_by(financial_year=int(financial_year)).first() 
+		data = SupplierMatrixSchema().dumps(query).data
+		data = json.loads(data)
+		competitor_name = data['supplier']['display_name']
+		json_dict = json.loads(data['json']['data'])
+
+		for agency in json_dict:
+			if agency not in agencies:
+				agencies.append(agency)
+			for unspsc in json_dict[agency]:
+				if unspsc not in unspscs:
+					unspscs.append(str(unspsc))
+
+		matrix_b_json_data = data['json']['data']
+
+		matrix_a = insight_functions.rebuild_matrix(matrix_a_json_data, unspscs, agencies)
+		matrix_b = insight_functions.rebuild_matrix(matrix_b_json_data, unspscs, agencies)
+
+		matrix_c = matrix_a-matrix_b
+
+
+		chart_data = []
+
+		for item in matrix_c:
+			for i in range(len(matrix_c[item])):
+				chart_dict = {}
+				winning = 0
+				competition = 0
+				print("agency:"+ str(matrix_c[item].index[i]))
+				print("unspsc:"+ str(item))
+				print("value:"+ str(matrix_c[item][i]))
+				if (matrix_c[item][i]==matrix_a[item][i]) and (matrix_c[item][i]!=0):
+					print("No competition")
+					description = target_supplier_name +" generated "+ functions.format_currency(matrix_a[item][i]) +" [bold]unchallenged[/] by "+ competitor_name +" in this service category and agency."
+					competition = 0
+				if (matrix_c[item][i]<matrix_a[item][i]) and (matrix_c[item][i]!=0) and (matrix_c[item][i]<0):
+					print("Competitor playing and winning")
+					description = competitor_name +" generated "+ functions.format_currency(matrix_b[item][i]) +" in this service category and agency; [bold]More[/] than the "+ functions.format_currency(matrix_a[item][i]) +" "+ target_supplier_name +" generated."
+					winning = -1
+					competition = 1
+				if (matrix_c[item][i]==(matrix_b[item][i]*-1)) and (matrix_c[item][i]!=0):
+					print("Competitor playing where you are not.")
+					description = competitor_name +" generated "+ functions.format_currency(matrix_b[item][i]) +" [bold]unchallenged[/] by "+ target_supplier_name +" in this service category and agency."
+					competition = -1
+					winning = -1
+				if (matrix_c[item][i]<matrix_a[item][i]) and (matrix_c[item][i]!=0) and (matrix_c[item][i]>0):
+					print("Competitor playing but losing")
+					description = competitor_name +" generated "+ functions.format_currency(matrix_b[item][i]) +" in this service category and agency; [bold]Less[/] than the "+ functions.format_currency(matrix_a[item][i]) +" "+ target_supplier_name +" generated."
+					winning = 1
+					competition = 1
+				print("---")
+
+				agency_id = matrix_c[item].index[i].replace("a_", "")
+				query = Agency.query.filter_by(id=agency_id).first()
+				result = AgencySchema().dump(query).data
+				agency_name = result['display_title']
+
+				query = Unspsc.query.filter_by(id=item).first()
+				result = UnspscSchema().dump(query).data
+				unspsc_title = result['title']
+
+				if matrix_c[item][i]!=0:
+					chart_dict['agency'] = agency_name
+					chart_dict['unspsc'] = unspsc_title
+					value = int(matrix_c[item][i])
+					chart_dict['value'] = value
+					chart_dict['competition'] = competition
+					chart_dict['winning'] = winning
+					chart_dict['description'] = description
+
+					chart_data.append(chart_dict)
+
+		print(matrix_a)
+		print("*****")
+		print(matrix_b)
+		print("*****")
+		print(matrix_c)
+
+		print("************************")
+		print(chart_data)
+		data = {"heatMapData":chart_data}
+		return jsonify(data)
+		#matrix_b = insight_functions.rebuild_matrix(matrix_b_json_data, unspscs, agencies)
+		
+		# Loop through all the scores and add them to the dataframe arrays
+		#score = insight_functions.calc_competition(matrix_a, matrix_b)
+
+		#Limit this to compare n competitors
+		#query = SupplierMatrix.query.filter_by(supplier_id=int(count)).filter_by(matrix_type="agency_segment").filter_by(financial_year=int(year)).first() 
+		#data = SupplierMatrixSchema().dumps(query).data
+
+
+	return "done"
 
 
 # --- DASHBOARD PAGE ---
@@ -1689,25 +1801,31 @@ def playingfield():
 	financial_year = 2019
 
 	# Get all of the suppiers competitors
-	query = Competitor.query.order_by(desc(Competitor.score)).filter_by(supplier_id=supplier_id).all()
+	query = Competitor.query.order_by(desc(Competitor.score)).filter_by(supplier_id=supplier_id).filter_by(agency_id=None).all()
 	result = CompetitorSchema(many=True).dump(query).data
 	data['competitors'] = result
 
 	data['heatmap'] = []
 
-	query = SupplierMatrix.query.filter_by(supplier_id=supplier_id).filter_by(financial_year=financial_year).first()
+	query = SupplierMatrix.query.filter_by(supplier_id=supplier_id).filter_by(financial_year=financial_year).filter_by(matrix_type="agency_segment").first()
 	result = SupplierMatrixSchema().dump(query).data
 	json_dict = json.loads(result['json']['data'])
+	print(json_dict)
 	
+	data['heatmap_agency_count'] = 0
 	for agency in json_dict:
+		data['heatmap_agency_count'] = data['heatmap_agency_count'] + 1
 		dict_temp = {}
 
 		agency_id = agency.replace("a_", "")
 		query = Agency.query.filter_by(id=agency_id).first()
 		result = AgencySchema().dump(query).data
 		
-		dict_temp['agency'] = result['display_title']
+		agency_name = result['display_title']
 		for unspsc in json_dict[agency]:
+			# Loop through and add a heat map record for each agency/unspsc combo
+			dict_temp = {}
+			dict_temp['agency'] = agency_name
 
 			query = Unspsc.query.filter_by(id=unspsc).first()
 			result = UnspscSchema().dump(query).data
@@ -1715,13 +1833,12 @@ def playingfield():
 
 			value = json_dict[agency][unspsc]
 			dict_temp['value'] = int(value)
-			print(unspsc)
+			#print(unspsc)
 
-		data['heatmap'].append(dict_temp)
+			data['heatmap'].append(dict_temp)
 
-	print(data['heatmap'])
-
-	print(json_dict)
+	#print(data['heatmap'])
+	#print(json_dict)
 
 	return render_template('playingfield.html', data=data)
 

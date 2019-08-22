@@ -218,43 +218,42 @@
 			</div>
 				
 			<div class="card mb-4">
-					<div class="card-header with-elements pb-0">
-						<h6 class="card-header-title mb-0">Recent contracts in the: <span class="insight_category_name">{{ contract_data.family['unspsc']['title'] }} category</span>. </h6> 
-					</div>
-					<div class="card-body">
-						<div class="card-datatable table-responsive" style="margin-top: -25px">
-							<table id="myTable" class="table table-hover card-table">
-								<thead style="font-size:small">
-								<tr>
-									<th>Status</th>
-									<th>Title</th>
-									<th>Agency</th>
-									<th>Division</th>
-									<th>Supplier</th>
-									<th>Value</th>
-									<th>Contract Start</th>
-									<th>Contract End</th>                            
-								</tr>
-								</thead>
-								<tbody style="font-size:small">
-									{% for contract in contract_data['family'].contracts: %}
-									<tr data-year="{{ contract.financial_year }}" data-ongoing="{{ contract.contract_ongoing }}" data-unspsc="{{ contract.unspsc_id }}" data-agency-id="{{ contract.agency_id }}">
-										<td>{% if (contract.contract_ending_soon==True and contract.contract_ongoing==True) %}<div class="badge badge-info">Ending soon</div>{% elif contract.contract_ongoing==True %}<div class="badge badge-success">Ongoing</div>{% else %} <div class="badge badge-danger">Complete</div>{% endif %}</td>
-										<td><a href="/contract/{{ contract.id }}">{{ contract.title }}</a></td>
-										<td>{{ contract.agency }}</td>
-										<td>{% if contract.division!="nan" %}{{ contract.division }}{% endif %}</td>
-										<td>{{ contract.supplier_name }}</td>
-										<td>{{ contract.contract_value }}</td>
-										<td nowrap>{{ contract.contract_start }}</td>
-										<td nowrap>{{ contract.contract_end }}</td>
-									</tr>
-									{% endfor %}
-								</tbody>
-							</table>
-						</div>
-					</div>
-	
+				<div class="card-header with-elements pb-0">
+					<h6 class="card-header-title mb-0">Recent contracts in the: <span class="insight_category_name">{{ contract_data.family['unspsc']['title'] }} category</span>. </h6> 
 				</div>
+				<div class="card-body">
+					<div class="card-datatable table-responsive" style="margin-top: -25px">
+						<table id="myTable" class="table table-hover card-table">
+							<thead style="font-size:small">
+							<tr>
+								<th>Status</th>
+								<th>Title</th>
+								<th>Agency</th>
+								<th>Division</th>
+								<th>Supplier</th>
+								<th>Value</th>
+								<th>Contract Start</th>
+								<th>Contract End</th>                            
+							</tr>
+							</thead>
+							<tbody style="font-size:small">
+								{% for contract in contract_data['family'].contracts: %}
+								<tr data-year="{{ contract.financial_year }}" data-ongoing="{{ contract.contract_ongoing }}" data-unspsc="{{ contract.unspsc_id }}" data-agency-id="{{ contract.agency_id }}">
+									<td>{% if (contract.contract_ending_soon==True and contract.contract_ongoing==True) %}<div class="badge badge-info">Ending soon</div>{% elif contract.contract_ongoing==True %}<div class="badge badge-success">Ongoing</div>{% else %} <div class="badge badge-danger">Complete</div>{% endif %}</td>
+									<td><a href="/contract/{{ contract.id }}">{{ contract.title }}</a></td>
+									<td>{{ contract.agency }}</td>
+									<td>{% if contract.division!="nan" %}{{ contract.division }}{% endif %}</td>
+									<td>{{ contract.supplier_name }}</td>
+									<td>{{ contract.contract_value }}</td>
+									<td nowrap>{{ contract.contract_start }}</td>
+									<td nowrap>{{ contract.contract_end }}</td>
+								</tr>
+								{% endfor %}
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
 
 		</div>
 	</div>	
