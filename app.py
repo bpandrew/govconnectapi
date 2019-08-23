@@ -1672,10 +1672,7 @@ def suppliers_add():
 def playingfield_heatmap_data():
 	target_id= int(request.args.get('target_id'))
 	competition_id= int(request.args.get('competition_id'))
-	try:
-		filter_overlap = int(request.args.get('filter_overlap'))
-	except:
-		filter_overlap = 0
+
 	try:
 		baseline = int(request.args.get('baseline'))
 	except:
@@ -1721,10 +1718,10 @@ def playingfield_heatmap_data():
 
 		matrix_a = insight_functions.rebuild_matrix(matrix_a_json_data, unspscs, agencies)
 
+		chart_data = {"winning":[], "losing":[], "not_playing":[], "uncontested":[], "all":[], "baseline":0}
+
 		# ----- BASELINE HERE
 		if baseline==1:
-
-			chart_data = []
 
 			for item in matrix_a:
 				for i in range(len(matrix_a[item])):
@@ -1743,19 +1740,16 @@ def playingfield_heatmap_data():
 						result = UnspscSchema().dump(query).data
 						unspsc_title = result['title']
 
-						if (filter_overlap==1) and (competition==0):
-							# Do not show the areas where there is no competition between the two suppliers
-							pass
-						else:
-							chart_dict['agency'] = agency_name
-							chart_dict['unspsc'] = unspsc_title
-							value = int(matrix_a[item][i])
-							chart_dict['value'] = value
-							chart_dict['competition'] = competition
-							chart_dict['winning'] = winning
-							chart_dict['description'] = description
+						chart_dict['agency'] = agency_name
+						chart_dict['unspsc'] = unspsc_title
+						value = int(matrix_a[item][i])
+						chart_dict['value'] = value
+						chart_dict['competition'] = competition
+						chart_dict['winning'] = winning
+						chart_dict['description'] = description
 
-							chart_data.append(chart_dict)
+						chart_data['all'].append(chart_dict)
+						chart_data['baseline'] = 1
 
 		else:
 
@@ -1763,39 +1757,42 @@ def playingfield_heatmap_data():
 
 			matrix_c = matrix_a-matrix_b
 
-			
-
-			chart_data = []
-
 			for item in matrix_c:
 				for i in range(len(matrix_c[item])):
 					chart_dict = {}
 					winning = 0
 					competition = 0
+					result_type = None # if the result is winning, losing, not_competing or uncontested
 					#print("agency:"+ str(matrix_c[item].index[i]))
 					#print("unspsc:"+ str(item))
 					#print("value:"+ str(matrix_c[item][i]))
+
+					# Dont include the results if there was no activity in the agency/unspsc
 					if (matrix_c[item][i]!=0):
 
 						if (matrix_c[item][i]==matrix_a[item][i]) and (matrix_c[item][i]!=0):
 							#print("No competition")
 							description = target_supplier_name +" generated "+ functions.format_currency(matrix_a[item][i]) +" [bold]unchallenged[/] by "+ competitor_name +" in this service category and agency."
 							competition = 0
+							result_type = "uncontested"
 						if (matrix_c[item][i]<matrix_a[item][i]) and (matrix_c[item][i]!=0) and (matrix_c[item][i]<0):
 							#print("Competitor playing and winning")
 							description = competitor_name +" generated "+ functions.format_currency(matrix_b[item][i]) +" in this service category and agency; [bold]More[/] than the "+ functions.format_currency(matrix_a[item][i]) +" "+ target_supplier_name +" generated."
 							winning = -1
 							competition = 1
+							result_type = "losing"
 						if (matrix_c[item][i]==(matrix_b[item][i]*-1)) and (matrix_c[item][i]!=0):
 							#print("Competitor playing where you are not.")
 							description = competitor_name +" generated "+ functions.format_currency(matrix_b[item][i]) +" [bold]unchallenged[/] by "+ target_supplier_name +" in this service category and agency."
 							competition = -1
 							winning = -1
+							result_type = "not_playing"
 						if (matrix_c[item][i]<matrix_a[item][i]) and (matrix_c[item][i]!=0) and (matrix_c[item][i]>0):
 							#print("Competitor playing but losing")
 							description = competitor_name +" generated "+ functions.format_currency(matrix_b[item][i]) +" in this service category and agency; [bold]Less[/] than the "+ functions.format_currency(matrix_a[item][i]) +" "+ target_supplier_name +" generated."
 							winning = 1
 							competition = 1
+							result_type = "winning"
 						#print("---")
 
 						agency_id = matrix_c[item].index[i].replace("a_", "")
@@ -1807,19 +1804,16 @@ def playingfield_heatmap_data():
 						result = UnspscSchema().dump(query).data
 						unspsc_title = result['title']
 
-						if (filter_overlap==1) and (competition==0):
-							# Do not show the areas where there is no competition between the two suppliers
-							pass
-						else:
-							chart_dict['agency'] = agency_name
-							chart_dict['unspsc'] = unspsc_title
-							value = int(matrix_c[item][i])
-							chart_dict['value'] = value
-							chart_dict['competition'] = competition
-							chart_dict['winning'] = winning
-							chart_dict['description'] = description
+						chart_dict['agency'] = agency_name
+						chart_dict['unspsc'] = unspsc_title
+						value = int(matrix_c[item][i])
+						chart_dict['value'] = value
+						chart_dict['competition'] = competition
+						chart_dict['winning'] = winning
+						chart_dict['description'] = description
 
-							chart_data.append(chart_dict)
+						chart_data[result_type].append(chart_dict)
+						chart_data['all'].append(chart_dict)
 
 		#print(matrix_a)
 		#print("*****")

@@ -60,8 +60,24 @@
 					<h4><div id="heatMapTitle" class="card-header-title mb-0">Baseline Activity</div></h4>
 					<div class="card-header-elements ml-auto">
 						<label class="text m-0">
-							<span class="text-light text-tiny font-weight-semibold align-middle">HIDE ACTIVITY WHERE THERE IS NO OVERLAP</span>
-							<span class="switcher switcher-sm d-inline-block align-middle mr-0 ml-2"><input type="checkbox" class="switcher-input" checked id="filter"><span class="switcher-indicator"><span class="switcher-yes"></span><span class="switcher-no"></span></span></span>
+								<div class="btn-group btn-group-toggle" data-toggle="buttons" id="filter_radio">
+									<label class="btn btn-primary waves-effect active">
+											
+										<input type="radio" name="btn-radio" checked="" value="all"> All
+									</label>
+									<label class="btn btn-primary waves-effect">
+										<input type="radio" name="btn-radio" value="winning"> Winning
+									</label>
+									<label class="btn btn-primary waves-effect">
+										<input type="radio" name="btn-radio" value="losing"> Losing
+									</label>
+									<label class="btn btn-primary waves-effect">
+										<input type="radio" name="btn-radio" value="not_playing"> Not Playing
+									</label>
+									<label class="btn btn-primary waves-effect">
+										<input type="radio" name="btn-radio" value="uncontested"> Uncontested
+									</label>
+								</div>
 							<a href="javascript:;" onclick="updateHeatmap('0', 'Baseline', 1);"><span class="fas fa-redo-alt ml-4"></span></a>
 						</label>
 						
@@ -90,12 +106,10 @@
 			],
 		}, );
 
+
 		updateHeatmap('0', 'Baseline', 1);
 	});
-</script>
 
-<!-- Chart code -->
-<script>
 //am4core.ready(function() {
 
 // Themes begin
@@ -194,9 +208,15 @@ var backup_data = [{'agency': 'Department of Industry, Innovation and Science', 
 //chart.data = [{'agency': 'Department of Industry, Innovation and Science', 'unspsc': 'Humanitarian aid and relief', 'value': 221540, 'competition': 0, 'winning': 0, 'description': 'KPMG generates revenue unchallenged by Oakton Services Pty Limited in this category.'}, {'agency': 'Department of Industry, Innovation and Science', 'unspsc': 'Education and training services', 'value': 13174, 'competition': 0, 'winning': 0, 'description': 'KPMG generates<br> revenue unchallenged by Oakton Services Pty Limited in this category.'}, {'agency': "Department of Veterans' Affairs", 'unspsc': 'Management advisory services', 'value': 1901088, 'competition': 1, 'winning': 1, 'description': 'Oakton Services Pty Limited provides services in this category, but has generated less revenue than KPMG<br>Next line'}, {'agency': 'Australian Prudential Regulation Authority', 'unspsc': 'Management advisory services', 'value': 99000, 'competition': 0, 'winning': 0, 'description': 'KPMG generates revenue unchallenged by Oakton Services Pty Limited in this category.'}, {'agency': 'Department of Home Affairs', 'unspsc': 'Management advisory services', 'value': -330000, 'competition': -1, 'winning': -1, 'description': 'Oakton Services Pty Limited generates revenue unchallenged by KPMG in this category.'}, {'agency': 'Department of Jobs and Small Business', 'unspsc': 'Public administration and finance services', 'value': 14822, 'competition': 0, 'winning': 0, 'description': 'KPMG generates revenue unchallenged by Oakton Services Pty Limited in this category.'}, {'agency': 'Department of Education and Training', 'unspsc': 'Accounting and bookkeeping services', 'value': 94909, 'competition': 0, 'winning': 0, 'description': 'KPMG generates revenue unchallenged by Oakton Services Pty Limited in this category.'}, {'agency': 'Clean Energy Regulator', 'unspsc': 'Accounting and bookkeeping services', 'value': 73192, 'competition': 0, 'winning': 0, 'description': 'KPMG generates revenue unchallenged by Oakton Services Pty Limited in this category.'}, {'agency': 'Office of the Director of Public Prosecutions', 'unspsc': 'Accounting and bookkeeping services', 'value': 443100, 'competition': 0, 'winning': 0, 'description': 'KPMG generates revenue unchallenged by Oakton Services Pty Limited in this category.'}];
 chart.data = [];
 
-var filter_overlap = 1
-var current_competitor = 0
-var current_competitor_name = ""
+var current_competitor = 0;
+var current_competitor_name = "";
+var baseline = 1;
+var data_all = [];
+var data_winning = [];
+var data_losing = [];
+var data_uncontested = [];
+var data_not_playing = [];
+
 
 function updateHeatmap(competitor_id, display_name, baseline=0) {
 
@@ -205,29 +225,52 @@ function updateHeatmap(competitor_id, display_name, baseline=0) {
 
 	if (baseline==1){
 		$('#filter').prop('checked', false);
-		filter_overlap = 0
 		$("#heatMapTitle").text("{{ session['supplier_name'] }} Baseline Activity");
 	} else {
 		$("#heatMapTitle").text("{{ session['supplier_name'] }} vs "+display_name);
 	}
 	
-	
-	$.get('/playingfield_heatmap_data?target_id={{data['supplier_id']}}&competition_id='+competitor_id +'&filter_overlap='+filter_overlap+'&baseline='+baseline,  // url
+	$.get('/playingfield_heatmap_data?target_id={{data['supplier_id']}}&competition_id='+competitor_id +'&baseline='+baseline,  // url
 	function (data, textStatus, jqXHR) {  // success callback
-		chart.data = data['heatMapData'];
-		var new_height = String((data['heatMapData'].length * 45)+220) + "px"
-		
+		baseline = data['heatMapData']['baseline']; // is this the baseline activity
+		data_all = data['heatMapData']['all'];
+		data_winning = data['heatMapData']['winning'];
+		data_losing = data['heatMapData']['losing'];
+		data_uncontested = data['heatMapData']['uncontested'];
+		data_not_playing = data['heatMapData']['not_playing'];
+
+		chart.data = data_all;
+		var new_height = String((chart.data.length * 30)+220) + "px"
 		$("#chartdiv").css("height", new_height);
+
+		if (baseline==1){
+			$('#filter_radio').hide();
+		} else {
+			$('#filter_radio').show();
+		}
 	});
 }
 
-$('#filter').change(function() {
-	if(this.checked) {
-		filter_overlap = 1;
-	} else {
-		filter_overlap = 0
+$('input[type=radio][name=btn-radio]').change(function() {
+
+//$('#filter').change(function() {
+	if (this.value == 'all') {
+		chart.data = data_all;
+	} 
+	if (this.value == 'winning') {
+		chart.data = data_winning;
+	} 
+	if (this.value == 'losing') {
+		chart.data = data_losing;
+	} 
+	if (this.value == 'not_playing') {
+		chart.data = data_not_playing;
+	} 
+	if (this.value == 'uncontested') {
+		chart.data = data_uncontested;
 	}   
-	updateHeatmap(current_competitor, current_competitor_name)  
+	var new_height = String((chart.data.length * 30)+220) + "px"
+	$("#chartdiv").css("height", new_height);
 });
 
 //}); // end am4core.ready()
