@@ -1875,9 +1875,9 @@ def playingfield():
 
 	data['heatmap'] = []
 
-	query = SupplierMatrix.query.filter_by(supplier_id=supplier_id).filter_by(financial_year=financial_year).filter_by(matrix_type="agency_segment").first()
-	result = SupplierMatrixSchema().dump(query).data
-	json_dict = json.loads(result['json']['data'])
+	query = Supplier.query.filter_by(id=supplier_id).first()
+	result = SupplierSchema().dump(query).data
+	data['target_supplier'] = result
 
 	#print(data['heatmap'])
 	#print(json_dict)
