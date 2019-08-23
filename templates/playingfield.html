@@ -150,8 +150,12 @@ xAxis.renderer.gridDistance = 10;
 yAxis.renderer.grid.template.disabled = true;
 yAxis.renderer.inversed = true;
 yAxis.renderer.minGridDistance = 10;
-yAxis.renderer.height = 220;
+yAxis.renderer.width = 230;
 
+var labelY = yAxis.renderer.labels.template;
+labelY.wrap = true;
+labelY.maxWidth = 250;
+labelY.horizontalCenter = "right"
 
 var series = chart.series.push(new am4charts.ColumnSeries());
 series.dataFields.categoryX = "unspsc";
@@ -171,7 +175,6 @@ series.tooltip.label.fill = am4core.color("#000");
 series.tooltip.pointerOrientation = "vertical";
 series.tooltip.maxWidth = 40;
 
-
 var bgColor = new am4core.InterfaceColorSet().getFor("background");
 
 var columnTemplate = series.columns.template;
@@ -183,17 +186,13 @@ columnTemplate.tooltipText = "{description}";
 columnTemplate.width = am4core.percent(100);
 columnTemplate.height = am4core.percent(100);
 
-
 var bullet2 = series.bullets.push(new am4charts.LabelBullet());
 bullet2.label.text = "${value}";
-
 
 bullet2.label.fill = am4core.color("#000000");
 bullet2.zIndex = 1;
 bullet2.fontSize = 11;
 bullet2.interactionsEnabled = false;
-
-
 
 // Set the fill colour for each cell.
 series.columns.template.column.adapter.add("fill", function(fill, target) {
@@ -231,7 +230,6 @@ var data_losing = [];
 var data_uncontested = [];
 var data_not_playing = [];
 
-
 function updateHeatmap(competitor_id, display_name, baseline=0) {
 
 	$('#chartdiv').hide();
@@ -266,11 +264,6 @@ function updateHeatmap(competitor_id, display_name, baseline=0) {
 			$('#filter_radio').show();
 		}
 
-		//alert(xAxis.renderer.measuredWidth);
-
-		//var new_height = String((chart.data.length * 30)+220) + "px"
-		//$("#chartdiv").css("height", new_height);
-
 		$('#loading_icon_heatmap').hide();
 		$('#chartdiv').show();
 		chart.validateData();
@@ -295,12 +288,9 @@ $('input[type=radio][name=btn-radio]').change(function() {
 	if (this.value == 'uncontested') {
 		chart.data = data_uncontested;
 	}   
-	//var new_height = String((chart.data.length * 30)+220) + "px"
-	//$("#chartdiv").css("height", new_height);
 });
 
 //}); // end am4core.ready()
-
 
 // Set cell size in pixels
 var cellSize = 40;
@@ -321,7 +311,7 @@ chart.events.on("datavalidated", function(ev) {
 
 	// Calculate how we need to adjust chart height
 	var adjustHeight = agencies.length * cellSize - categoryAxis.pixelHeight;
-	var adjustWidth = unspscs.length * cellWidth + 220;
+	var adjustWidth = unspscs.length * cellWidth + 250;
 
 	// get current chart height
 	var targetHeight = chart.pixelHeight + adjustHeight;

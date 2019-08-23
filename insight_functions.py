@@ -85,10 +85,10 @@ def supplier_agency_segment_matrix(df, supplier_id, unspsc_segments, unspsc_dict
 
 	matrixes = [] # holds all of the generated matrixes, so it can be passed back and added to the db
 
-	# CHANGED! Added family_unspsc_id
+	# make a copy before we calculate the agency totals
+	df_divisions = df_temp.copy()
+
 	df_temp = df_temp.groupby(['agency.id', 'segment_unspsc_id', 'family_unspsc_id']).sum()
-	#df_temp = df_temp.groupby(['agency.id', 'family_unspsc_id']).sum()
-	print(df_temp)
 
 	json_dict = {}
 	for index, row in df_temp.iterrows(): 
@@ -106,23 +106,40 @@ def supplier_agency_segment_matrix(df, supplier_id, unspsc_segments, unspsc_dict
 			except:
 				json_dict['a_'+str(index[0])][index[2]]=row['contract_value']
 
-		
 
-		#try:    
-		#	json_dict['a_'+str(index[0])][index[2]]=json_dict['a_'+str(index[0])][index[2]]+row['contract_value']
-		#	print("added family") 
-		#except:
-		#	print("created family") 
-		#	json_dict['a_'+str(index[0])][index[2]]=row['contract_value']
+	# NEW HERE
+	if 'division.id' in df.columns:
+		pass
+	else:
+		df_divisions['division.id'] = 0
+	df_divisions = df_divisions.groupby(['division.id', 'segment_unspsc_id', 'family_unspsc_id']).sum()
+	print(df_divisions)
 
-	#json.dumps(json_dict)
+	json_dict_div = {}
+	for index, row in df_divisions.iterrows(): 
+		json_dict_div['d_'+str(index[0])]={}
+	for index, row in df_divisions.iterrows():
+		if index[2]==0:
+			print("added to the segment"+ str(index[2]))
+			try:
+				json_dict_div['d_'+str(index[0])][index[1]]=json_dict_div['d_'+str(index[0])][index[1]]+row['contract_value']
+			except:
+				json_dict_div['d_'+str(index[0])][index[1]]=row['contract_value']
+		else:
+			try:
+				json_dict_div['d_'+str(index[0])][index[2]]=json_dict_div['d_'+str(index[0])][index[2]]+row['contract_value']
+			except:
+				json_dict_div['d_'+str(index[0])][index[2]]=row['contract_value']
 
-	matrixes.append( {"supplier_id":supplier_id, "data":json.dumps(json_dict)} )
-	print(json.dumps(json_dict))
+	# ----------
+
+
+
+	matrixes.append( {"supplier_id":supplier_id, "data":json.dumps(json_dict), "div_data": json.dumps(json_dict_div)})
+	#print(json.dumps(json_dict))
 
 	return matrixes
-	#except:
-	#	return None
+
 
 
 

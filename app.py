@@ -389,28 +389,28 @@ def matrix(target_supplier):
 
 		# Loop over suppliers and add the matrix to the db
 		#for supplier_id in supplier_ids:
-		try:
-			matrixes = insight_functions.supplier_agency_segment_matrix(df, target_supplier, unspsc_segments, unspsc_dict, agencies, financial_year, financial_quarter)
+		#try:
+		matrixes = insight_functions.supplier_agency_segment_matrix(df, target_supplier, unspsc_segments, unspsc_dict, agencies, financial_year, financial_quarter)
 
-			if matrixes!=None:
-				for matrix in matrixes:
-					if len(matrix['data'])>2:
-						# Add the matrix to the db
-						obj=SupplierMatrix.query.filter_by(supplier_id=matrix['supplier_id']).filter_by(financial_year=financial_year).filter_by(financial_quarter=financial_quarter).first()
-						if obj==None:
-							db.create_all()
-							query = SupplierMatrix(matrix_type="agency_segment", supplier_id=target_supplier, json=matrix, financial_year=financial_year, financial_quarter=financial_quarter, created=datetime.now())
-							db.session.add(query)
-							db.session.commit()
-						else:
-							response = OpSchema().dump(obj).data # get the existing op data
-							# Update any changes to the opportunity
-							obj.json = matrix
-							created=datetime.now()
-							db.session.commit()
-		except:
-			print("some sort of error creating the matrix for the user.  Line 400 app.py")
-			pass
+		if matrixes!=None:
+			for matrix in matrixes:
+				if len(matrix['data'])>2:
+					# Add the matrix to the db
+					obj=SupplierMatrix.query.filter_by(supplier_id=matrix['supplier_id']).filter_by(financial_year=financial_year).filter_by(financial_quarter=financial_quarter).first()
+					if obj==None:
+						db.create_all()
+						query = SupplierMatrix(matrix_type="agency_segment", supplier_id=target_supplier, json=matrix, financial_year=financial_year, financial_quarter=financial_quarter, created=datetime.now())
+						db.session.add(query)
+						db.session.commit()
+					else:
+						response = OpSchema().dump(obj).data # get the existing op data
+						# Update any changes to the opportunity
+						obj.json = matrix
+						created=datetime.now()
+						db.session.commit()
+		#except:
+			#print("some sort of error creating the matrix for the user.  Line 400 app.py")
+			#pass
 
 	if loop==1:
 		link = "<a href='/matrix/"+ str(int(target_supplier)+1) +"?loop="+ str(loop) +"'>Next</a>"
@@ -1673,6 +1673,15 @@ def playingfield_heatmap_data():
 	target_id= int(request.args.get('target_id'))
 	competition_id= int(request.args.get('competition_id'))
 
+	# Are we looking for agency level heatmap or division?
+	# This determines which data we user from the supplier matrix JSON
+	data_level = 'agency'
+	data_level = 'division'
+	if data_level=='agency':
+		data_source = 'data'
+	else:
+		data_source = 'div_data'
+
 	try:
 		baseline = int(request.args.get('baseline'))
 	except:
@@ -1689,7 +1698,7 @@ def playingfield_heatmap_data():
 	target_supplier_name = data['supplier']['display_name']
 	if len(data)>0:
 
-		json_dict = json.loads(data['json']['data'])
+		json_dict = json.loads(data['json'][data_source])
 		unspscs = []
 		agencies = []
 		
@@ -1698,14 +1707,14 @@ def playingfield_heatmap_data():
 			for unspsc in json_dict[agency]:
 				unspscs.append(str(unspsc))
 
-		matrix_a_json_data = data['json']['data']
+		matrix_a_json_data = data['json'][data_source]
 
 		if baseline!=1:
 			query = SupplierMatrix.query.filter_by(supplier_id=competition_id).filter_by(matrix_type="agency_segment").filter_by(financial_year=int(financial_year)).first() 
 			data = SupplierMatrixSchema().dumps(query).data
 			data = json.loads(data)
 			competitor_name = data['supplier']['display_name']
-			json_dict = json.loads(data['json']['data'])
+			json_dict = json.loads(data['json'][data_source])
 
 			for agency in json_dict:
 				if agency not in agencies:
@@ -1714,7 +1723,7 @@ def playingfield_heatmap_data():
 					if unspsc not in unspscs:
 						unspscs.append(str(unspsc))
 
-			matrix_b_json_data = data['json']['data']
+			matrix_b_json_data = data['json'][data_source]
 
 		matrix_a = insight_functions.rebuild_matrix(matrix_a_json_data, unspscs, agencies)
 
@@ -1731,10 +1740,26 @@ def playingfield_heatmap_data():
 						description = ""
 						competition = 0
 						winning = 0
-						agency_id = matrix_a[item].index[i].replace("a_", "")
-						query = Agency.query.filter_by(id=agency_id).first()
-						result = AgencySchema().dump(query).data
-						agency_name = result['display_title']
+
+						if data_level=='agency':
+							agency_id = matrix_a[item].index[i].replace("a_", "")
+							query = Agency.query.filter_by(id=agency_id).first()
+							result = AgencySchema().dump(query).data
+							agency_name = result['display_title']
+
+						if data_level=='division':
+							division_id = matrix_a[item].index[i].replace("d_", "")
+							division_id = division_id[:division_id.find(".")]
+							print(division_id)
+							if division_id!="":
+								query = Division.query.filter_by(id=division_id).first()
+								result = DivisionSchema().dump(query).data
+								agency_name = result['display_title']
+							else:
+								agency_name="Undisclosed"
+
+
+
 
 						query = Unspsc.query.filter_by(id=item).first()
 						result = UnspscSchema().dump(query).data
@@ -1771,10 +1796,22 @@ def playingfield_heatmap_data():
 					# Dont include the results if there was no activity in the agency/unspsc
 					if (matrix_c[item][i]!=0):
 
-						agency_id = matrix_c[item].index[i].replace("a_", "")
-						query = Agency.query.filter_by(id=agency_id).first()
-						result = AgencySchema().dump(query).data
-						agency_name = result['display_title']
+						if data_level=='agency':
+							agency_id = matrix_a[item].index[i].replace("a_", "")
+							query = Agency.query.filter_by(id=agency_id).first()
+							result = AgencySchema().dump(query).data
+							agency_name = result['display_title']
+
+						if data_level=='division':
+							division_id = matrix_a[item].index[i].replace("d_", "")
+							division_id = division_id[:division_id.find(".")]
+							print(division_id)
+							if division_id!="":
+								query = Division.query.filter_by(id=division_id).first()
+								result = DivisionSchema().dump(query).data
+								agency_name = result['display_title']
+							else:
+								agency_name="Undisclosed"
 
 						query = Unspsc.query.filter_by(id=item).first()
 						result = UnspscSchema().dump(query).data
