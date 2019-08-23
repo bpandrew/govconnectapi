@@ -1718,7 +1718,7 @@ def playingfield_heatmap_data():
 
 		matrix_a = insight_functions.rebuild_matrix(matrix_a_json_data, unspscs, agencies)
 
-		chart_data = {"winning":[], "losing":[], "not_playing":[], "uncontested":[], "all":[], "baseline":0}
+		chart_data = {"winning":[], "winning_sum":0, "losing":[], "losing_sum":0, "not_playing":[], "not_playing_sum":0, "uncontested":[], "uncontested_sum":0, "all":[], "all_sum":0, "baseline":0}
 
 		# ----- BASELINE HERE
 		if baseline==1:
@@ -1748,6 +1748,7 @@ def playingfield_heatmap_data():
 						chart_dict['winning'] = winning
 						chart_dict['description'] = description
 
+						chart_data['all_sum'] = int(chart_data['all_sum']) + int(value)
 						chart_data['all'].append(chart_dict)
 						chart_data['baseline'] = 1
 
@@ -1808,18 +1809,30 @@ def playingfield_heatmap_data():
 						chart_dict['unspsc'] = unspsc_title
 						value = int(matrix_c[item][i])
 						chart_dict['value'] = value
+						#try:
+						#	chart_dict['perc_change'] = round(int((matrix_a[item][i]) / int(matrix_b[item][i])*100), 2)
+						#except:
+						#	chart_dict['perc_change'] = None
 						chart_dict['competition'] = competition
 						chart_dict['winning'] = winning
 						chart_dict['description'] = description
 
 						chart_data[result_type].append(chart_dict)
+						chart_data[result_type+'_sum'] = int(chart_data[result_type+'_sum']) + int(value)
 						chart_data['all'].append(chart_dict)
+						chart_data[result_type+'_sum'] = int(chart_data['all_sum']) + int(value)
 
 		#print(matrix_a)
 		#print("*****")
 		#print(matrix_b)
 		#print("*****")
 		#print(matrix_c)
+
+		loops = ['all', 'winning', 'losing', 'not_playing', 'uncontested']
+		for result_type in loops:
+			if int(chart_data[result_type+'_sum'])!=0:
+				for item in chart_data[result_type]:
+					item['opacity'] = round(int(item['value'])/int(chart_data[result_type+'_sum']), 2)
 
 		#print("************************")
 		#print(chart_data)
