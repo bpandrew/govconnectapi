@@ -1771,31 +1771,6 @@ def playingfield_heatmap_data():
 					# Dont include the results if there was no activity in the agency/unspsc
 					if (matrix_c[item][i]!=0):
 
-						if (matrix_c[item][i]==matrix_a[item][i]) and (matrix_c[item][i]!=0):
-							#print("No competition")
-							description = target_supplier_name +" generated "+ functions.format_currency(matrix_a[item][i]) +" [bold]unchallenged[/] by "+ competitor_name +" in this service category and agency."
-							competition = 0
-							result_type = "uncontested"
-						if (matrix_c[item][i]<matrix_a[item][i]) and (matrix_c[item][i]!=0) and (matrix_c[item][i]<0):
-							#print("Competitor playing and winning")
-							description = competitor_name +" generated "+ functions.format_currency(matrix_b[item][i]) +" in this service category and agency; [bold]More[/] than the "+ functions.format_currency(matrix_a[item][i]) +" "+ target_supplier_name +" generated."
-							winning = -1
-							competition = 1
-							result_type = "losing"
-						if (matrix_c[item][i]==(matrix_b[item][i]*-1)) and (matrix_c[item][i]!=0):
-							#print("Competitor playing where you are not.")
-							description = competitor_name +" generated "+ functions.format_currency(matrix_b[item][i]) +" [bold]unchallenged[/] by "+ target_supplier_name +" in this service category and agency."
-							competition = -1
-							winning = -1
-							result_type = "not_playing"
-						if (matrix_c[item][i]<matrix_a[item][i]) and (matrix_c[item][i]!=0) and (matrix_c[item][i]>0):
-							#print("Competitor playing but losing")
-							description = competitor_name +" generated "+ functions.format_currency(matrix_b[item][i]) +" in this service category and agency; [bold]Less[/] than the "+ functions.format_currency(matrix_a[item][i]) +" "+ target_supplier_name +" generated."
-							winning = 1
-							competition = 1
-							result_type = "winning"
-						#print("---")
-
 						agency_id = matrix_c[item].index[i].replace("a_", "")
 						query = Agency.query.filter_by(id=agency_id).first()
 						result = AgencySchema().dump(query).data
@@ -1804,6 +1779,34 @@ def playingfield_heatmap_data():
 						query = Unspsc.query.filter_by(id=item).first()
 						result = UnspscSchema().dump(query).data
 						unspsc_title = result['title']
+
+
+						if (matrix_c[item][i]==matrix_a[item][i]) and (matrix_c[item][i]!=0):
+							#print("No competition")
+							description = "[bold]"+target_supplier_name +"[/] had no competition from [bold]"+ competitor_name +"[/] in this agency/service category.\n"+ functions.format_currency(matrix_a[item][i]) +" was generated [bold]Uncontested[/]\n\n[bold]Agency:[/] "+agency_name+"\n[bold]Service Category:[/] "+unspsc_title
+							competition = 0
+							result_type = "uncontested"
+						if (matrix_c[item][i]<matrix_a[item][i]) and (matrix_c[item][i]!=0) and (matrix_c[item][i]<0):
+							#print("Competitor playing and winning")
+							description = "[bold]"+competitor_name +"[/] is out-performing [bold]"+target_supplier_name +"[/] in this agency/service category;\nEarning "+ functions.format_currency(matrix_b[item][i]) +" compared to "+ functions.format_currency(matrix_a[item][i]) +" for "+ target_supplier_name +".\n\n[bold]Agency:[/] "+agency_name+"\n[bold]Service Category:[/] "+unspsc_title
+							winning = -1
+							competition = 1
+							result_type = "losing"
+						if (matrix_c[item][i]==(matrix_b[item][i]*-1)) and (matrix_c[item][i]!=0):
+							#print("Competitor playing where you are not.")
+							description = "[bold]"+ competitor_name +"[/] generated "+ functions.format_currency(matrix_b[item][i]) +" unchallenged in this agency/service category.\nRepresenting a potential opportunity for [bold]"+target_supplier_name +"[/] for expansion.\n\n[bold]Agency:[/] "+agency_name+"\n[bold]Service Category:[/] "+unspsc_title
+							competition = -1
+							winning = -1
+							result_type = "not_playing"
+						if (matrix_c[item][i]<matrix_a[item][i]) and (matrix_c[item][i]!=0) and (matrix_c[item][i]>0):
+							#print("Competitor playing but losing")
+							description = "[bold]"+ target_supplier_name +"[/] is out-performing [bold]"+competitor_name +"[/] in this agency/service category;\nEarning "+ functions.format_currency(matrix_a[item][i]) +" compared to "+ functions.format_currency(matrix_b[item][i]) +" for "+ competitor_name +".\n\n[bold]Agency:[/] "+agency_name+"\n[bold]Service Category:[/] "+unspsc_title
+							winning = 1
+							competition = 1
+							result_type = "winning"
+						#print("---")
+
+						
 
 						chart_dict['agency'] = agency_name
 						chart_dict['unspsc'] = unspsc_title

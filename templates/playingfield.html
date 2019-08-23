@@ -161,7 +161,7 @@ series.dataFields.competition = "competition";
 series.dataFields.description = "description";
 series.dataFields.opacity_ = "opacity";
 series.sequencedInterpolation = true;
-series.defaultState.transitionDuration = 3000;
+series.defaultState.transitionDuration = 2000;
 
 // Make the tooltip white background with black text
 series.tooltip.getFillFromObject = false;
@@ -192,13 +192,7 @@ bullet2.zIndex = 1;
 bullet2.fontSize = 11;
 bullet2.interactionsEnabled = false;
 
-// Set the opacity of each cell.
-series.columns.template.column.adapter.add("opacity", function(opacity, target) {
-  if (target.dataItem) {
-	return target.dataItem.opacity_;
-  }
-  return opacity;
-});
+
 
 // Set the fill colour for each cell.
 series.columns.template.column.adapter.add("fill", function(fill, target) {
@@ -278,6 +272,7 @@ function updateHeatmap(competitor_id, display_name, baseline=0) {
 
 		$('#loading_icon_heatmap').hide();
 		$('#chartdiv').show();
+		chart.validateData();
 	});
 }
 
@@ -333,6 +328,14 @@ chart.events.on("datavalidated", function(ev) {
 	// Set it on chart's container
 	chart.svgContainer.htmlElement.style.height = targetHeight + "px";
 	chart.svgContainer.htmlElement.style.width = adjustWidth + "px";
+
+	// Set the opacity of each cell.
+	series.columns.template.column.adapter.add("opacity", function(opacity, target) {
+	if (target.dataItem) {
+		return target.dataItem.opacity_;
+	}
+	return opacity;
+	});
 });
 
 </script>
