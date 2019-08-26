@@ -304,6 +304,10 @@ def comp_matrix(target_supplier, count):
 				query = Competitor(supplier_id=target_supplier, competitor_id=index, score=row['score'], agency_id=agency_id, created=datetime.now())
 				db.session.add(query)
 				db.session.commit()
+			else:
+				obj.score=row['score']
+				db.session.commit()
+
 
 		#except:
 		#	pass
