@@ -214,6 +214,29 @@ var options = chart.exporting.getFormatOptions("png");
 options.quality = 0.8;
 chart.exporting.setFormatOptions("png", options);
 
+var legend = new am4charts.Legend();
+legend.parent = chart.chartContainer;
+legend.background.fill = am4core.color("#ffffff");
+legend.background.fillOpacity = 0.05;
+legend.fontSize = 10;
+legend.height = 40;
+legend.width = 500;
+legend.align = "right";
+legend.data = [{
+	"name": "Winning",
+	"fill":"#67CA9C"
+	}, {
+	"name": "Losing",
+	"fill": "#DE5B62"
+	}, {
+	"name": "Not Playing",
+	"fill": "#F99552"
+	}, {
+	"name": "Uncontested",
+	"fill": "#efefef"
+	},
+];
+
 var title = chart.titles.create();
 title.text = "";
 title.fontSize = 18;
@@ -338,7 +361,7 @@ chart.events.on("datavalidated", function(ev) {
 
 	// Calculate how we need to adjust chart height
 	var adjustHeight = agencies.length * cellSize - categoryAxis.pixelHeight;
-	var adjustWidth = unspscs.length * cellWidth + 250;
+	var adjustWidth = unspscs.length * cellWidth + 290;
 
 	// get current chart height
 	var targetHeight = chart.pixelHeight + adjustHeight;
