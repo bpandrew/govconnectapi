@@ -299,12 +299,14 @@ def comp_matrix(target_supplier, count):
 
 			# Check the record does not exist
 			query = Competitor.query.filter_by(supplier_id=target_supplier).filter_by(competitor_id=index).filter_by(agency_id=agency_id).first() 
-			if (query==None) and (row['score']!=0) and (row['score']>-0.95):
-				# Add the record to the competitor table
-				query = Competitor(supplier_id=target_supplier, competitor_id=index, score=row['score'], agency_id=agency_id, created=datetime.now())
-				db.session.add(query)
-				db.session.commit()
+			if (query==None):
+				if (row['score']!=0) and (row['score']>-0.95):
+					# Add the record to the competitor table
+					query = Competitor(supplier_id=target_supplier, competitor_id=index, score=row['score'], agency_id=agency_id, created=datetime.now())
+					db.session.add(query)
+					db.session.commit()
 			else:
+				#if (row['score']!=0) and (row['score']>-0.95):
 				query.score=row['score']
 				db.session.commit()
 
