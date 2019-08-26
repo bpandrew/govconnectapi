@@ -490,7 +490,7 @@ def login():
 			session['user_id'] = result['id']
 			session['user_token'] = result['token']
 			session['admin'] = result['admin']
-			session['user_supplier_id'] = result['supplier_id']
+			session['user_supplier_id'] = result['supplier']['id']
 
 			return redirect(url_for('op'))
 		else:
