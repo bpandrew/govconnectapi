@@ -93,6 +93,7 @@
 		</div>
 	</div>
 
+	<a href="javascript:;" onclick="savePDF()">Save PDF</a>
 </div>
 
 <!-- [ content ] End -->
@@ -197,6 +198,27 @@ bullet2.zIndex = 1;
 bullet2.fontSize = 11;
 bullet2.interactionsEnabled = false;
 
+// Enable export
+chart.exporting.menu = new am4core.ExportMenu();
+chart.exporting.menu.items = [{
+  "label": "...",
+  "menu": [
+	{ "type": "png", "label": "PNG" },
+	{ "type": "jpg", "label": "JPG" },
+  ]
+}];
+chart.exporting.filePrefix = "GovConnect - HeatMap";
+chart.exporting.title = "Chart Title Here";
+chart.exporting.useRetina = true;
+var options = chart.exporting.getFormatOptions("png");
+options.quality = 0.8;
+chart.exporting.setFormatOptions("png", options);
+
+var title = chart.titles.create();
+title.text = "";
+title.fontSize = 18;
+title.marginBottom = 20;
+
 // Set the fill colour for each cell.
 series.columns.template.column.adapter.add("fill", function(fill, target) {
   if (target.dataItem) {
@@ -243,9 +265,11 @@ function updateHeatmap(competitor_id, display_name, baseline=0) {
 
 	if (baseline==1){
 		$('#filter').prop('checked', false);
-		$("#heatMapTitle").text("{{ data['target_supplier']['display_name']}} Baseline Activity");
+		title.text = "{{ data['target_supplier']['display_name']}} Baseline Activity"
+		$("#heatMapTitle").text(title.text);
 	} else {
-		$("#heatMapTitle").text("{{ data['target_supplier']['display_name']}} vs "+display_name);
+		title.text = "{{ data['target_supplier']['display_name']}} vs "+display_name;
+		$("#heatMapTitle").text(title.text);
 	}
 	
 	//alert('/playingfield_heatmap_data?target_id={{data['supplier_id']}}&competition_id='+competitor_id +'&baseline='+baseline+'&lvl='+data_lvl+"&agency="+current_agency_id)
