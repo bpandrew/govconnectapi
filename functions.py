@@ -53,7 +53,7 @@ def format_currency_comma(value, round_=False):
 		if round_==True:
 			value = round_thousand(value)
 		else:
-			value = int(value)
+			value = value
 		output = "$"+ humanize.intcomma(value)
 		return output
 

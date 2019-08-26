@@ -126,7 +126,7 @@
 									<td>{{ contract.category_temp_title }}</td>
 									<td>{{ contract.division.display_title }}</td>
 									<td>{{ contract.branch.display_title }}</td>
-									<td>${{ contract.contract_value }}</td>
+									<td>{{ contract.contract_value }}</td>
 									<td nowrap>{{ contract.publish_date }}</td>
 								</tr>
 								{% endfor %}
@@ -202,7 +202,7 @@
 
                 // Update footer
                 $(api.column(5).footer()).html(
-                    '$' + pageTotal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + ' <br><small>( $' + total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + ' total)</small>'
+                    '$' + pageTotal.toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + ' <br><small>( $' + total.toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") + ' total)</small>'
                 );
             }
         });

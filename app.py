@@ -1328,15 +1328,17 @@ def agency_detail(agency_id, division_id=0, branch_id=0):
 		
 
 	# Get all of the contracts for the Agency/Division/Branch
-	contracts = Contract.query.filter_by(agency_id=data['agency_data']['id'])
+	contracts = Contract.query.filter_by(agency_id=data['agency_data']['id']).order_by(desc(Contract.contract_start))
 	if division_id>0:
 		contracts = contracts.filter( getattr(Contract, "division_id" ) == division_id )
 	if branch_id>0:
 		contracts = contracts.filter( getattr(Contract, "branch_id" ) == branch_id )
-	contracts = contracts.all()
+	contracts = contracts.limit(500).all()
 	contract_data = ContractSchema(many=True).dumps(contracts).data
 	contract_data = json.loads(contract_data)
 	data['contract_data'] = contract_data
+	for item in data['contract_data']:
+		item['contract_value'] = functions.format_currency_comma(item['contract_value'], False)
 
 	contracts_norm = json_normalize(contract_data) #normalise the JSON for the contracts
 
