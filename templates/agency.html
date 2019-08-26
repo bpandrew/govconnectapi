@@ -103,7 +103,7 @@
                         <h5 class="m-0 mr-2">Contracts</h5>
                     </div>
                     <div class="card-subtitle text-muted mb-3">
-                        {{ data.title }} currently has XX ongoing contract(s);</p>
+                        {{ data.title }} currently has the following ongoing contract(s);</p>
                     </div>
                     <div class="card-datatable table-responsive" style="margin-top: -25px">
                         <table id="currentContractsTable" class="table table-hover card-table">
@@ -152,6 +152,19 @@
 
 {% include "footer.html" %}
 
+<script src="https://cdn.datatables.net/buttons/1.5.6/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/1.5.6/js/buttons.flash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/1.5.6/js/buttons.html5.min.js"></script>
+
+
+
+
+
+
+
 <script>
     $(document).ready(function() {
         $('#myTable').DataTable({
@@ -160,11 +173,15 @@
             "scrollX": false,
             "order": [
                 [0, "asc"]
-            ],
+			]
         }, );
 
 
         table = $('#currentContractsTable').DataTable({
+			"dom": 'Bfrtip',
+			"buttons": [
+            	"csv", "excel"
+       		],
             "orderCellsTop": true,
             "fixedHeader": true,
             "order": [
