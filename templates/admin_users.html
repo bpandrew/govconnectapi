@@ -1,0 +1,57 @@
+{% include "header_simple.html" %}
+
+	<div class="container-fluid flex-grow-1 container-p-y">			
+		<h4 class="font-weight-bold py-3 mb-0">User Administration</h4>
+		<div class="row">
+			<div class="col">
+				<div class="card mb-4">
+					<div class="card-body">
+						<div class="card-datatable table-responsive" style="margin-top: -25px">
+							<table id="myTable" class="table table-hover card-table">
+								<thead style="font-size:small">
+								<tr>
+									<th>Name</th>
+									<th>Email</th>                         
+								</tr>
+								</thead>
+								<tbody style="font-size:small">
+									{% for item in data['users'] %}
+									<tr>
+										<td><a href="/admin/user/{{ item['id']}}">{{ item['first_name']}} {{ item['last_name']}}</a></td>
+										<td>{{ item['email'] }}</td>
+									</tr>
+									{% endfor %}
+								</tbody>
+							</table>
+						</div>
+	
+					</div>
+
+				</div>
+			</div>
+		</div>
+
+	
+	</div>
+
+
+{% include "footer_simple.html" %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.js"></script>
+<script src="{{ url_for('static',filename='js/bootstrap.js') }}"></script>
+
+<script src="{{ url_for('static',filename='libs/datatables/datatables.js') }}"></script>
+<script src="{{ url_for('static',filename='js/pages/tables_datatables.js') }}"></script>
+
+<!-- Datatable Ajax/Cache -->
+<script src="{{ url_for('static',filename='js/ajax_datatable.js') }}"></script>
+
+<script>
+    $(document).ready(function() {
+        table = $('#myTable').DataTable({
+            "order": [
+                [0, "desc"]
+            ]
+        });
+    });
+</script>

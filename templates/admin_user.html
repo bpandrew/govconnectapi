@@ -1,0 +1,54 @@
+{% include "header_simple.html" %}
+
+<div class="row">
+	<div class="col-xl-6">
+		<div class="card mb-4">
+			<div class="card-body">
+
+				<form action="" method="post" enctype="multipart/form-data" novalidate class="my-5" id="form1">
+					{{ form.hidden_tag() }}
+		
+					<div class="form-group">
+						<label class="form-label">Supplier ID</label> {{ form.supplier_id(class_="form-control") }}
+						<div class="clearfix">{% for error in form.supplier_id.errors %}<span class="error_text">{{ error }}</span>{% endfor %}</div>
+					</div>
+					<div class="form-group">
+						<label class="form-label">{{ form.first_name.label }}</label> {{ form.first_name(class_="form-control") }}
+						<div class="clearfix">{% for error in form.first_name.errors %}<span class="error_text">{{ error }}</span>{% endfor %}</div>
+					</div>
+					<div class="form-group">
+						<label class="form-label">{{ form.last_name.label }}</label> {{ form.last_name(class_="form-control") }}
+						<div class="clearfix">{% for error in form.last_name.errors %}<span class="error_text">{{ error }}</span>{% endfor %}</div>
+					</div>
+					<div class="d-flex justify-content-between align-items-center m-0">
+						<button type="submit" form="form1" value="Submit" class="btn btn-primary btn-block mt-4">Save Changes</button>
+					</div>
+		
+				</form>
+				<!-- [ Form ] End -->
+			</div>
+		</div>
+	</div>
+</div>
+
+
+{% include "footer_simple.html" %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.js"></script>
+<script src="{{ url_for('static',filename='js/bootstrap.js') }}"></script>
+
+<script src="{{ url_for('static',filename='libs/datatables/datatables.js') }}"></script>
+<script src="{{ url_for('static',filename='js/pages/tables_datatables.js') }}"></script>
+
+<!-- Datatable Ajax/Cache -->
+<script src="{{ url_for('static',filename='js/ajax_datatable.js') }}"></script>
+
+<script>
+    $(document).ready(function() {
+        table = $('#myTable').DataTable({
+            "order": [
+                [0, "desc"]
+            ]
+        });
+    });
+</script>

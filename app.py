@@ -2288,6 +2288,43 @@ def admin_umbrella_supplier():
 
 
 
+@app.route("/admin/users")
+def admin_users():
+	data = {}
+	query = User.query.all()
+	data['users'] = UserSchema(many=True).dump(query).data
+
+	return render_template('admin_users.html', data=data)
+
+
+from forms import ProfileForm
+@app.route("/admin/user/<user_id>", methods=['GET', 'POST'])
+def admin_user_detail(user_id):
+	# Load the form
+	form = ProfileForm()
+
+	if form.validate_on_submit():
+		obj = User.query.filter_by(id=user_id).first()
+		obj.supplier_id = form.supplier_id.data
+		obj.first_name = form.first_name.data
+		obj.last_name = form.last_name.data
+		db.session.commit()
+
+		# Add in the update code here
+		return redirect(url_for('admin_users'))
+	
+	obj = User.query.filter_by(id=user_id).first()
+	result = json.loads(UserSchema().dumps(obj).data)
+
+	form.first_name.default = result['first_name']
+	form.last_name.default = result['last_name']
+	form.supplier_id.default = result['supplier']
+	form.process()
+	
+	return render_template('admin_user.html', form=form, data=result)
+
+
+
 
 # ------------------------------------ RUN APP ------------------------------------
 # ---------------------------------------------------------------------------------
