@@ -1390,7 +1390,7 @@ def division_add():
     title=request.args.get('title').capitalize()
     agency_id=request.args.get('agency_id')
     
-    division = Division.query.filter_by(title=title).first()
+    division = Division.query.filter_by(title=title).filter_by(agency_id=agency_id).first()
     if division==None:
         db.create_all()
         division = Division(title=title, agency_id=agency_id, display_title=functions.cleanTitle(title))
@@ -1410,7 +1410,7 @@ def branch_add():
     title=request.args.get('title').capitalize()
     division_id=request.args.get('division_id')
     
-    branch = Branch.query.filter_by(title=title).first()
+    branch = Branch.query.filter_by(title=title).filter_by(division_id=division_id).first()
     if branch==None:
         db.create_all()
         branch = Branch(title=title, division_id=division_id, display_title=functions.cleanTitle(title))
@@ -1673,10 +1673,13 @@ def playingfield_heatmap_data():
 	target_id= int(request.args.get('target_id'))
 	competition_id= int(request.args.get('competition_id'))
 
+	filter_agency = int(request.args.get('agency')) # should we filter the results by agency?
+
 	# Are we looking for agency level heatmap or division?
 	# This determines which data we user from the supplier matrix JSON
-	data_level = 'agency'
-	data_level = 'division'
+	#data_level = 'agency'
+	#data_level = 'division'
+	data_level= request.args.get('lvl')
 	if data_level=='agency':
 		data_source = 'data'
 	else:
@@ -1734,6 +1737,7 @@ def playingfield_heatmap_data():
 
 			for item in matrix_a:
 				for i in range(len(matrix_a[item])):
+					ignore_record=False
 					if (matrix_a[item][i]!=0):
 						chart_dict = {}	
 
@@ -1747,35 +1751,55 @@ def playingfield_heatmap_data():
 							result = AgencySchema().dump(query).data
 							agency_name = result['display_title']
 
+							chart_dict['agency_id'] = agency_id
+
 						if data_level=='division':
+							division_id_raw = matrix_a[item].index[i]
+							print(division_id_raw)
+							disclosed_division = division_id_raw.find("da_") # is this an undefined Division?
+							print(disclosed_division)
 							division_id = matrix_a[item].index[i].replace("d_", "")
-							division_id = division_id[:division_id.find(".")]
-							print(division_id)
-							if division_id!="":
+							division_id_raw = division_id
+
+							if disclosed_division==-1:
 								query = Division.query.filter_by(id=division_id).first()
 								result = DivisionSchema().dump(query).data
 								agency_name = result['display_title']
+
+								if int(filter_agency) != int(result['agency']):
+									ignore_record=True
+									agency_name = str(filter_agency)+" IGNORE"
+									pass
+
 							else:
-								agency_name="Undisclosed"
+								temp_agency_id = matrix_a[item].index[i].replace("da_", "")
+								if int(filter_agency) != int(temp_agency_id):
+									ignore_record=True
+								else:
+									agency_name="Undisclosed Division"
+
+
+							chart_dict['division_id'] = division_id
+							
 
 
 
+						if ignore_record==False:
+							query = Unspsc.query.filter_by(id=item).first()
+							result = UnspscSchema().dump(query).data
+							unspsc_title = result['title']
 
-						query = Unspsc.query.filter_by(id=item).first()
-						result = UnspscSchema().dump(query).data
-						unspsc_title = result['title']
+							chart_dict['agency'] = agency_name
+							chart_dict['unspsc'] = unspsc_title
+							value = int(matrix_a[item][i])
+							chart_dict['value'] = value
+							chart_dict['competition'] = competition
+							chart_dict['winning'] = winning
+							chart_dict['description'] = description
 
-						chart_dict['agency'] = agency_name
-						chart_dict['unspsc'] = unspsc_title
-						value = int(matrix_a[item][i])
-						chart_dict['value'] = value
-						chart_dict['competition'] = competition
-						chart_dict['winning'] = winning
-						chart_dict['description'] = description
-
-						chart_data['all_sum'] = int(chart_data['all_sum']) + int(value)
-						chart_data['all'].append(chart_dict)
-						chart_data['baseline'] = 1
+							chart_data['all_sum'] = int(chart_data['all_sum']) + int(value)
+							chart_data['all'].append(chart_dict)
+							chart_data['baseline'] = 1
 
 		else:
 
@@ -1785,6 +1809,7 @@ def playingfield_heatmap_data():
 
 			for item in matrix_c:
 				for i in range(len(matrix_c[item])):
+					ignore_record=False
 					chart_dict = {}
 					winning = 0
 					competition = 0
@@ -1802,65 +1827,86 @@ def playingfield_heatmap_data():
 							result = AgencySchema().dump(query).data
 							agency_name = result['display_title']
 
+							chart_dict['agency_id'] = agency_id
+
+
 						if data_level=='division':
+							division_id_raw = matrix_a[item].index[i]
+							print(division_id_raw)
+							disclosed_division = division_id_raw.find("da_") # is this an undefined Division?
+							print(disclosed_division)
 							division_id = matrix_a[item].index[i].replace("d_", "")
-							division_id = division_id[:division_id.find(".")]
-							print(division_id)
-							if division_id!="":
+							division_id_raw = division_id
+
+							if disclosed_division==-1:
 								query = Division.query.filter_by(id=division_id).first()
 								result = DivisionSchema().dump(query).data
-								agency_name = result['display_title']
+								agency_name =  result['display_title'] #str(division_id_raw) +":"+str(division_id) +":"+ str(result['agency']) +
+
+								if int(filter_agency) != int(result['agency']):
+									ignore_record=True
+									agency_name = str(filter_agency)+" IGNORE"
+									pass
+
 							else:
-								agency_name="Undisclosed"
+								temp_agency_id = matrix_a[item].index[i].replace("da_", "")
+								if int(filter_agency) != int(temp_agency_id):
+									ignore_record=True
+								else:
+									agency_name="Undisclosed Division"
 
-						query = Unspsc.query.filter_by(id=item).first()
-						result = UnspscSchema().dump(query).data
-						unspsc_title = result['title']
+
+							chart_dict['division_id'] = division_id
+
+						if ignore_record==False:
+
+							query = Unspsc.query.filter_by(id=item).first()
+							result = UnspscSchema().dump(query).data
+							unspsc_title = result['title']
 
 
-						if (matrix_c[item][i]==matrix_a[item][i]) and (matrix_c[item][i]!=0):
-							#print("No competition")
-							description = "[bold]"+target_supplier_name +"[/] had no competition from [bold]"+ competitor_name +"[/] in this agency/service category.\n"+ functions.format_currency(matrix_a[item][i]) +" was generated [bold]Uncontested[/]\n\n[bold]Agency:[/] "+agency_name+"\n[bold]Service Category:[/] "+unspsc_title
-							competition = 0
-							result_type = "uncontested"
-						if (matrix_c[item][i]<matrix_a[item][i]) and (matrix_c[item][i]!=0) and (matrix_c[item][i]<0):
-							#print("Competitor playing and winning")
-							description = "[bold]"+competitor_name +"[/] is out-performing [bold]"+target_supplier_name +"[/] in this agency/service category;\nEarning "+ functions.format_currency(matrix_b[item][i]) +" compared to "+ functions.format_currency(matrix_a[item][i]) +" for "+ target_supplier_name +".\n\n[bold]Agency:[/] "+agency_name+"\n[bold]Service Category:[/] "+unspsc_title
-							winning = -1
-							competition = 1
-							result_type = "losing"
-						if (matrix_c[item][i]==(matrix_b[item][i]*-1)) and (matrix_c[item][i]!=0):
-							#print("Competitor playing where you are not.")
-							description = "[bold]"+ competitor_name +"[/] generated "+ functions.format_currency(matrix_b[item][i]) +" unchallenged in this agency/service category.\nRepresenting a potential opportunity for [bold]"+target_supplier_name +"[/] for expansion.\n\n[bold]Agency:[/] "+agency_name+"\n[bold]Service Category:[/] "+unspsc_title
-							competition = -1
-							winning = -1
-							result_type = "not_playing"
-						if (matrix_c[item][i]<matrix_a[item][i]) and (matrix_c[item][i]!=0) and (matrix_c[item][i]>0):
-							#print("Competitor playing but losing")
-							description = "[bold]"+ target_supplier_name +"[/] is out-performing [bold]"+competitor_name +"[/] in this agency/service category;\nEarning "+ functions.format_currency(matrix_a[item][i]) +" compared to "+ functions.format_currency(matrix_b[item][i]) +" for "+ competitor_name +".\n\n[bold]Agency:[/] "+agency_name+"\n[bold]Service Category:[/] "+unspsc_title
-							winning = 1
-							competition = 1
-							result_type = "winning"
-						#print("---")
+							if (matrix_c[item][i]==matrix_a[item][i]) and (matrix_c[item][i]!=0):
+								#print("No competition")
+								description = "[bold]"+target_supplier_name +"[/] had no competition from [bold]"+ competitor_name +"[/] in this agency/service category.\n"+ functions.format_currency(matrix_a[item][i]) +" was generated [bold]Uncontested[/]\n\n[bold]Agency:[/] "+agency_name+"\n[bold]Service Category:[/] "+unspsc_title
+								competition = 0
+								result_type = "uncontested"
+							if (matrix_c[item][i]<matrix_a[item][i]) and (matrix_c[item][i]!=0) and (matrix_c[item][i]<0):
+								#print("Competitor playing and winning")
+								description = "[bold]"+competitor_name +"[/] is out-performing [bold]"+target_supplier_name +"[/] in this agency/service category;\nEarning "+ functions.format_currency(matrix_b[item][i]) +" compared to "+ functions.format_currency(matrix_a[item][i]) +" for "+ target_supplier_name +".\n\n[bold]Agency:[/] "+agency_name+"\n[bold]Service Category:[/] "+unspsc_title
+								winning = -1
+								competition = 1
+								result_type = "losing"
+							if (matrix_c[item][i]==(matrix_b[item][i]*-1)) and (matrix_c[item][i]!=0):
+								#print("Competitor playing where you are not.")
+								description = "[bold]"+ competitor_name +"[/] generated "+ functions.format_currency(matrix_b[item][i]) +" unchallenged in this agency/service category.\nRepresenting a potential opportunity for [bold]"+target_supplier_name +"[/] for expansion.\n\n[bold]Agency:[/] "+agency_name+"\n[bold]Service Category:[/] "+unspsc_title
+								competition = -1
+								winning = -1
+								result_type = "not_playing"
+							if (matrix_c[item][i]<matrix_a[item][i]) and (matrix_c[item][i]!=0) and (matrix_c[item][i]>0):
+								#print("Competitor playing but losing")
+								description = "[bold]"+ target_supplier_name +"[/] is out-performing [bold]"+competitor_name +"[/] in this agency/service category;\nEarning "+ functions.format_currency(matrix_a[item][i]) +" compared to "+ functions.format_currency(matrix_b[item][i]) +" for "+ competitor_name +".\n\n[bold]Agency:[/] "+agency_name+"\n[bold]Service Category:[/] "+unspsc_title
+								winning = 1
+								competition = 1
+								result_type = "winning"
+							#print("---")
 
 						
+							chart_dict['agency'] = agency_name
+							chart_dict['unspsc'] = unspsc_title
+							value = int(matrix_c[item][i])
+							chart_dict['value'] = value
+							#try:
+							#	chart_dict['perc_change'] = round(int((matrix_a[item][i]) / int(matrix_b[item][i])*100), 2)
+							#except:
+							#	chart_dict['perc_change'] = None
+							chart_dict['competition'] = competition
+							chart_dict['winning'] = winning
+							chart_dict['description'] = description
 
-						chart_dict['agency'] = agency_name
-						chart_dict['unspsc'] = unspsc_title
-						value = int(matrix_c[item][i])
-						chart_dict['value'] = value
-						#try:
-						#	chart_dict['perc_change'] = round(int((matrix_a[item][i]) / int(matrix_b[item][i])*100), 2)
-						#except:
-						#	chart_dict['perc_change'] = None
-						chart_dict['competition'] = competition
-						chart_dict['winning'] = winning
-						chart_dict['description'] = description
-
-						chart_data[result_type].append(chart_dict)
-						chart_data[result_type+'_sum'] = int(chart_data[result_type+'_sum']) + int(value)
-						chart_data['all'].append(chart_dict)
-						chart_data[result_type+'_sum'] = int(chart_data['all_sum']) + int(value)
+							chart_data[result_type].append(chart_dict)
+							chart_data[result_type+'_sum'] = int(chart_data[result_type+'_sum']) + int(value)
+							chart_data['all'].append(chart_dict)
+							chart_data[result_type+'_sum'] = int(chart_data['all_sum']) + int(value)
 
 		#print(matrix_a)
 		#print("*****")

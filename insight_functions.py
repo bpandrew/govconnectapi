@@ -38,6 +38,15 @@ def clean_contract_df(data):
 	df['current_fy'] = df['current_fy'].map(lambda x: x.year).astype(int)
 	df['years_back'] = df['current_fy'].astype(int)-df['financial_year'].astype(int)
 
+	# add the agency_id (plus 1 million) if there is no division defined
+
+	if 'division.id' in df.columns:
+		df['division.id'].fillna("", inplace=True)
+		df['division.id'].replace('', df['agency.id']+1000000, inplace=True)
+		df['division.id'].replace(0, df['agency.id']+1000000, inplace=True)
+	else:
+		df['division.id'] = df['agency.id']+1000000
+
 	# Fill all of the gaps in the data
 	df = df.fillna("")
 	return df
@@ -45,7 +54,7 @@ def clean_contract_df(data):
 
 
 def supplier_agency_segment_matrix(df, supplier_id, unspsc_segments, unspsc_dict, agencies, financial_year, financial_quarter):
-	# A matrix for each supplier, showing total revenue by agency (y) and segment (x).
+	# A matrix for each supplier, showing total revenue by agency (y) and segment/family (x). AND by division and segment/family
 
 	try:
 		print(df['unspsc.unspsc'])
@@ -112,24 +121,45 @@ def supplier_agency_segment_matrix(df, supplier_id, unspsc_segments, unspsc_dict
 		pass
 	else:
 		df_divisions['division.id'] = 0
+
 	df_divisions = df_divisions.groupby(['division.id', 'segment_unspsc_id', 'family_unspsc_id']).sum()
 	print(df_divisions)
 
 	json_dict_div = {}
-	for index, row in df_divisions.iterrows(): 
-		json_dict_div['d_'+str(index[0])]={}
+	# Loop through and create the empty dictionary
 	for index, row in df_divisions.iterrows():
+		div_id = str(index[0])
+		if div_id.find(".")!=-1:
+			div_id = div_id[:div_id.find(".")] 
+		
+		if int(div_id)>1000000:
+			json_dict_div['da_'+ str(int(div_id)-1000000 )]={}
+		else:
+			json_dict_div['d_'+div_id]={}
+
+	# Loop through and pupulate the dictionary
+	for index, row in df_divisions.iterrows():
+		div_id = str(index[0])
+		if div_id.find(".")!=-1:
+			div_id = div_id[:div_id.find(".")] 
+
+		#div_id = 'd_'+div_id
+		if int(div_id)>1000000:
+			div_id = 'da_'+str(int(div_id)-1000000 )
+		else:
+			div_id = 'd_'+div_id
+		
 		if index[2]==0:
 			print("added to the segment"+ str(index[2]))
 			try:
-				json_dict_div['d_'+str(index[0])][index[1]]=json_dict_div['d_'+str(index[0])][index[1]]+row['contract_value']
+				json_dict_div[div_id][index[1]]=json_dict_div[div_id][index[1]]+row['contract_value']
 			except:
-				json_dict_div['d_'+str(index[0])][index[1]]=row['contract_value']
+				json_dict_div[div_id][index[1]]=row['contract_value']
 		else:
 			try:
-				json_dict_div['d_'+str(index[0])][index[2]]=json_dict_div['d_'+str(index[0])][index[2]]+row['contract_value']
+				json_dict_div[div_id][index[2]]=json_dict_div[div_id][index[2]]+row['contract_value']
 			except:
-				json_dict_div['d_'+str(index[0])][index[2]]=row['contract_value']
+				json_dict_div[div_id][index[2]]=row['contract_value']
 
 	# ----------
 

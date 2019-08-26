@@ -67,16 +67,16 @@
 											
 										<input type="radio" name="btn-radio" checked="" value="all"> All
 									</label>
-									<label class="btn btn-primary waves-effect">
+									<label class="btn btn-success waves-effect">
 										<input type="radio" name="btn-radio" value="winning"> Winning
 									</label>
-									<label class="btn btn-primary waves-effect">
+									<label class="btn btn-danger waves-effect">
 										<input type="radio" name="btn-radio" value="losing"> Losing
 									</label>
-									<label class="btn btn-primary waves-effect">
+									<label class="btn btn-warning waves-effect">
 										<input type="radio" name="btn-radio" value="not_playing"> Not Playing
 									</label>
-									<label class="btn btn-primary waves-effect">
+									<label class="btn btn-secondary waves-effect">
 										<input type="radio" name="btn-radio" value="uncontested"> Uncontested
 									</label>
 								</div>
@@ -156,10 +156,13 @@ var labelY = yAxis.renderer.labels.template;
 labelY.wrap = true;
 labelY.maxWidth = 250;
 labelY.horizontalCenter = "right"
+//labelY.propertyFields.url = "url"
+labelY.fill = am4core.color("#6B69BF");
 
 var series = chart.series.push(new am4charts.ColumnSeries());
 series.dataFields.categoryX = "unspsc";
 series.dataFields.categoryY = "agency";
+series.dataFields.agency_id = "agency_id";
 series.dataFields.value = "value";
 series.dataFields.winning = "winning";
 series.dataFields.competition = "competition";
@@ -216,10 +219,8 @@ series.columns.template.column.adapter.add("fill", function(fill, target) {
   return fill;
 });
 
-var backup_data = [{'agency': 'Department of Industry, Innovation and Science', 'unspsc': 'Humanitarian aid and relief', 'value': 221540, 'competition': 0, 'winning': 0, 'description': 'KPMG generated $221,540.0 [bold]unchallenged[/] by Pepworldwide Pty Ltd in this service category and agency.'}, {'agency': 'Department of Industry, Innovation and Science', 'unspsc': 'Education and training services', 'value': -4176, 'competition': 1, 'winning': -1, 'description': 'Pepworldwide Pty Ltd generated $17,350.0 in this service category and agency; [bold]More[/] than the $13,174.0 KPMG generated.'}, {'agency': "Department of Veterans' Affairs", 'unspsc': 'Management advisory services', 'value': 3851088, 'competition': 0, 'winning': 0, 'description': 'KPMG generated $3.9 million [bold]unchallenged[/] by Pepworldwide Pty Ltd in this service category and agency.'}, {'agency': 'Australian Prudential Regulation Authority', 'unspsc': 'Management advisory services', 'value': 99000, 'competition': 0, 'winning': 0, 'description': 'KPMG generated $99,000.0 [bold]unchallenged[/] by Pepworldwide Pty Ltd in this service category and agency.'}, {'agency': 'Department of Jobs and Small Business', 'unspsc': 'Public administration and finance services', 'value': 14822, 'competition': 0, 'winning': 0, 'description': 'KPMG generated $14,822.0 [bold]unchallenged[/] by Pepworldwide Pty Ltd in this service category and agency.'}, {'agency': 'Department of Education and Training', 'unspsc': 'Accounting and bookkeeping services', 'value': 94909, 'competition': 0, 'winning': 0, 'description': 'KPMG generated $94,909.0 [bold]unchallenged[/] by Pepworldwide Pty Ltd in this service category and agency.'}, {'agency': 'Clean Energy Regulator', 'unspsc': 'Accounting and bookkeeping services', 'value': 73192, 'competition': 0, 'winning': 0, 'description': 'KPMG generated $73,192.0 [bold]unchallenged[/] by Pepworldwide Pty Ltd in this service category and agency.'}, {'agency': 'Office of the Director of Public Prosecutions', 'unspsc': 'Accounting and bookkeeping services', 'value': 443100, 'competition': 0, 'winning': 0, 'description': 'KPMG generated $443,100.0 [bold]unchallenged[/] by Pepworldwide Pty Ltd in this service category and agency.'}];
+//var backup_data = [{'agency': 'Department of Industry, Innovation and Science', 'unspsc': 'Humanitarian aid and relief', 'value': 221540, 'competition': 0, 'winning': 0, 'description': 'KPMG generated $221,540.0 [bold]unchallenged[/] by Pepworldwide Pty Ltd in this service category and agency.'}, {'agency': 'Department of Industry, Innovation and Science', 'unspsc': 'Education and training services', 'value': -4176, 'competition': 1, 'winning': -1, 'description': 'Pepworldwide Pty Ltd generated $17,350.0 in this service category and agency; [bold]More[/] than the $13,174.0 KPMG generated.'}, {'agency': "Department of Veterans' Affairs", 'unspsc': 'Management advisory services', 'value': 3851088, 'competition': 0, 'winning': 0, 'description': 'KPMG generated $3.9 million [bold]unchallenged[/] by Pepworldwide Pty Ltd in this service category and agency.'}, {'agency': 'Australian Prudential Regulation Authority', 'unspsc': 'Management advisory services', 'value': 99000, 'competition': 0, 'winning': 0, 'description': 'KPMG generated $99,000.0 [bold]unchallenged[/] by Pepworldwide Pty Ltd in this service category and agency.'}, {'agency': 'Department of Jobs and Small Business', 'unspsc': 'Public administration and finance services', 'value': 14822, 'competition': 0, 'winning': 0, 'description': 'KPMG generated $14,822.0 [bold]unchallenged[/] by Pepworldwide Pty Ltd in this service category and agency.'}, {'agency': 'Department of Education and Training', 'unspsc': 'Accounting and bookkeeping services', 'value': 94909, 'competition': 0, 'winning': 0, 'description': 'KPMG generated $94,909.0 [bold]unchallenged[/] by Pepworldwide Pty Ltd in this service category and agency.'}, {'agency': 'Clean Energy Regulator', 'unspsc': 'Accounting and bookkeeping services', 'value': 73192, 'competition': 0, 'winning': 0, 'description': 'KPMG generated $73,192.0 [bold]unchallenged[/] by Pepworldwide Pty Ltd in this service category and agency.'}, {'agency': 'Office of the Director of Public Prosecutions', 'unspsc': 'Accounting and bookkeeping services', 'value': 443100, 'competition': 0, 'winning': 0, 'description': 'KPMG generated $443,100.0 [bold]unchallenged[/] by Pepworldwide Pty Ltd in this service category and agency.'}];
 
-//chart.data = [{'agency': 'Australian Competition and Consumer Commission', 'unspsc': 'Accounting and bookkeeping services', 'value': 19950}, {'agency': 'Department of Industry, Innovation and Science', 'unspsc': 'Work related organizations', 'value': 57200}, {'agency': "Department of Veterans' Affairs", 'unspsc': 'Management advisory services', 'value': 39000}, {'agency': 'Department of the Environment and Energy', 'unspsc': 'Management advisory services', 'value': 766739}, {'agency': 'Department of Human Services', 'unspsc': 'Computer services', 'value': 176000}, {'agency': 'Csiro', 'unspsc': 'Management advisory services', 'value': 567261}, {'agency': 'Bureau of Meteorology', 'unspsc': 'Accounting and bookkeeping services', 'value': 230736}, {'agency': 'Department of Foreign Affairs and Trade', 'unspsc': 'Accounting and bookkeeping services', 'value': 1220010}, {'agency': 'Department of Home Affairs', 'unspsc': 'Computer services', 'value': 149133}, {'agency': 'Australian Electoral Commission', 'unspsc': 'Management advisory services', 'value': 513939}, {'agency': 'Department of Finance', 'unspsc': 'Accounting and bookkeeping services', 'value': 168361}, {'agency': 'Australian Federal Police', 'unspsc': 'Writing and translations', 'value': 220000}, {'agency': 'Office of National Intelligence', 'unspsc': 'Management advisory services', 'value': 1063820}, {'agency': 'Department of Jobs and Small Business', 'unspsc': 'Public administration and finance services', 'value': 36058}, {'agency': 'Digital Transformation Agency', 'unspsc': 'Human resources services', 'value': 569205}, {'agency': 'Department of Agriculture and Water Resources', 'unspsc': 'Humanitarian aid and relief', 'value': 79530}, {'agency': 'Department of Social Services', 'unspsc': 'Humanitarian aid and relief', 'value': 154140}, {'agency': 'Australian Securities and Investments Commission', 'unspsc': 'Accounting and bookkeeping services', 'value': 855371}, {'agency': 'Austrade', 'unspsc': 'Economics', 'value': 274429}, {'agency': 'Australian Digital Health Agency', 'unspsc': 'Computer services', 'value': 374999}, {'agency': 'Geoscience Australia', 'unspsc': 'Accounting and bookkeeping services', 'value': 32399}, {'agency': 'Department of Infrastructure, Regional Development and Cities', 'unspsc': 'Components for information technology or broadcasting or telecommunications', 'value': 2184162}, {'agency': 'Department of the Prime Minister and Cabinet', 'unspsc': 'Public administration and finance services', 'value': 55000}, {'agency': 'Australian Taxation Office', 'unspsc': 'Accounting and bookkeeping services', 'value': 28640}, {'agency': 'Department of Defence', 'unspsc': 'Education and training services', 'value': 15180}, {'agency': 'Department of Education and Training', 'unspsc': 'Humanitarian aid and relief', 'value': 1096924}, {'agency': 'Department of Health', 'unspsc': 'Business administration services', 'value': 261269}, {'agency': 'Australian Sports Anti-Doping Authority', 'unspsc': 'Public administration and finance services', 'value': 143073}, {'agency': 'Australian Financial Security Authority', 'unspsc': 'Management advisory services', 'value': 68200}, {'agency': "Attorney-General's Department", 'unspsc': 'Economics', 'value': 987392}, {'agency': 'Australian Criminal Intelligence Commission', 'unspsc': 'Accounting and bookkeeping services', 'value': 1688060}, {'agency': 'Australian Prudential Regulation Authority', 'unspsc': 'Management advisory services', 'value': 418000}, {'agency': 'Department of the Treasury', 'unspsc': 'Economics', 'value': 149775}, {'agency': 'National Mental Health Commission', 'unspsc': 'Accounting and bookkeeping services', 'value': 119630}, {'agency': 'Clean Energy Regulator', 'unspsc': 'Business administration services', 'value': 159500}, {'agency': 'National Archives of Australia', 'unspsc': 'Business administration services', 'value': 28600}, {'agency': 'Future Fund Management Agency', 'unspsc': 'Human resources services', 'value': 24910}, {'agency': 'Department of Foreign Affairs and Trade - Australian Aid Program', 'unspsc': 'Public administration and finance services', 'value': 68291}, {'agency': 'Australian National Audit Office', 'unspsc': 'Accounting and bookkeeping services', 'value': 731075}, {'agency': 'Office of the Director of Public Prosecutions', 'unspsc': 'Management advisory services', 'value': 72047}];
-//chart.data = [{'agency': 'Department of Industry, Innovation and Science', 'unspsc': 'Humanitarian aid and relief', 'value': 221540, 'competition': 0, 'winning': 0, 'description': 'KPMG generates revenue unchallenged by Oakton Services Pty Limited in this category.'}, {'agency': 'Department of Industry, Innovation and Science', 'unspsc': 'Education and training services', 'value': 13174, 'competition': 0, 'winning': 0, 'description': 'KPMG generates<br> revenue unchallenged by Oakton Services Pty Limited in this category.'}, {'agency': "Department of Veterans' Affairs", 'unspsc': 'Management advisory services', 'value': 1901088, 'competition': 1, 'winning': 1, 'description': 'Oakton Services Pty Limited provides services in this category, but has generated less revenue than KPMG<br>Next line'}, {'agency': 'Australian Prudential Regulation Authority', 'unspsc': 'Management advisory services', 'value': 99000, 'competition': 0, 'winning': 0, 'description': 'KPMG generates revenue unchallenged by Oakton Services Pty Limited in this category.'}, {'agency': 'Department of Home Affairs', 'unspsc': 'Management advisory services', 'value': -330000, 'competition': -1, 'winning': -1, 'description': 'Oakton Services Pty Limited generates revenue unchallenged by KPMG in this category.'}, {'agency': 'Department of Jobs and Small Business', 'unspsc': 'Public administration and finance services', 'value': 14822, 'competition': 0, 'winning': 0, 'description': 'KPMG generates revenue unchallenged by Oakton Services Pty Limited in this category.'}, {'agency': 'Department of Education and Training', 'unspsc': 'Accounting and bookkeeping services', 'value': 94909, 'competition': 0, 'winning': 0, 'description': 'KPMG generates revenue unchallenged by Oakton Services Pty Limited in this category.'}, {'agency': 'Clean Energy Regulator', 'unspsc': 'Accounting and bookkeeping services', 'value': 73192, 'competition': 0, 'winning': 0, 'description': 'KPMG generates revenue unchallenged by Oakton Services Pty Limited in this category.'}, {'agency': 'Office of the Director of Public Prosecutions', 'unspsc': 'Accounting and bookkeeping services', 'value': 443100, 'competition': 0, 'winning': 0, 'description': 'KPMG generates revenue unchallenged by Oakton Services Pty Limited in this category.'}];
 chart.data = [];
 
 var current_competitor = 0;
@@ -229,6 +230,8 @@ var data_winning = [];
 var data_losing = [];
 var data_uncontested = [];
 var data_not_playing = [];
+var data_lvl = 'agency'
+var current_agency_id = 0
 
 function updateHeatmap(competitor_id, display_name, baseline=0) {
 
@@ -245,7 +248,8 @@ function updateHeatmap(competitor_id, display_name, baseline=0) {
 		$("#heatMapTitle").text("{{ data['target_supplier']['display_name']}} vs "+display_name);
 	}
 	
-	$.get('/playingfield_heatmap_data?target_id={{data['supplier_id']}}&competition_id='+competitor_id +'&baseline='+baseline,  // url
+	//alert('/playingfield_heatmap_data?target_id={{data['supplier_id']}}&competition_id='+competitor_id +'&baseline='+baseline+'&lvl='+data_lvl+"&agency="+current_agency_id)
+	$.get('/playingfield_heatmap_data?target_id={{data['supplier_id']}}&competition_id='+competitor_id +'&baseline='+baseline+'&lvl='+data_lvl+"&agency="+current_agency_id,  // url
 	function (data, textStatus, jqXHR) {  // success callback
 		baseline = data['heatMapData']['baseline']; // is this the baseline activity
 		data_all = data['heatMapData']['all'];
@@ -271,8 +275,6 @@ function updateHeatmap(competitor_id, display_name, baseline=0) {
 }
 
 $('input[type=radio][name=btn-radio]').change(function() {
-
-//$('#filter').change(function() {
 	if (this.value == 'all') {
 		chart.data = data_all;
 	} 
@@ -288,6 +290,7 @@ $('input[type=radio][name=btn-radio]').change(function() {
 	if (this.value == 'uncontested') {
 		chart.data = data_uncontested;
 	}   
+	chart.validateData();
 });
 
 //}); // end am4core.ready()
@@ -334,10 +337,25 @@ chart.events.on("datavalidated", function(ev) {
 // To be used as a redirect later to show the agency / division details.
 series.columns.template.events.on("hit", function(ev) {
 	console.log("clicked on ", ev.target.dataItem.value);
-
 }, this);
 
 
+yAxis.renderer.labels.template.events.on("hit", function(event){
+
+	if (data_lvl=='agency'){
+		current_agency_id = event.target.dataItem.dataContext.agency_id
+		//alert(event.target.dataItem.dataContext.agency_id);
+		data_lvl = "division";
+		labelY.fill = am4core.color("#000000");
+		if (current_competitor==0){
+			updateHeatmap('0', 'Baseline', 1);
+		} else {
+			updateHeatmap(current_competitor, current_competitor_name, 0);
+		}
+		
+	}
+
+})
 
 </script>
 
