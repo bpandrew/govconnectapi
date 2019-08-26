@@ -490,10 +490,8 @@ def login():
 			session['user_id'] = result['id']
 			session['user_token'] = result['token']
 			session['admin'] = result['admin']
-			try:
-				session['user_supplier_id'] = result['supplier']
-			else:
-				session['user_supplier_id'] = None
+
+			session['user_supplier_id'] = result['supplier']
 
 			return redirect(url_for('op'))
 		else:
