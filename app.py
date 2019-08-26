@@ -305,7 +305,7 @@ def comp_matrix(target_supplier, count):
 				db.session.add(query)
 				db.session.commit()
 			else:
-				obj.score=row['score']
+				query.score=row['score']
 				db.session.commit()
 
 
