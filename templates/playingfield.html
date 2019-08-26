@@ -24,6 +24,7 @@
 						<thead style="font-size:small">
 						<tr>
 							<th>Supplier</th>
+							<th>Comparative Performance</th> 
 							<th>Score</th>  
 							<th>Agency</th>                       
 						</tr>
@@ -34,11 +35,14 @@
 								<td><a href="javascript:;" onclick="updateHeatmap('{{ competitor['competitor']['id']}}', '{{ competitor['competitor']['display_name']}}');">{{ competitor['competitor']['display_name']}}</a></td>
 								
 								{% if competitor['score']<=0 %}
-								<td><div class="badge badge-success">{{competitor['score']|round(2)}} Under-Performing</div></td>
+								<td><div class="badge badge-success">Under-Performing</div></td>
 								{% endif %}
 								{% if competitor['score']>0 %}
-								<td><div class="badge badge-danger">{{competitor['score']|round(2)}} Out-Performing</div></td>
+								<td><div class="badge badge-danger">Out-Performing</div></td>
 								{% endif %}
+
+								<td>{{competitor['score']|round(2)}}</td>
+
 								{% if competitor['agency']!=None %}
 								<td>{{competitor['agency']['display_title']}}</td>
 								{% else %}
