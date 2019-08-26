@@ -440,6 +440,34 @@ def dashboard():
     return render_template('index.html')
 
 
+
+# --- USER PROFILE PAGE ---
+from forms import ProfileForm
+@app.route("/profile", methods=['GET', 'POST'])
+def profile():
+	# Load the form
+	form = ProfileForm()
+
+	if form.validate_on_submit():
+		obj = User.query.filter_by(id=session['user_id']).first()
+		obj.supplier_id = form.supplier_id.data
+		session['user_supplier_id'] = form.supplier_id.data
+		db.session.commit()
+
+		# Add in the update code here
+		return redirect(url_for('profile'))
+	
+	obj = User.query.filter_by(id=session['user_id']).first()
+	result = json.loads(UserSchema().dumps(obj).data)
+
+	form.first_name.default = result['first_name']
+	form.last_name.default = result['last_name']
+	form.supplier_id.default = result['supplier']
+	form.process()
+	
+	return render_template('profile.html', form=form, data=result)
+
+
 # --- LOGIN PAGE ---
 from forms import LoginForm
 @app.route('/login', methods=['GET', 'POST'])
@@ -462,6 +490,7 @@ def login():
 			session['user_id'] = result['id']
 			session['user_token'] = result['token']
 			session['admin'] = result['admin']
+			session['user_supplier_id'] = result['supplier_id']
 
 			return redirect(url_for('op'))
 		else:
@@ -1672,7 +1701,7 @@ def suppliers_add():
 # --- DASHBOARD PAGE ---
 @app.route("/playingfield_heatmap_data")
 def playingfield_heatmap_data():
-	target_id= int(request.args.get('target_id'))
+	target_id = int(request.args.get('target_id'))
 	competition_id= int(request.args.get('competition_id'))
 
 	filter_agency = int(request.args.get('agency')) # should we filter the results by agency?
@@ -1945,11 +1974,12 @@ def playingfield():
 
 	data = {}
 
-	session['supplier_name'] = "Deloitte"
+	supplier_id = int(session['user_supplier_id'])
+	print(supplier_id)
 
 	# Get this from the Session.
 	#supplier_id = 2915
-	supplier_id= int(request.args.get('id'))
+	#supplier_id= int(request.args.get('id'))
 	data['supplier_id'] = supplier_id 
 	financial_year = 2019
 

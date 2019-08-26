@@ -24,6 +24,14 @@ class AddUser(FlaskForm):
     submit = SubmitField('Create Account')
 
 
+
+class ProfileForm(FlaskForm):
+	first_name = StringField('First Name', validators=[DataRequired()])
+	last_name = StringField('Last Name', validators=[DataRequired()])
+	supplier_id = StringField('Supplier ID', validators=[DataRequired()])
+	submit = SubmitField('Save Changes')
+
+
 # ------------------------------------ ADMIN ------------------------------------
 # ---------------------------------------------------------------------------------
 
