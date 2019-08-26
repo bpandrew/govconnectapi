@@ -1979,13 +1979,11 @@ def playingfield():
 	print(supplier_id)
 
 	# Get this from the Session.
-	#supplier_id = 2915
-	#supplier_id= int(request.args.get('id'))
 	data['supplier_id'] = supplier_id 
 	financial_year = 2019
 
 	# Get all of the suppiers competitors
-	query = Competitor.query.order_by(desc(Competitor.score)).filter_by(supplier_id=supplier_id).filter_by(agency_id=None).all()
+	query = Competitor.query.order_by(desc(Competitor.score)).filter_by(supplier_id=supplier_id).all()
 	result = CompetitorSchema(many=True).dump(query).data
 	data['competitors'] = result
 
@@ -1994,9 +1992,6 @@ def playingfield():
 	query = Supplier.query.filter_by(id=supplier_id).first()
 	result = SupplierSchema().dump(query).data
 	data['target_supplier'] = result
-
-	#print(data['heatmap'])
-	#print(json_dict)
 
 	return render_template('playingfield.html', data=data)
 

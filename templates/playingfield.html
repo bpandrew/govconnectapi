@@ -57,7 +57,7 @@
 			</div>
 		</div>
 
-
+	<small><a href="javascript:;" onclick="reset()"><b>RESET HEATMAP AND COMPETITOR TABLE</b></a></small>
 
 	<div class="row">
 		<div class="col-xl-12">
@@ -84,7 +84,7 @@
 										<input type="radio" name="btn-radio" value="uncontested"> Uncontested
 									</label>
 								</div>
-							<a href="javascript:;" onclick="updateHeatmap('0', 'Baseline', 1);"><span class="fas fa-redo-alt ml-4"></span></a>
+							<a href="javascript:;" onclick="reset();"><span class="fas fa-redo-alt ml-4"></span></a>
 						</label>
 					</div>
 				</div>
@@ -106,15 +106,40 @@
 
 <script>
 	$(document).ready(function() {
-		$('#myTable').DataTable({
+		table = $('#myTable').DataTable({
 			"order": [
 				[1, "asc"]
 			],
 		}, );
 
-
 		updateHeatmap('0', 'Baseline', 1);
+		update_table("");
 	});
+
+
+	function reset(){
+		current_agency_title = "";
+		data_lvl = 'agency'
+		current_agency_id = 0
+		updateHeatmap('0', 'Baseline', 1);
+	}
+
+	function update_table(agency_name) {
+		// updates the datatable with the broad category items
+		$.fn.dataTable.ext.search.pop();
+		$.fn.dataTable.ext.search.push(
+			function(settings, data, dataIndex) {
+				var temp_value = $(table.row(dataIndex).node()).attr('data-agency');
+				if (temp_value==agency_name){
+					return true
+				}
+				else {
+					return false;
+				}
+			}
+		);
+		table.draw();
+	};
 
 //am4core.ready(function() {
 
@@ -281,6 +306,7 @@ var data_uncontested = [];
 var data_not_playing = [];
 var data_lvl = 'agency'
 var current_agency_id = 0
+var current_agency_title = ""
 
 function updateHeatmap(competitor_id, display_name, baseline=0) {
 
@@ -292,10 +318,10 @@ function updateHeatmap(competitor_id, display_name, baseline=0) {
 
 	if (baseline==1){
 		$('#filter').prop('checked', false);
-		title.text = "{{ data['target_supplier']['display_name']}} Baseline Activity"
+		title.text = "{{ data['target_supplier']['display_name']}} Baseline Activity | "+ current_agency_title 
 		$("#heatMapTitle").text(title.text);
 	} else {
-		title.text = "{{ data['target_supplier']['display_name']}} vs "+display_name;
+		title.text = "{{ data['target_supplier']['display_name']}} vs "+display_name + " | " + current_agency_title ;
 		$("#heatMapTitle").text(title.text);
 	}
 	
@@ -322,6 +348,9 @@ function updateHeatmap(competitor_id, display_name, baseline=0) {
 		$('#loading_icon_heatmap').hide();
 		$('#chartdiv').show();
 		chart.validateData();
+
+		// Update the table to show/hide relevant competitors
+		update_table(current_agency_title);
 	});
 }
 
@@ -395,6 +424,7 @@ yAxis.renderer.labels.template.events.on("hit", function(event){
 
 	if (data_lvl=='agency'){
 		current_agency_id = event.target.dataItem.dataContext.agency_id
+		current_agency_title = event.target.dataItem.dataContext.agency
 		//alert(event.target.dataItem.dataContext.agency_id);
 		data_lvl = "division";
 		labelY.fill = am4core.color("#000000");
