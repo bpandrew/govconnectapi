@@ -88,7 +88,7 @@
 				<div class="card-body" style="overflow-x: scroll;">
 					<p>This chart is showing the relative performance and revenue of both suppliers accross ALL agencies and service categories.  The values represent the difference (Δ) in revenue.</p>
 					<div id="loading_icon_heatmap" style="text-align: center; margin-top: 10px;"><img src="https://loading.io/spinners/flickr/index.orbit-balls-loading-gif.svg"></div>
-					<div id="chartdiv" class="chartjs-demo" style="display: block; width: 100%; height: 200px;"></div>
+					<div id="chartdiv" class="chartjs-demo" style="display: block; width: 100%; height: 800px;"></div>
 				</div>
 			</div>
 		</div>
@@ -376,41 +376,10 @@ function updateHeatmap(competitor_id, display_name, baseline=0) {
 	});
 }
 
-$('input[type=radio][name=btn-radio]').change(function() {
-	if (this.value == 'all') {
-		chart.data = data_all;
-	} 
-	if (this.value == 'winning') {
-		chart.data = data_winning;
-	} 
-	if (this.value == 'losing') {
-		chart.data = data_losing;
-	} 
-	if (this.value == 'not_playing') {
-		chart.data = data_not_playing;
-	} 
-	if (this.value == 'uncontested') {
-		chart.data = data_uncontested;
-	}   
-	chart.validateData();
-});
 
 //}); // end am4core.ready()
 
-// Set cell size in pixels
-var cellSize = 40;
-var cellWidth = 110;
-chart.events.on("datavalidated", function(ev) {
 
-	// Get objects of interest
-	var chart = ev.target;
-	var categoryAxis = chart.yAxes.getIndex(0);
-
-	chart.svgContainer.htmlElement.style.height = "800px";
-	chart.svgContainer.htmlElement.style.width = "800px";
-
-
-});
 
 // Register the click on the item
 // To be used as a redirect later to show the agency / division details.
@@ -419,65 +388,6 @@ chart.events.on("datavalidated", function(ev) {
 //}, this);
 
 
-yAxis.renderer.labels.template.events.on("hit", function(event){
-
-	if (event.target.dataItem.dataContext.y_children==1){
-		if (ylevel=='division'){
-			labelY.fill = am4core.color("#000000");
-		}
-
-		if (ylevel=='agency'){
-			ydivisionid = event.target.dataItem.dataContext.yid
-			ylevel = "division";
-			current_ylabel = event.target.dataItem.dataContext.ylabel
-			updateHeatmap(current_competitor, current_competitor_name, 0);
-		}
-		if (ylevel=='all'){
-			yagencyid = event.target.dataItem.dataContext.yid
-			ylevel = "agency";
-			current_ylabel = event.target.dataItem.dataContext.ylabel
-			updateHeatmap(current_competitor, current_competitor_name, 0);
-		}
-	} else {
-	event.target.fill = am4core.color("#000000");
-}
-})
-
-
-xAxis.renderer.labels.template.events.on("hit", function(event){
-
-if (event.target.dataItem.dataContext.x_children==1){
-	
-	if (xlevel=='commodities'){
-		labelX.fill = am4core.color("#000000");
-	}
-
-	if (xlevel=='classes'){
-		xclass = event.target.dataItem.dataContext.xid
-		xlevel = "commodities";
-		//current_ylabel = event.target.dataItem.dataContext.ylabel
-		updateHeatmap(current_competitor, current_competitor_name, 0);
-	}
-
-	if (xlevel=='families'){
-		xfamily = event.target.dataItem.dataContext.xid
-		xlevel = "classes";
-		//current_ylabel = event.target.dataItem.dataContext.ylabel
-		updateHeatmap(current_competitor, current_competitor_name, 0);
-	}
-
-	if (xlevel=='segments'){
-		xsegment = event.target.dataItem.dataContext.xid
-		xlevel = "families";
-		//current_ylabel = event.target.dataItem.dataContext.ylabel
-		updateHeatmap(current_competitor, current_competitor_name, 0);
-	}
-
-} else {
-	event.target.fill = am4core.color("#000000");
-}
-
-})
 
 
 
