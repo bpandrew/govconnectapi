@@ -65,6 +65,24 @@ def round_thousand(value):
 	return int(math.ceil(value / 1000.0)) * 1000
 
 
+# Finds the start and end dates for a financial year (minus years_back)
+# If years_back==0, it is the current financial year
+def fy(years_back):
+	now = datetime.now()
+	if now.month>=7:
+		fy_start = str(now.year-years_back)+'-07-01'
+		fy_end = str(now.year+1-years_back)+'-06-30'
+		fy = str(now.year+1-years_back)
+	else:
+		fy_start = str(now.year-1-years_back)+'-07-01'
+		fy_end = str(now.year-years_back)+'-06-30'
+		fy = str(now.year-years_back)
+
+	return fy_start, fy_end, fy
+
+
+
+
 
 # Generate the dates for the current financial year and the previous
 def financial_years():

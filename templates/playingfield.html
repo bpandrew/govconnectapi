@@ -80,9 +80,6 @@
 									<label class="btn btn-warning waves-effect">
 										<input type="radio" name="btn-radio" value="not_playing"> Not Playing
 									</label>
-									<label class="btn btn-secondary waves-effect">
-										<input type="radio" name="btn-radio" value="uncontested"> Uncontested
-									</label>
 								</div>
 							<a href="javascript:;" onclick="reset();"><span class="fas fa-redo-alt ml-4"></span></a>
 						</label>
@@ -118,7 +115,7 @@
 
 
 	function reset(){
-		current_agency_title = "";
+		current_ylabel = "";
 		data_lvl = 'agency'
 		current_agency_id = 0
 		updateHeatmap('0', 'Baseline', 1);
@@ -156,8 +153,9 @@ chart.maskBullets = false;
 var xAxis = chart.xAxes.push(new am4charts.CategoryAxis());
 var yAxis = chart.yAxes.push(new am4charts.CategoryAxis());
 
-xAxis.dataFields.category = "unspsc";
-yAxis.dataFields.category = "agency";
+
+xAxis.dataFields.category = "xlabel";
+yAxis.dataFields.category = "ylabel";
 yAxis.renderer.labels.template.fontSize = 12;
 xAxis.renderer.labels.template.rotation = 270;
 xAxis.renderer.labels.template.fontSize = 12;
@@ -167,9 +165,7 @@ label.wrap = true;
 label.maxWidth = 200;
 label.verticalCenter = "middle"
 label.horizontalCenter = "right"
-//label.truncate = true;
-//label.maxWidth = 200;
-label.tooltipText = "{category}";
+
 
 xAxis.renderer.grid.template.disabled = true;
 xAxis.renderer.minGridDistance = 10;
@@ -189,15 +185,28 @@ labelY.horizontalCenter = "right"
 //labelY.propertyFields.url = "url"
 labelY.fill = am4core.color("#6B69BF");
 
+
+var labelX = xAxis.renderer.labels.template;
+labelX.wrap = true;
+labelX.maxWidth = 200;
+labelX.horizontalCenter = "right"
+//labelY.propertyFields.url = "url"
+labelX.fill = am4core.color("#6B69BF");
+
+
+
 var series = chart.series.push(new am4charts.ColumnSeries());
-series.dataFields.categoryX = "unspsc";
-series.dataFields.categoryY = "agency";
-series.dataFields.agency_id = "agency_id";
+series.dataFields.categoryX = "xlabel";
+series.dataFields.xid = "xid";
+series.dataFields.categoryY = "ylabel";
+series.dataFields.yid = "yid";
 series.dataFields.value = "value";
 series.dataFields.winning = "winning";
-series.dataFields.competition = "competition";
+series.dataFields.competition = "contested";
 series.dataFields.description = "description";
-series.dataFields.opacity_ = "opacity";
+series.dataFields.opacity_ = 1; //"opacity";
+series.dataFields.y_children = "y_children";
+series.dataFields.x_children = "x_children";
 series.sequencedInterpolation = true;
 series.defaultState.transitionDuration = 2000;
 
@@ -282,7 +291,7 @@ series.columns.template.column.adapter.add("fill", function(fill, target) {
 		// losing and playing
 		return am4core.color("#DE5B62")
 	}
-	else if (target.dataItem.winning == -1 && target.dataItem.competition == -1) {
+	else if (target.dataItem.winning == 0 && target.dataItem.competition == 1) {
 		// losing without playing
       return am4core.color("#F99552")
     }
@@ -304,9 +313,16 @@ var data_winning = [];
 var data_losing = [];
 var data_uncontested = [];
 var data_not_playing = [];
-var data_lvl = 'agency'
-var current_agency_id = 0
-var current_agency_title = ""
+var ylevel = 'all';
+var xlevel = 'segments';
+var current_agency_id = 0;
+var current_ylabel = "";
+
+var xclass = 0;
+var xfamily = 0;
+var xsegment = 0;
+var yagencyid = 0;
+var ydivisionid = 0;
 
 function updateHeatmap(competitor_id, display_name, baseline=0) {
 
@@ -318,22 +334,22 @@ function updateHeatmap(competitor_id, display_name, baseline=0) {
 
 	if (baseline==1){
 		$('#filter').prop('checked', false);
-		title.text = "{{ data['target_supplier']['display_name']}} Baseline Activity | "+ current_agency_title 
+		title.text = "{{ data['target_supplier']['display_name']}} Baseline Activity | "+ current_ylabel 
 		$("#heatMapTitle").text(title.text);
 	} else {
-		title.text = "{{ data['target_supplier']['display_name']}} vs "+display_name + " | " + current_agency_title ;
+		title.text = "{{ data['target_supplier']['display_name']}} vs "+display_name + " | " + current_ylabel ;
 		$("#heatMapTitle").text(title.text);
 	}
 	
-	//alert('/playingfield_heatmap_data?target_id={{data['supplier_id']}}&competition_id='+competitor_id +'&baseline='+baseline+'&lvl='+data_lvl+"&agency="+current_agency_id)
-	$.get('/playingfield_heatmap_data?target_id={{data['supplier_id']}}&competition_id='+competitor_id +'&baseline='+baseline+'&lvl='+data_lvl+"&agency="+current_agency_id,  // url
+	//alert('/s_activity/2915/938?fy_filter=1&ylevel='+ylevel+'&xlevel='+xlevel+'&yagencyid='+yagencyid+'&ydivisionid='+ydivisionid+'&segment='+xsegment+'&family='+xfamily+'&class='+xclass)
+	$.get('/s_activity/{{data['supplier_id']}}/'+ competitor_id +'?fy_filter=1&ylevel='+ylevel+'&xlevel='+xlevel+'&yagencyid='+yagencyid+'&ydivisionid='+ydivisionid+'&segment='+xsegment+'&family='+xfamily+'&class='+xclass,
 	function (data, textStatus, jqXHR) {  // success callback
-		baseline = data['heatMapData']['baseline']; // is this the baseline activity
-		data_all = data['heatMapData']['all'];
-		data_winning = data['heatMapData']['winning'];
-		data_losing = data['heatMapData']['losing'];
-		data_uncontested = data['heatMapData']['uncontested'];
-		data_not_playing = data['heatMapData']['not_playing'];
+		baseline = data['baseline']; // is this the baseline activity
+		data_all = data['all'];
+		data_winning = data['winning'];
+		data_losing = data['losing'];
+		data_uncontested = data['uncontested'];
+		data_not_playing = data['not_playing'];
 
 		chart.data = data_all;
 
@@ -350,7 +366,7 @@ function updateHeatmap(competitor_id, display_name, baseline=0) {
 		chart.validateData();
 
 		// Update the table to show/hide relevant competitors
-		update_table(current_agency_title);
+		update_table(current_ylabel);
 	});
 }
 
@@ -388,8 +404,8 @@ chart.events.on("datavalidated", function(ev) {
 	var agencies = [];
 	var unspscs = [];
 	for (i = 0; i < chart.data.length; i++) { 
-		agencies.indexOf(chart.data[i]['agency']) === -1 ? agencies.push(chart.data[i]['agency']) : console.log("This item already exists");
-		unspscs.indexOf(chart.data[i]['unspsc']) === -1 ? unspscs.push(chart.data[i]['unspsc']) : console.log("This item already exists");
+		agencies.indexOf(chart.data[i]['ylabel']) === -1 ? agencies.push(chart.data[i]['ylabel']) : console.log("This item already exists");
+		unspscs.indexOf(chart.data[i]['xlabel']) === -1 ? unspscs.push(chart.data[i]['xlabel']) : console.log("This item already exists");
 	}
 
 	// Calculate how we need to adjust chart height
@@ -422,21 +438,68 @@ series.columns.template.events.on("hit", function(ev) {
 
 yAxis.renderer.labels.template.events.on("hit", function(event){
 
-	if (data_lvl=='agency'){
-		current_agency_id = event.target.dataItem.dataContext.agency_id
-		current_agency_title = event.target.dataItem.dataContext.agency
-		//alert(event.target.dataItem.dataContext.agency_id);
-		data_lvl = "division";
-		labelY.fill = am4core.color("#000000");
-		if (current_competitor==0){
-			updateHeatmap('0', 'Baseline', 1);
-		} else {
+	if (event.target.dataItem.dataContext.y_children==1){
+		if (ylevel=='division'){
+			labelY.fill = am4core.color("#000000");
+		}
+
+		if (ylevel=='agency'){
+			ydivisionid = event.target.dataItem.dataContext.yid
+			ylevel = "division";
+			current_ylabel = event.target.dataItem.dataContext.ylabel
 			updateHeatmap(current_competitor, current_competitor_name, 0);
 		}
-		
+		if (ylevel=='all'){
+			yagencyid = event.target.dataItem.dataContext.yid
+			ylevel = "agency";
+			current_ylabel = event.target.dataItem.dataContext.ylabel
+			updateHeatmap(current_competitor, current_competitor_name, 0);
+		}
+	} else {
+	event.target.fill = am4core.color("#000000");
+}
+})
+
+
+xAxis.renderer.labels.template.events.on("hit", function(event){
+
+if (event.target.dataItem.dataContext.x_children==1){
+	
+	if (xlevel=='classes'){
+		labelX.fill = am4core.color("#000000");
 	}
 
+	if (xlevel=='classes'){
+		xclass = event.target.dataItem.dataContext.xid
+		xlevel = "commodities";
+		//current_ylabel = event.target.dataItem.dataContext.ylabel
+		updateHeatmap(current_competitor, current_competitor_name, 0);
+	}
+
+	if (xlevel=='families'){
+		xfamily = event.target.dataItem.dataContext.xid
+		xlevel = "classes";
+		//current_ylabel = event.target.dataItem.dataContext.ylabel
+		updateHeatmap(current_competitor, current_competitor_name, 0);
+	}
+
+	if (xlevel=='segments'){
+		xsegment = event.target.dataItem.dataContext.xid
+		xlevel = "families";
+		//current_ylabel = event.target.dataItem.dataContext.ylabel
+		updateHeatmap(current_competitor, current_competitor_name, 0);
+	}
+
+	
+	
+} else {
+	event.target.fill = am4core.color("#000000");
+}
+
 })
+
+
+
 
 </script>
 

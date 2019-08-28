@@ -47,10 +47,18 @@ def clean_contract_df(data):
 	else:
 		df['division.id'] = df['agency.id']+1000000
 
+	if 'branch.id' in df.columns:
+		df['branch.id'].fillna(0, inplace=True)
+		df['branch.id'].replace('', 0, inplace=True)
+		df['branch.id'] = df['branch.id'].astype(float)
+		df['branch.id'].replace('', df['division.id']+1000000, inplace=True)
+		df['branch.id'].replace(0, df['division.id']+1000000, inplace=True)
+	else:
+		df['branch.id'] = df['division.id']+1000000
+
 	# Fill all of the gaps in the data
 	df = df.fillna("")
 	return df
-
 
 
 def supplier_agency_segment_matrix(df, supplier_id, unspsc_segments, unspsc_dict, agencies, financial_year, financial_quarter):
@@ -96,6 +104,7 @@ def supplier_agency_segment_matrix(df, supplier_id, unspsc_segments, unspsc_dict
 
 	# make a copy before we calculate the agency totals
 	df_divisions = df_temp.copy()
+	df_branches = df_temp.copy()
 
 	df_temp = df_temp.groupby(['agency.id', 'segment_unspsc_id', 'family_unspsc_id']).sum()
 
@@ -164,8 +173,7 @@ def supplier_agency_segment_matrix(df, supplier_id, unspsc_segments, unspsc_dict
 	# ----------
 
 
-
-	matrixes.append( {"supplier_id":supplier_id, "data":json.dumps(json_dict), "div_data": json.dumps(json_dict_div)})
+	matrixes.append( {"supplier_id":supplier_id, "data":json.dumps(json_dict), "div_data": json.dumps(json_dict_div) })
 	#print(json.dumps(json_dict))
 
 	return matrixes

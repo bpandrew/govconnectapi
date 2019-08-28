@@ -318,6 +318,421 @@ def comp_matrix(target_supplier, count):
 	return str(link)
 
 
+
+
+def agency_name(id_):	
+	try:
+		query = Agency.query.filter_by(id=id_).first()
+		data = AgencySchema().dumps(query).data
+		data = json.loads(data)
+		return data['display_title']
+	except:
+		return None
+
+def division_name(id_):	
+	try:
+		query = Division.query.filter_by(id=id_).first()
+		data = DivisionSchema().dumps(query).data
+		data = json.loads(data)
+		return data['display_title']
+	except:
+		return None
+
+def branch_name(id_):	
+	try:
+		query = Branch.query.filter_by(id=id_).first()
+		data = BranchSchema().dumps(query).data
+		data = json.loads(data)
+		return data['display_title']
+	except:
+		return None
+
+
+def unspsc_name(id_):	
+	try:
+		id_ = str(id_)
+		query = Unspsc.query.filter_by(unspsc=id_).first()
+		data = UnspscSchema().dumps(query).data
+		data = json.loads(data)
+		return data['title']
+	except:
+		return None
+
+
+# Loop over all supplier and generate tehir activity JSON
+@app.route("/s_activity/<target_supplier>/<competitor>", methods=['GET'])
+def s_activity(target_supplier, competitor):
+
+	#"/2915/938?fy_filter=1&ylevel=all&xlevel=classes&yagencyid=0&ydivisionid=0&segment=0&family=0&class=0"
+
+	yLevel = request.args.get('ylevel') # all, agency, division, branch
+	xLevel = request.args.get('xlevel') # segments, families, classes, commodities
+
+	yAgencyId = request.args.get('yagencyid')
+	yDivisionId = request.args.get('ydivisionid')
+
+	xSegment = request.args.get('segment')
+	xFamily = request.args.get('family')
+	xClass = request.args.get('class')
+
+	try:
+		fy_filter=int(request.args.get('fy_filter'))
+	except:
+		fy_filter=0
+
+	fy_start, fy_end, fy = functions.fy(fy_filter)
+
+	matrix_a = supplier_activity_json(target_supplier, fy_filter, yLevel, xLevel, yAgencyId, yDivisionId, xSegment, xFamily, xClass, False)
+	
+	# look up the competitor if there is one..
+	if int(competitor)!=0:
+		matrix_b = supplier_activity_json(competitor, fy_filter, yLevel, xLevel, yAgencyId, yDivisionId, xSegment, xFamily, xClass, True)
+
+		if matrix_b!=None:
+			# compare the two sets of json here..
+			for item in matrix_b['activity_index']:
+
+				# If there is overlap y/x calculate the new value
+				if item in matrix_a['activity_index']:
+
+					# Retrieve the Competitor info from the db
+					query = Supplier.query.filter_by(id=competitor).first()
+					data = SupplierSchema().dumps(query).data
+					data = json.loads(data)
+					competitor_name = data['display_name']
+
+					# Retrieve the Competitor info from the db
+					query = Supplier.query.filter_by(id=target_supplier).first()
+					data = SupplierSchema().dumps(query).data
+					data = json.loads(data)
+					supplier_name = data['display_name']
+					
+					# retrieve the two activities for the supplier and competitor so we can compare them
+					array_posn = matrix_a['activity_index'][item]['position']
+					activity_a = matrix_a['all'][array_posn]
+					array_posn = matrix_b['activity_index'][item]['position']
+					activity_b = matrix_b['all'][array_posn]
+
+					activity_a['value'] = float(activity_a['value'])-float(activity_b['value']) # update the value a-b
+					activity_a['contested'] = 1 # mark it as having competition
+
+					if activity_a['value']>0:
+						activity_a['winning'] = 1
+
+					if activity_a['value']<0:
+						activity_a['winning'] = -1
+
+					activity_a['description'] = ""
+					activity_a['description'] =  "In FY"+ str(int(fy)-1)[2:] +"/"+ str(fy)[2:] +", "+ supplier_name +" earned "+ functions.format_currency(activity_a['original_value']) +" via "+ str(activity_a['contractcount'])  +" contract(s).\n"+ competitor_name +" earned "+ functions.format_currency(activity_b['original_value']) +" via "+ str(activity_b['contractcount']) +" contract(s)"
+
+					if activity_a['winning'] == 1:
+						matrix_a['winning'].append(activity_a)
+					if activity_a['winning'] == -1:
+						matrix_a['losing'].append(activity_a)
+
+					matrix_a['baseline'] = 0
+				else:
+					#If there is no overlap, simply append the competitor to matrix_a
+					array_posn = matrix_b['activity_index'][item]['position']
+					matrix_a['all'].append(matrix_b['all'][array_posn])
+
+					matrix_b['all'][array_posn]['value'] = matrix_b['all'][array_posn]['value']*-1
+					matrix_a['not_playing'].append(matrix_b['all'][array_posn])
+
+					matrix_a['baseline'] = 0
+
+	return matrix_a
+
+
+
+
+def supplier_activity_json(target_supplier, fy_filter, yLevel, xLevel, yAgencyId, yDivisionId, xSegment, xFamily, xClass, competitor):
+
+	fy_start, fy_end, fy = functions.fy(fy_filter)
+
+	# Retrieve the supplier activity json from the DB.
+	query = SupplierMatrix.query.filter_by(matrix_type="activity").filter_by(supplier_id=target_supplier).filter_by(financial_year=fy).filter_by(financial_quarter=0).first()
+	data = SupplierMatrixSchema().dumps(query).data
+	data = json.loads(data)
+	json_ = json.loads(data['json'])
+
+	# Retrieve the Supplier info from the db
+	query = Supplier.query.filter_by(id=target_supplier).first()
+	data = SupplierSchema().dumps(query).data
+	data = json.loads(data)
+	supplier_name = data['display_name']
+
+	heatMapData = {"activity_index": {}, "yLevel": yLevel, "xLevel": xLevel, "yAgencyId":yAgencyId, "yDivisionId":yDivisionId, "xSegment":xSegment, "xFamily": xFamily, "xClass":xClass,"all":[],"winning":[],"losing":[],"unconstested":[], "not_playing":[], "baseline":1}	
+	
+
+	# Check is the yAxis has children
+	if yLevel=="all":
+		y_base = json_['agencies']
+		y_child = "divisions"
+	if yLevel=="agency":
+		# The agency might not exist for the competitor?
+		if yAgencyId not in json_['agencies']:
+			return None
+		y_base = json_['agencies'][yAgencyId]['divisions']
+		y_child = "branches"
+	if yLevel=="division":
+		# The agency or division might not exist for the competitor?
+		if yAgencyId not in json_['agencies']:
+			return None
+			if yDivisionId not in json_['agencies'][yAgencyId]['divisions']:
+				return None
+		y_base = json_['agencies'][yAgencyId]['divisions'][yDivisionId]['branches']
+		y_child = 0
+
+
+	i=0
+	for item in y_base:
+		base_ = y_base[item]
+
+		# Loop over the agencies
+		for category in base_[xLevel]:
+
+			temp_dict = {}
+
+			if y_child!=0:
+				if len(base_[y_child])>0:
+					temp_dict['y_children'] = 1
+				else:
+					temp_dict['y_children'] = 0
+			else:
+				temp_dict['y_children'] = 0
+
+			if competitor==True:
+				temp_dict['playing'] = 0
+				temp_dict['contested'] = 1
+			else:
+				temp_dict['playing'] = 1
+				temp_dict['contested'] = 0
+
+			temp_dict['winning'] = 0
+			temp_dict['ylabel'] = base_['title']
+			temp_dict['yid'] = item
+			temp_dict['ysum'] = base_['sum']
+
+			# Add the UNSPSC data
+			temp_dict['xid'] = category
+			temp_dict['xlabel'] = base_[xLevel][category]['title']
+			temp_dict['original_value'] = base_[xLevel][category]['sum']
+			temp_dict['value'] = base_[xLevel][category]['sum']
+			temp_dict['contractcount'] = base_[xLevel][category]['count']
+
+			temp_dict['description'] = "In FY"+ str(int(fy)-1)[2:] +"/"+ str(fy)[2:] +", "+  supplier_name +" earned "+ functions.format_currency(temp_dict['original_value']) +" via "+ str(temp_dict['contractcount'])  +" contract(s)."
+
+			#print(category)
+			#print(base_[xLevel][category])
+
+			temp_dict['x_children'] = 0
+			# Check if the xAxis has children
+			if xLevel=="segments":
+				for cat_item in base_['families']:
+					if str(category)[:2]==str(cat_item)[:2]:
+						temp_dict['x_children'] = 1
+						break
+
+			if xLevel=="families":
+				for cat_item in base_['classes']:
+					if str(category)[:4]==str(cat_item)[:4]:
+						temp_dict['x_children'] = 1
+						break
+
+			if xLevel=="classes":
+				for cat_item in base_['commodities']:
+					if str(category)[:6]==str(cat_item)[:6]:
+						temp_dict['x_children'] = 1
+						break
+
+
+			# Filter by Segment, Family or Class if they are defined
+			append_activity = True
+			if int(xSegment)!=0:
+				if str(xSegment)[:2]!=str(temp_dict['xid'])[:2]:
+					append_activity=False
+
+				if int(xFamily)!=0:
+					if str(xFamily)[:4]!=str(temp_dict['xid'])[:4]:
+						append_activity=False
+
+					if int(xClass)!=0:
+						if str(xClass)[:6]!=str(temp_dict['xid'])[:6]:
+							append_activity=False
+
+			if append_activity == True:
+				heatMapData['all'].append(temp_dict)
+				i+=1
+
+				# Create an index of what is in the JSON, so we can compare it easily with a competitor without having to loop over everything
+				index_ = str(temp_dict['yid']) + "_" + str(temp_dict['xid'])
+				heatMapData['activity_index'][index_]={"position":i}
+			
+
+	return heatMapData
+	
+
+	
+
+
+
+# Loop over all supplier and generate tehir activity JSON
+@app.route("/s_activity_create/<target_supplier>", methods=['GET'])
+def s_activity_create(target_supplier):
+
+	loop = 0
+
+	try:
+		fy_filter=int(request.args.get('fy_filter'))
+	except:
+		fy_filter=0
+
+	if loop==1:
+		link = "<script>window.location.href = '/s_activity_create/"+ str(int(target_supplier)+1) +"?loop="+ str(loop) +"&fy_filter="+ str(fy_filter) +"';</script>"
+		return str(link)
+	else:
+		return supplier_activity(target_supplier, fy_filter)
+
+
+	
+# Generate the supplier Activity JSON to store in the DB
+def supplier_activity(target_supplier, fy_filter):
+
+	# check the supplier exists
+	query = Supplier.query.filter_by(id=target_supplier).first()
+	if query==None:
+		return None
+
+	# Get the financial year start and end dates (fy=0 is the current financial year)
+	fy_start, fy_end, fy = functions.fy(fy_filter)
+
+	# Find all of the children if it is an umbrella
+	search_suppliers = [int(target_supplier)]
+	query = Supplier.query.filter_by(umbrella_id=int(target_supplier)).all()
+	data = SupplierSchema(many=True).dumps(query).data
+	data = json.loads(data)
+	for item in data:
+		# Add the IDs of the children to the search
+		if item['id'] not in search_suppliers:
+			search_suppliers.append(item['id'])
+
+	# Get all of the contracts for the supplier, in the correct financial year.
+	query = Contract.query.filter(Contract.supplier_id.in_(search_suppliers)).filter(Contract.contract_start>=fy_start).filter(Contract.contract_start<=fy_end).all()
+	data = ContractSchema(many=True).dumps(query).data
+	data = json.loads(data)
+
+	# Create the Supplier Activity JSON Object
+	activity = {"agencies":{}, "sum":0}
+
+	for contract in data:
+		# Add the Agencies
+		if contract['agency']!=None:
+			agency_ = activity['agencies']
+			if contract['agency']['id'] in agency_:
+				agency_[contract['agency']['id']]['sum']+= float(contract['contract_value'])
+			else:
+				agency_[contract['agency']['id']]={"sum": float(contract['contract_value']), "title": agency_name(contract['agency']['id'])}
+				agency_[contract['agency']['id']]['divisions'] = {}
+				agency_[contract['agency']['id']]['segments'] = {}
+				agency_[contract['agency']['id']]['families'] = {}
+				agency_[contract['agency']['id']]['classes'] = {}
+				agency_[contract['agency']['id']]['commodities'] = {}
+
+		# Add the divisions
+		if contract['division']!=None:
+			division_ = activity['agencies'][contract['agency']['id']]['divisions']
+			if contract['division']['id'] in division_:
+		 		division_[contract['division']['id']]['sum']+= float(contract['contract_value'])
+			else:
+				division_[contract['division']['id']]={"sum": float(contract['contract_value']), "title": division_name(contract['division']['id'])}
+				division_[contract['division']['id']]['branches'] = {}
+				division_[contract['division']['id']]['segments'] = {}
+				division_[contract['division']['id']]['families'] = {}
+				division_[contract['division']['id']]['classes'] = {}
+				division_[contract['division']['id']]['commodities'] = {}
+
+			# Add the branches
+			if contract['branch']!=None:
+				branch_ = activity['agencies'][contract['agency']['id']]['divisions'][contract['division']['id']]['branches']
+				if contract['branch']['id'] in branch_:
+					branch_[contract['branch']['id']]['sum']+= float(contract['contract_value'])
+				else:
+					branch_[contract['branch']['id']]={"sum": float(contract['contract_value']), "title": branch_name(contract['branch']['id'])}
+					branch_[contract['branch']['id']]['segments'] = {}
+					branch_[contract['branch']['id']]['families'] = {}
+					branch_[contract['branch']['id']]['classes'] = {}
+					branch_[contract['branch']['id']]['commodities'] = {}
+
+
+		# Find the UNSPSC Segment, Family and Class
+		if contract['unspsc']!=None:
+			contract_unspsc = contract['unspsc']['unspsc']
+			contract_unspsc_level  = int(contract['unspsc']['level_int'])
+			# loop though and generat the UNSPSCs at all levels
+			for i in range(contract_unspsc_level):
+				sig_figures = (i+1)*2 # how many of the UNSPSC numbers we will use from the left
+				contract_unspsc_temp = str(contract_unspsc)
+				contract_unspsc_temp = str(contract_unspsc_temp[:sig_figures])
+				# Add the trailing zeros to the end of the UNSPSC
+				for l in range(8-sig_figures):
+					contract_unspsc_temp = contract_unspsc_temp+"0"
+				contract_unspsc_temp = int(contract_unspsc_temp) # convert back to intger
+				
+				if i==0:
+					add_level = "segments"
+				if i==1:
+					add_level = "families"
+				if i==2:
+					add_level = "classes"
+				if i==3:
+					add_level = "commodities"
+				
+				
+				# add the segment to the agency/division/branch 
+				if contract_unspsc_temp in agency_[contract['agency']['id']][add_level]:
+					agency_[contract['agency']['id']][add_level][contract_unspsc_temp]['sum'] += float(contract['contract_value'])
+					agency_[contract['agency']['id']][add_level][contract_unspsc_temp]['count'] += 1
+				else:
+					agency_[contract['agency']['id']][add_level][contract_unspsc_temp] = {"sum":float(contract['contract_value']), "count":1, "title": unspsc_name(contract_unspsc_temp)}
+
+
+				if contract['division']!=None:
+					if contract_unspsc_temp in division_[contract['division']['id']][add_level]:
+						division_[contract['division']['id']][add_level][contract_unspsc_temp]['sum'] += float(contract['contract_value'])
+						division_[contract['division']['id']][add_level][contract_unspsc_temp]['count'] += 1
+					else:
+						division_[contract['division']['id']][add_level][contract_unspsc_temp] = {"sum":float(contract['contract_value']), "count":1, "title": unspsc_name(contract_unspsc_temp)}
+
+
+					if contract['branch']!=None:
+						if contract_unspsc_temp in branch_[contract['branch']['id']][add_level]:
+							branch_[contract['branch']['id']][add_level][contract_unspsc_temp]['sum'] += float(contract['contract_value'])
+							branch_[contract['branch']['id']][add_level][contract_unspsc_temp]['count'] += 1
+						else:
+							branch_[contract['branch']['id']][add_level][contract_unspsc_temp] = {"sum":float(contract['contract_value']), "count":1, "title": unspsc_name(contract_unspsc_temp)}
+
+				i+=1
+
+	activity_json = json.dumps(activity)
+	
+	obj=SupplierMatrix.query.filter_by(matrix_type="activity").filter_by(supplier_id=target_supplier).filter_by(financial_year=fy).filter_by(financial_quarter=0).first()
+	if obj==None:
+		db.create_all()
+		query = SupplierMatrix(matrix_type="activity", supplier_id=target_supplier, json=activity_json, financial_year=fy, financial_quarter=0, created=datetime.now())
+		db.session.add(query)
+		db.session.commit()
+	else:
+		# Update any changes to the opportunity
+		obj.json = activity_json
+		obj.created = datetime.now()
+		db.session.commit()
+
+	#return jsonify(activity['agencies']) #[19]['segments']
+	return jsonify(activity)
+
+
+
 @app.route("/matrix/<target_supplier>", methods=['GET'])
 def matrix(target_supplier):
 
@@ -329,7 +744,7 @@ def matrix(target_supplier):
 	year=int(request.args.get('year'))
 
 	if int(target_supplier)==0:
-		query = SupplierMatrix.query.delete() #.filter_by(supplier_id=target_supplier)
+		query = SupplierMatrix.query.filter_by(supplier_id=target_supplier).delete() 
 		db.session.commit()
 
 	# Creates the matrix for the supplier for a year/financial quarter.
@@ -367,7 +782,6 @@ def matrix(target_supplier):
 	for item in data:
 		agencies.append(item['id'])
 
-
 	search_suppliers = [int(target_supplier)]
 
 	# Find all of the children if it is an umbrella
@@ -385,8 +799,6 @@ def matrix(target_supplier):
 	data = ContractSchema(many=True).dumps(query).data
 	data = json.loads(data)
 
-	#print(data)
-
 	if len(data)>0:
 		df = insight_functions.clean_contract_df(data)
 
@@ -394,7 +806,6 @@ def matrix(target_supplier):
 		financial_quarter = 0
 
 		# Loop over suppliers and add the matrix to the db
-		#for supplier_id in supplier_ids:
 		#try:
 		matrixes = insight_functions.supplier_agency_segment_matrix(df, target_supplier, unspsc_segments, unspsc_dict, agencies, financial_year, financial_quarter)
 
