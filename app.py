@@ -583,7 +583,7 @@ def supplier_activity_json(target_supplier, fy_filter, yLevel, xLevel, yAgencyId
 @app.route("/s_activity_create/<target_supplier>", methods=['GET'])
 def s_activity_create(target_supplier):
 
-	loop = 0
+	loop = 1
 
 	try:
 		fy_filter=int(request.args.get('fy_filter'))
@@ -628,13 +628,20 @@ def supplier_activity(target_supplier, fy_filter):
 	activity = {"agencies":{}, "sum":0}
 
 	for contract in data:
+
+		try:
+			contract_value = loat(contract['contract_value'])
+		except:
+			contract_value = contract['contract_value'][:contract['contract_value'].find("Original:")].strip()
+
 		# Add the Agencies
 		if contract['agency']!=None:
 			agency_ = activity['agencies']
 			if contract['agency']['id'] in agency_:
-				agency_[contract['agency']['id']]['sum']+= float(contract['contract_value'])
+				agency_[contract['agency']['id']]['sum']+= contract_value
 			else:
-				agency_[contract['agency']['id']]={"sum": float(contract['contract_value']), "title": agency_name(contract['agency']['id'])}
+
+				agency_[contract['agency']['id']]={"sum": contract_value, "title": agency_name(contract['agency']['id'])}
 				agency_[contract['agency']['id']]['divisions'] = {}
 				agency_[contract['agency']['id']]['segments'] = {}
 				agency_[contract['agency']['id']]['families'] = {}
@@ -645,9 +652,9 @@ def supplier_activity(target_supplier, fy_filter):
 		if contract['division']!=None:
 			division_ = activity['agencies'][contract['agency']['id']]['divisions']
 			if contract['division']['id'] in division_:
-		 		division_[contract['division']['id']]['sum']+= float(contract['contract_value'])
+		 		division_[contract['division']['id']]['sum']+= contract_value
 			else:
-				division_[contract['division']['id']]={"sum": float(contract['contract_value']), "title": division_name(contract['division']['id'])}
+				division_[contract['division']['id']]={"sum": contract_value, "title": division_name(contract['division']['id'])}
 				division_[contract['division']['id']]['branches'] = {}
 				division_[contract['division']['id']]['segments'] = {}
 				division_[contract['division']['id']]['families'] = {}
@@ -658,9 +665,9 @@ def supplier_activity(target_supplier, fy_filter):
 			if contract['branch']!=None:
 				branch_ = activity['agencies'][contract['agency']['id']]['divisions'][contract['division']['id']]['branches']
 				if contract['branch']['id'] in branch_:
-					branch_[contract['branch']['id']]['sum']+= float(contract['contract_value'])
+					branch_[contract['branch']['id']]['sum']+= contract_value
 				else:
-					branch_[contract['branch']['id']]={"sum": float(contract['contract_value']), "title": branch_name(contract['branch']['id'])}
+					branch_[contract['branch']['id']]={"sum": contract_value, "title": branch_name(contract['branch']['id'])}
 					branch_[contract['branch']['id']]['segments'] = {}
 					branch_[contract['branch']['id']]['families'] = {}
 					branch_[contract['branch']['id']]['classes'] = {}
@@ -693,26 +700,26 @@ def supplier_activity(target_supplier, fy_filter):
 				
 				# add the segment to the agency/division/branch 
 				if contract_unspsc_temp in agency_[contract['agency']['id']][add_level]:
-					agency_[contract['agency']['id']][add_level][contract_unspsc_temp]['sum'] += float(contract['contract_value'])
+					agency_[contract['agency']['id']][add_level][contract_unspsc_temp]['sum'] += contract_value
 					agency_[contract['agency']['id']][add_level][contract_unspsc_temp]['count'] += 1
 				else:
-					agency_[contract['agency']['id']][add_level][contract_unspsc_temp] = {"sum":float(contract['contract_value']), "count":1, "title": unspsc_name(contract_unspsc_temp)}
+					agency_[contract['agency']['id']][add_level][contract_unspsc_temp] = {"sum":contract_value, "count":1, "title": unspsc_name(contract_unspsc_temp)}
 
 
 				if contract['division']!=None:
 					if contract_unspsc_temp in division_[contract['division']['id']][add_level]:
-						division_[contract['division']['id']][add_level][contract_unspsc_temp]['sum'] += float(contract['contract_value'])
+						division_[contract['division']['id']][add_level][contract_unspsc_temp]['sum'] += contract_value
 						division_[contract['division']['id']][add_level][contract_unspsc_temp]['count'] += 1
 					else:
-						division_[contract['division']['id']][add_level][contract_unspsc_temp] = {"sum":float(contract['contract_value']), "count":1, "title": unspsc_name(contract_unspsc_temp)}
+						division_[contract['division']['id']][add_level][contract_unspsc_temp] = {"sum":contract_value, "count":1, "title": unspsc_name(contract_unspsc_temp)}
 
 
 					if contract['branch']!=None:
 						if contract_unspsc_temp in branch_[contract['branch']['id']][add_level]:
-							branch_[contract['branch']['id']][add_level][contract_unspsc_temp]['sum'] += float(contract['contract_value'])
+							branch_[contract['branch']['id']][add_level][contract_unspsc_temp]['sum'] += contract_value
 							branch_[contract['branch']['id']][add_level][contract_unspsc_temp]['count'] += 1
 						else:
-							branch_[contract['branch']['id']][add_level][contract_unspsc_temp] = {"sum":float(contract['contract_value']), "count":1, "title": unspsc_name(contract_unspsc_temp)}
+							branch_[contract['branch']['id']][add_level][contract_unspsc_temp] = {"sum":contract_value, "count":1, "title": unspsc_name(contract_unspsc_temp)}
 
 				i+=1
 
