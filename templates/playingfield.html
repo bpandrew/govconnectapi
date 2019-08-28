@@ -402,7 +402,7 @@ chart.events.on("datavalidated", function(ev) {
 	var i;
 	var agencies = [];
 	var unspscs = [];
-	for (i = 0; i < chart.data.length; i++) { 
+	for (i = 0; i < 10; i++) { //chart.data.length
 		agencies.indexOf(chart.data[i]['ylabel']) === -1 ? agencies.push(chart.data[i]['ylabel']) : console.log("This item already exists");
 		unspscs.indexOf(chart.data[i]['xlabel']) === -1 ? unspscs.push(chart.data[i]['xlabel']) : console.log("This item already exists");
 	}
@@ -430,9 +430,9 @@ chart.events.on("datavalidated", function(ev) {
 
 // Register the click on the item
 // To be used as a redirect later to show the agency / division details.
-series.columns.template.events.on("hit", function(ev) {
-	console.log("clicked on ", ev.target.dataItem.value);
-}, this);
+//series.columns.template.events.on("hit", function(ev) {
+//	console.log("clicked on ", ev.target.dataItem.value);
+//}, this);
 
 
 yAxis.renderer.labels.template.events.on("hit", function(event){
@@ -464,7 +464,7 @@ xAxis.renderer.labels.template.events.on("hit", function(event){
 
 if (event.target.dataItem.dataContext.x_children==1){
 	
-	if (xlevel=='classes'){
+	if (xlevel=='commodities'){
 		labelX.fill = am4core.color("#000000");
 	}
 
