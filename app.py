@@ -472,15 +472,15 @@ def supplier_activity_json(target_supplier, fy_filter, yLevel, xLevel, yAgencyId
 	if yLevel=="agency":
 		# The agency might not exist for the competitor?
 		if yAgencyId not in json_['agencies']:
-			return None
+			return heatMapData
 		y_base = json_['agencies'][yAgencyId]['divisions']
 		y_child = "branches"
 	if yLevel=="division":
 		# The agency or division might not exist for the competitor?
 		if yAgencyId not in json_['agencies']:
-			return None
+			return heatMapData
 			if yDivisionId not in json_['agencies'][yAgencyId]['divisions']:
-				return None
+				return heatMapData
 		y_base = json_['agencies'][yAgencyId]['divisions'][yDivisionId]['branches']
 		y_child = 0
 
@@ -525,9 +525,6 @@ def supplier_activity_json(target_supplier, fy_filter, yLevel, xLevel, yAgencyId
 				temp_dict['description'] = "In FY"+ str(int(fy)-1)[2:] +"/"+ str(fy)[2:] +", "+ supplier_name +" earned "+ functions.format_currency(temp_dict['original_value']) +" via "+ str(temp_dict['contractcount'])  +" contract(s)."
 			except:
 				temp_dict['description'] = "?"
-				print(supplier_name)
-				print(temp_dict['original_value'])
-				print(functions.format_currency(temp_dict['original_value']))
 
 			#print(category)
 			#print(base_[xLevel][category])
