@@ -639,7 +639,7 @@ def supplier_activity(target_supplier, fy_filter):
 			contract_value = float(contract['contract_value'])
 			contract_value = round(contract_value, 0)
 		except:
-			contract_value = str(contract_value)
+			contract_value = str(contract['contract_value'])
 			contract_value = contract_value[:contract_value.find("Original:")].strip()
 			contract_value = float(contract_value)
 			contract_value = round(contract_value, 0)

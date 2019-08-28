@@ -195,6 +195,8 @@ xAxis.renderer.minGridDistance = 10;
 xAxis.renderer.height = 200;
 xAxis.renderer.gridDistance = 10;
 xAxis.title.text = "UNSPSC Segments";
+xAxis.title.marginTop = 15;
+xAxis.title.marginBottom = 15;
 xAxis.title.rotation = 0;
 xAxis.title.align = "center";
 
@@ -204,6 +206,7 @@ yAxis.renderer.inversed = true;
 yAxis.renderer.minGridDistance = 10;
 yAxis.renderer.width = 230;
 yAxis.title.text = "Agencies";
+yAxis.title.marginRight = 20;
 yAxis.title.rotation = 270;
 yAxis.title.align = "center";
 
@@ -217,7 +220,7 @@ labelY.fill = am4core.color("#6B69BF");
 
 var labelX = xAxis.renderer.labels.template;
 labelX.wrap = true;
-labelX.maxWidth = 200;
+labelX.width = 200;
 labelX.horizontalCenter = "right"
 //labelY.propertyFields.url = "url"
 labelX.fill = am4core.color("#6B69BF");
@@ -267,6 +270,7 @@ bullet2.interactionsEnabled = false;
 
 // Enable export
 chart.exporting.menu = new am4core.ExportMenu();
+
 chart.exporting.menu.items = [{
   "label": "...",
   "menu": [
@@ -385,7 +389,7 @@ function updateHeatmap(competitor_id, display_name) {
 
 		$('#loading_icon_heatmap').hide();
 		$('#chartdiv').show();
-		chart.validateData();
+		
 
 		// Update the table to show/hide relevant competitors
 		update_table(current_ylabel);
@@ -397,6 +401,8 @@ function updateHeatmap(competitor_id, display_name) {
 			title.text = "{{ data['target_supplier']['display_name']}} vs "+display_name ;
 			$("#heatMapTitle").text(title.text);
 		}
+
+		chart.validateData();
 	});
 }
 
@@ -430,9 +436,6 @@ chart.events.on("datavalidated", function(ev) {
 	var chart = ev.target;
 	var categoryAxis = chart.yAxes.getIndex(0);
 
-	chart.svgContainer.htmlElement.style.height = "800px";
-	chart.svgContainer.htmlElement.style.width = "800px";
-
 	var i;
 	var agencies = [];
 	var unspscs = [];
@@ -442,19 +445,20 @@ chart.events.on("datavalidated", function(ev) {
 	}
 
 	// Calculate how we need to adjust chart height
-	var adjustHeight = agencies.length * cellSize - categoryAxis.pixelHeight;
-	var adjustWidth = unspscs.length * cellWidth + 290;
+	var adjustHeight = agencies.length * cellSize + 350;
+	var adjustWidth = unspscs.length * cellWidth + 300;
 
 	// get current chart height
-	var targetHeight = chart.pixelHeight + adjustHeight;
+	//var targetHeight = chart.pixelHeight + adjustHeight;
+
+	//alert(agencies.length * cellSize)
 
 	// Set it on chart's container
-	chart.svgContainer.htmlElement.style.height = targetHeight + "px";
+	chart.svgContainer.htmlElement.style.height = adjustHeight + "px";
 	if (adjustWidth<500){
 		adjustWidth=700
 	}
 	chart.svgContainer.htmlElement.style.width = adjustWidth + "px";
-
 
 	// Set the opacity of each cell.
 	series.columns.template.column.adapter.add("opacity", function(opacity, target) {
@@ -558,6 +562,7 @@ function bc_agency(){
 	ydivisionid = 0;
 	ydivisionname = 0;
 	ylevel = "agency"
+	yAxis.title.text = "Divisions";
 	$('#bc_division').hide();
 
 	updateHeatmap(current_competitor, current_competitor_name, 0);	
@@ -569,6 +574,7 @@ function bc_all(){
 	ydivisionid = 0;
 	ydivisionname = "";
 	ylevel = "all"
+	yAxis.title.text = "Agencies";
 	$('#bc_division').hide();
 	$('#bc_agency').hide();
 	$('#bc').hide();
@@ -585,6 +591,7 @@ function bcx_all(){
 	xsegment = 0;
 	xsegmentname = "";
 	xlevel = "segments"
+	xAxis.title.text = "UNSPSC Segments";
 	$('#bcx_segment').hide();
 	$('#bcx').hide();
 
@@ -598,6 +605,7 @@ function bcx_segment(){
 	xfamily = 0;
 	xfamilyname = "";
 	xlevel = "families"
+	xAxis.title.text = "UNSPSC Families";
 	$('#bcx_family').hide();
 	$('#bcx_class').hide();
 	$('#bcx_commodity').hide();
@@ -609,6 +617,7 @@ function bcx_family(){
 	xclass = 0;
 	xclassname = "";
 	xlevel = "classes"
+	xAxis.title.text = "UNSPSC Classes";
 	$('#bcx_class').hide();
 	$('#bcx_commodity').hide();
 
