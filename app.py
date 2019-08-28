@@ -512,13 +512,13 @@ def supplier_activity_json(target_supplier, fy_filter, yLevel, xLevel, yAgencyId
 			temp_dict['winning'] = 0
 			temp_dict['ylabel'] = base_['title']
 			temp_dict['yid'] = item
-			temp_dict['ysum'] = base_['sum']
+			temp_dict['ysum'] = float(base_['sum'])
 
 			# Add the UNSPSC data
 			temp_dict['xid'] = category
 			temp_dict['xlabel'] = base_[xLevel][category]['title']
-			temp_dict['original_value'] = base_[xLevel][category]['sum']
-			temp_dict['value'] = base_[xLevel][category]['sum']
+			temp_dict['original_value'] = float(base_[xLevel][category]['sum'])
+			temp_dict['value'] = float(base_[xLevel][category]['sum'])
 			temp_dict['contractcount'] = base_[xLevel][category]['count']
 
 			try:
@@ -570,7 +570,6 @@ def supplier_activity_json(target_supplier, fy_filter, yLevel, xLevel, yAgencyId
 			if append_activity == True:
 				heatMapData['all'].append(temp_dict)
 				
-
 				# Create an index of what is in the JSON, so we can compare it easily with a competitor without having to loop over everything
 				index_ = str(temp_dict['yid']) + "_" + str(temp_dict['xid'])
 				heatMapData['activity_index'][index_]={"position":i}
@@ -637,10 +636,16 @@ def supplier_activity(target_supplier, fy_filter):
 	for contract in data:
 
 		try:
-			contract_value = int(contract['contract_value'])
+			contract_value = float(contract['contract_value'])
+			contract_value = round(contract_value, 0)
 		except:
-			contract_value = contract['contract_value'][:contract['contract_value'].find("Original:")].strip()
-			contract_value = int(contract_value)
+			contract_value = str(contract_value)
+			contract_value = contract_value[:contract_value.find("Original:")].strip()
+			contract_value = float(contract_value)
+			contract_value = round(contract_value, 0)
+
+
+		#contract_value = 100
 
 		# Add the Agencies
 		if contract['agency']!=None:
