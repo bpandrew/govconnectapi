@@ -521,7 +521,13 @@ def supplier_activity_json(target_supplier, fy_filter, yLevel, xLevel, yAgencyId
 			temp_dict['value'] = base_[xLevel][category]['sum']
 			temp_dict['contractcount'] = base_[xLevel][category]['count']
 
-			temp_dict['description'] = "In FY"+ str(int(fy)-1)[2:] +"/"+ str(fy)[2:] +", "+  supplier_name +" earned "+ functions.format_currency(temp_dict['original_value']) +" via "+ str(temp_dict['contractcount'])  +" contract(s)."
+			try:
+				temp_dict['description'] = "In FY"+ str(int(fy)-1)[2:] +"/"+ str(fy)[2:] +", "+ supplier_name +" earned "+ functions.format_currency(temp_dict['original_value']) +" via "+ str(temp_dict['contractcount'])  +" contract(s)."
+			except:
+				temp_dict['description'] = "?"
+				print(supplier_name)
+				print(temp_dict['original_value'])
+				print(functions.format_currency(temp_dict['original_value']))
 
 			#print(category)
 			#print(base_[xLevel][category])
