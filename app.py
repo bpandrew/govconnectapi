@@ -637,10 +637,10 @@ def supplier_activity(target_supplier, fy_filter):
 	for contract in data:
 
 		try:
-			contract_value = float(contract['contract_value'])
+			contract_value = int(contract['contract_value'])
 		except:
 			contract_value = contract['contract_value'][:contract['contract_value'].find("Original:")].strip()
-			contract_value = float(contract_value)
+			contract_value = int(contract_value)
 
 		# Add the Agencies
 		if contract['agency']!=None:
@@ -673,7 +673,7 @@ def supplier_activity(target_supplier, fy_filter):
 			if contract['branch']!=None:
 				branch_ = activity['agencies'][contract['agency']['id']]['divisions'][contract['division']['id']]['branches']
 				if contract['branch']['id'] in branch_:
-					branch_[contract['branch']['id']]['sum']+= contract_value
+					branch_[contract['branch']['id']]['sum'] += contract_value
 				else:
 					branch_[contract['branch']['id']]={"sum": contract_value, "title": branch_name(contract['branch']['id'])}
 					branch_[contract['branch']['id']]['segments'] = {}
