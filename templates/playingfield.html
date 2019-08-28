@@ -178,12 +178,18 @@ xAxis.renderer.grid.template.disabled = true;
 xAxis.renderer.minGridDistance = 10;
 xAxis.renderer.height = 200;
 xAxis.renderer.gridDistance = 10;
+xAxis.title.text = "UNSPSC Segments";
+xAxis.title.rotation = 0;
+xAxis.title.align = "center";
 
 
 yAxis.renderer.grid.template.disabled = true;
 yAxis.renderer.inversed = true;
 yAxis.renderer.minGridDistance = 10;
 yAxis.renderer.width = 230;
+yAxis.title.text = "Agencies";
+yAxis.title.rotation = 270;
+yAxis.title.align = "center";
 
 var labelY = yAxis.renderer.labels.template;
 labelY.wrap = true;
@@ -284,7 +290,7 @@ legend.data = [{
 
 var title = chart.titles.create();
 title.text = "";
-title.fontSize = 18;
+title.fontSize = 16;
 title.marginBottom = 20;
 
 // Set the fill colour for each cell.
@@ -331,7 +337,7 @@ var xsegment = 0;
 var yagencyid = 0;
 var ydivisionid = 0;
 
-function updateHeatmap(competitor_id, display_name, baseline=0) {
+function updateHeatmap(competitor_id, display_name) {
 
 	$('#chartdiv').hide();
 	$('#loading_icon_heatmap').show();
@@ -339,13 +345,6 @@ function updateHeatmap(competitor_id, display_name, baseline=0) {
 	current_competitor = competitor_id
 	current_competitor_name = display_name
 
-	if (baseline==1){
-		title.text = "{{ data['target_supplier']['display_name']}} Baseline Activity | "+ current_ylabel 
-		$("#heatMapTitle").text(title.text);
-	} else {
-		title.text = "{{ data['target_supplier']['display_name']}} vs "+display_name + " | " + current_ylabel ;
-		$("#heatMapTitle").text(title.text);
-	}
 	
 	//alert('/s_activity/2915/938?fy_filter=1&ylevel='+ylevel+'&xlevel='+xlevel+'&yagencyid='+yagencyid+'&ydivisionid='+ydivisionid+'&segment='+xsegment+'&family='+xfamily+'&class='+xclass)
 	$.get('/s_activity/{{data['supplier_id']}}/'+ competitor_id +'?fy_filter=1&ylevel='+ylevel+'&xlevel='+xlevel+'&yagencyid='+yagencyid+'&ydivisionid='+ydivisionid+'&segment='+xsegment+'&family='+xfamily+'&class='+xclass,
@@ -373,6 +372,14 @@ function updateHeatmap(competitor_id, display_name, baseline=0) {
 
 		// Update the table to show/hide relevant competitors
 		update_table(current_ylabel);
+
+		if (baseline==1){
+			title.text = "{{ data['target_supplier']['display_name']}} Activity";
+			$("#heatMapTitle").text(title.text);
+		} else {
+			title.text = "{{ data['target_supplier']['display_name']}} vs "+display_name ;
+			$("#heatMapTitle").text(title.text);
+		}
 	});
 }
 
@@ -426,7 +433,11 @@ chart.events.on("datavalidated", function(ev) {
 
 	// Set it on chart's container
 	chart.svgContainer.htmlElement.style.height = targetHeight + "px";
+	if (adjustWidth<500){
+		adjustWidth=700
+	}
 	chart.svgContainer.htmlElement.style.width = adjustWidth + "px";
+
 
 	// Set the opacity of each cell.
 	series.columns.template.column.adapter.add("opacity", function(opacity, target) {
@@ -455,12 +466,14 @@ yAxis.renderer.labels.template.events.on("hit", function(event){
 		if (ylevel=='agency'){
 			ydivisionid = event.target.dataItem.dataContext.yid
 			ylevel = "division";
+			yAxis.title.text = "Branches";
 			current_ylabel = event.target.dataItem.dataContext.ylabel
 			updateHeatmap(current_competitor, current_competitor_name, 0);
 		}
 		if (ylevel=='all'){
 			yagencyid = event.target.dataItem.dataContext.yid
 			ylevel = "agency";
+			yAxis.title.text = "Divisions";
 			current_ylabel = event.target.dataItem.dataContext.ylabel
 			updateHeatmap(current_competitor, current_competitor_name, 0);
 		}
@@ -481,6 +494,7 @@ if (event.target.dataItem.dataContext.x_children==1){
 	if (xlevel=='classes'){
 		xclass = event.target.dataItem.dataContext.xid
 		xlevel = "commodities";
+		xAxis.title.text = "USPSC Commodities";
 		//current_ylabel = event.target.dataItem.dataContext.ylabel
 		updateHeatmap(current_competitor, current_competitor_name, 0);
 	}
@@ -488,6 +502,7 @@ if (event.target.dataItem.dataContext.x_children==1){
 	if (xlevel=='families'){
 		xfamily = event.target.dataItem.dataContext.xid
 		xlevel = "classes";
+		xAxis.title.text = "USPSC Classes";
 		//current_ylabel = event.target.dataItem.dataContext.ylabel
 		updateHeatmap(current_competitor, current_competitor_name, 0);
 	}
@@ -495,6 +510,7 @@ if (event.target.dataItem.dataContext.x_children==1){
 	if (xlevel=='segments'){
 		xsegment = event.target.dataItem.dataContext.xid
 		xlevel = "families";
+		xAxis.title.text = "USPSC Families";
 		//current_ylabel = event.target.dataItem.dataContext.ylabel
 		updateHeatmap(current_competitor, current_competitor_name, 0);
 	}
