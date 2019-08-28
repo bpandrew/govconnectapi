@@ -637,9 +637,10 @@ def supplier_activity(target_supplier, fy_filter):
 	for contract in data:
 
 		try:
-			contract_value = loat(contract['contract_value'])
+			contract_value = float(contract['contract_value'])
 		except:
 			contract_value = contract['contract_value'][:contract['contract_value'].find("Original:")].strip()
+			contract_value = float(contract_value)
 
 		# Add the Agencies
 		if contract['agency']!=None:
