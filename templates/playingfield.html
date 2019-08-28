@@ -380,16 +380,15 @@ function updateHeatmap(competitor_id, display_name) {
 		chart.data = data_all;
 
 		if (baseline==1){
-			//bullet2.label.text = "${value}";
+			bullet2.label.text = "${value}";
 			$('#filter_radio').hide();
 		} else {
-			//bullet2.label.text = "Δ$ {value}";
+			bullet2.label.text = "Δ$ {value}";
 			$('#filter_radio').show();
 		}
 
 		$('#loading_icon_heatmap').hide();
 		$('#chartdiv').show();
-		
 
 		// Update the table to show/hide relevant competitors
 		update_table(current_ylabel);
