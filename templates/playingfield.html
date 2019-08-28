@@ -114,9 +114,17 @@
 
 
 	function reset(){
+		ylevel = 'all';
+		xlevel = 'segments';
+		current_agency_id = 0;
 		current_ylabel = "";
-		data_lvl = 'agency'
-		current_agency_id = 0
+
+		xclass = 0;
+		xfamily = 0;
+		xsegment = 0;
+		yagencyid = 0;
+		ydivisionid = 0;
+
 		updateHeatmap('0', 'Baseline', 1);
 	}
 
@@ -398,32 +406,9 @@ chart.events.on("datavalidated", function(ev) {
 	var chart = ev.target;
 	var categoryAxis = chart.yAxes.getIndex(0);
 
-	var i;
-	var agencies = [];
-	var unspscs = [];
-	for (i = 0; i < chart.data.length; i++) { 
-		agencies.indexOf(chart.data[i]['ylabel']) === -1 ? agencies.push(chart.data[i]['ylabel']) : console.log("This item already exists");
-		unspscs.indexOf(chart.data[i]['xlabel']) === -1 ? unspscs.push(chart.data[i]['xlabel']) : console.log("This item already exists");
-	}
+	chart.svgContainer.htmlElement.style.height = "800px";
+	chart.svgContainer.htmlElement.style.width = "800px";
 
-	// Calculate how we need to adjust chart height
-	var adjustHeight = agencies.length * cellSize - categoryAxis.pixelHeight;
-	var adjustWidth = unspscs.length * cellWidth + 290;
-
-	// get current chart height
-	var targetHeight = chart.pixelHeight + adjustHeight;
-
-	// Set it on chart's container
-	chart.svgContainer.htmlElement.style.height = targetHeight + "px";
-	chart.svgContainer.htmlElement.style.width = adjustWidth + "px";
-
-	// Set the opacity of each cell.
-	series.columns.template.column.adapter.add("opacity", function(opacity, target) {
-	if (target.dataItem) {
-		return target.dataItem.opacity_;
-	}
-	return opacity;
-	});
 
 });
 
@@ -488,7 +473,6 @@ if (event.target.dataItem.dataContext.x_children==1){
 		updateHeatmap(current_competitor, current_competitor_name, 0);
 	}
 
-	
 } else {
 	event.target.fill = am4core.color("#000000");
 }
