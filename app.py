@@ -563,11 +563,13 @@ def supplier_activity_json(target_supplier, fy_filter, yLevel, xLevel, yAgencyId
 
 			if append_activity == True:
 				heatMapData['all'].append(temp_dict)
-				i+=1
+				
 
 				# Create an index of what is in the JSON, so we can compare it easily with a competitor without having to loop over everything
 				index_ = str(temp_dict['yid']) + "_" + str(temp_dict['xid'])
 				heatMapData['activity_index'][index_]={"position":i}
+
+				i+=1
 			
 
 	return heatMapData
