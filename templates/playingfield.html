@@ -279,7 +279,27 @@ title.text = "";
 title.fontSize = 18;
 title.marginBottom = 20;
 
-
+// Set the fill colour for each cell.
+series.columns.template.column.adapter.add("fill", function(fill, target) {
+  if (target.dataItem) {
+    if (target.dataItem.winning == 1 && target.dataItem.competition == 1) {
+		// winning playing
+    	return am4core.color("#67CA9C")
+    }
+    else if (target.dataItem.winning == -1 && target.dataItem.competition == 1) {
+		// losing and playing
+		return am4core.color("#DE5B62")
+	}
+	else if (target.dataItem.winning == 0 && target.dataItem.competition == 1) {
+		// losing without playing
+      return am4core.color("#F99552")
+    }
+    else {
+      return am4core.color("#efefef");
+    }
+  }
+  return fill;
+});
 
 //var backup_data = [{'agency': 'Department of Industry, Innovation and Science', 'unspsc': 'Humanitarian aid and relief', 'value': 221540, 'competition': 0, 'winning': 0, 'description': 'KPMG generated $221,540.0 [bold]unchallenged[/] by Pepworldwide Pty Ltd in this service category and agency.'}, {'agency': 'Department of Industry, Innovation and Science', 'unspsc': 'Education and training services', 'value': -4176, 'competition': 1, 'winning': -1, 'description': 'Pepworldwide Pty Ltd generated $17,350.0 in this service category and agency; [bold]More[/] than the $13,174.0 KPMG generated.'}, {'agency': "Department of Veterans' Affairs", 'unspsc': 'Management advisory services', 'value': 3851088, 'competition': 0, 'winning': 0, 'description': 'KPMG generated $3.9 million [bold]unchallenged[/] by Pepworldwide Pty Ltd in this service category and agency.'}, {'agency': 'Australian Prudential Regulation Authority', 'unspsc': 'Management advisory services', 'value': 99000, 'competition': 0, 'winning': 0, 'description': 'KPMG generated $99,000.0 [bold]unchallenged[/] by Pepworldwide Pty Ltd in this service category and agency.'}, {'agency': 'Department of Jobs and Small Business', 'unspsc': 'Public administration and finance services', 'value': 14822, 'competition': 0, 'winning': 0, 'description': 'KPMG generated $14,822.0 [bold]unchallenged[/] by Pepworldwide Pty Ltd in this service category and agency.'}, {'agency': 'Department of Education and Training', 'unspsc': 'Accounting and bookkeeping services', 'value': 94909, 'competition': 0, 'winning': 0, 'description': 'KPMG generated $94,909.0 [bold]unchallenged[/] by Pepworldwide Pty Ltd in this service category and agency.'}, {'agency': 'Clean Energy Regulator', 'unspsc': 'Accounting and bookkeeping services', 'value': 73192, 'competition': 0, 'winning': 0, 'description': 'KPMG generated $73,192.0 [bold]unchallenged[/] by Pepworldwide Pty Ltd in this service category and agency.'}, {'agency': 'Office of the Director of Public Prosecutions', 'unspsc': 'Accounting and bookkeeping services', 'value': 443100, 'competition': 0, 'winning': 0, 'description': 'KPMG generated $443,100.0 [bold]unchallenged[/] by Pepworldwide Pty Ltd in this service category and agency.'}];
 
@@ -312,7 +332,6 @@ function updateHeatmap(competitor_id, display_name, baseline=0) {
 	current_competitor_name = display_name
 
 	if (baseline==1){
-		$('#filter').prop('checked', false);
 		title.text = "{{ data['target_supplier']['display_name']}} Baseline Activity | "+ current_ylabel 
 		$("#heatMapTitle").text(title.text);
 	} else {
@@ -333,10 +352,10 @@ function updateHeatmap(competitor_id, display_name, baseline=0) {
 		chart.data = data_all;
 
 		if (baseline==1){
-			bullet2.label.text = "${value}";
+			//bullet2.label.text = "${value}";
 			$('#filter_radio').hide();
 		} else {
-			bullet2.label.text = "Δ$ {value}";
+			//bullet2.label.text = "Δ$ {value}";
 			$('#filter_radio').show();
 		}
 
