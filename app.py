@@ -441,6 +441,9 @@ def s_activity(target_supplier, competitor):
 
 					matrix_a['baseline'] = 0
 
+	#return matrix_a
+
+	matrix_a['all'] = sorted(matrix_a['all'], key=lambda k: k['value'], reverse=True) 
 	return matrix_a
 
 
