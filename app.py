@@ -583,7 +583,7 @@ def supplier_activity_json(target_supplier, fy_filter, yLevel, xLevel, yAgencyId
 @app.route("/s_activity_create/<target_supplier>", methods=['GET'])
 def s_activity_create(target_supplier):
 
-	loop = 1
+	loop = int(request.args.get('loop'))
 
 	try:
 		fy_filter=int(request.args.get('fy_filter'))
@@ -591,6 +591,7 @@ def s_activity_create(target_supplier):
 		fy_filter=0
 
 	if loop==1:
+		supplier_activity(target_supplier, fy_filter)
 		link = "<script>window.location.href = '/s_activity_create/"+ str(int(target_supplier)+1) +"?loop="+ str(loop) +"&fy_filter="+ str(fy_filter) +"';</script>"
 		return str(link)
 	else:
