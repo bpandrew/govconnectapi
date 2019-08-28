@@ -45,7 +45,7 @@ def format_currency(value):
 			output = "$"+ humanize.intword(value)
 		return output
 	except:
-		return None
+		return 0
 
 # format as a currency
 def format_currency_comma(value, round_=False):
