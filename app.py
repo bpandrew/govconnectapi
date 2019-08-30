@@ -658,6 +658,8 @@ def s_activity_create(target_supplier):
 
 	loop = int(request.args.get('loop'))
 
+	time.sleep(0.1)
+
 	try:
 		fy_filter=int(request.args.get('fy_filter'))
 	except:
