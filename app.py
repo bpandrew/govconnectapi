@@ -359,7 +359,7 @@ def unspsc_name(id_):
 		return None
 
 
-# Loop over all supplier and generate tehir activity JSON
+# Loop over all supplier and generate the activity JSON for the HEATMAP
 @app.route("/s_activity/<target_supplier>/<competitor>", methods=['GET'])
 def s_activity(target_supplier, competitor):
 
@@ -448,7 +448,78 @@ def s_activity(target_supplier, competitor):
 
 
 
+# Assess the target supplier against another supplier to get a comparative score / competitor score
+@app.route("/s_competition/<target_supplier>/<competitor_id>/<fy_filter>", methods=['GET'])
+def s_competition(target_supplier, competitor_id, fy_filter):
+	target_supplier = int(target_supplier)
+	competitor_id = int(competitor_id)
+	fy_filter = int(fy_filter)
+	loop = int(request.args.get('loop'))
+	link = "<script>window.location.href = '/s_competition/"+ str(target_supplier) +"/"+str(competitor_id+1)+"/"+str(fy_filter) +"?loop="+ str(loop) +"';</script>"
 
+	time.sleep(0.05)
+	# returns a simplified JSON of all activity at the 'full depth' so it can be compared against another supplier
+	fy_start, fy_end, fy = functions.fy(fy_filter)
+
+	# Retrieve the supplier competition activity json from the DB.
+	query = SupplierMatrix.query.filter_by(matrix_type="activity").filter_by(supplier_id=target_supplier).filter_by(financial_year=fy).filter_by(financial_quarter=0).first()
+	data = SupplierMatrixSchema().dumps(query).data
+	data = json.loads(data)
+	json_ = json.loads(data['json'])
+	json_a = json_['comp_json']
+
+
+	# Retrieve the supplier competition activity json from the DB.
+	query = SupplierMatrix.query.filter_by(matrix_type="activity").filter_by(supplier_id=competitor_id).filter_by(financial_year=fy).filter_by(financial_quarter=0).first()
+	data = SupplierMatrixSchema().dumps(query).data
+	data = json.loads(data)
+	try:
+		json_ = json.loads(data['json'])
+		json_b = json_['comp_json']
+	except:
+		return str(link)
+
+	comp_score = []
+
+	for item in json_b:
+		# ignore the sum item
+		if item!="sum":
+			if item in json_a:
+				#print(json_b[item]['sum'])
+				#print(json_a[item]['sum'])
+				score = float(json_b[item]['sum']) / float(json_a[item]['sum'])
+				#print(json_a['sum'])
+				score = (json_b[item]['sum']/json_a['sum']) * score
+				score = round(score, 4)
+				comp_dict = {"score":score, "target_supplier":target_supplier, "competitor_id":competitor_id, "agency_id":json_a[item]['agency'], "division_id":json_a[item]['division'], "branch_id":json_a[item]['branch'], "unspsc":json_a[item]['unspsc']}
+				print("yep")
+				comp_score.append(comp_dict)
+
+	# Add all the score to the db
+	for competitor in comp_score:
+		# Check the record does not exist
+		query = Competitor.query.filter_by(supplier_id=competitor['target_supplier']).filter_by(competitor_id=competitor['competitor_id']).filter_by(agency_id=competitor['agency_id']).filter_by(division_id=competitor['division_id']).filter_by(branch_id=competitor['branch_id']).filter_by(category=competitor['unspsc']).first() 
+		if (query==None):
+			# Add the record to the competitor table
+			query = Competitor(supplier_id=competitor['target_supplier'], competitor_id=competitor['competitor_id'], score=competitor['score'], agency_id=competitor['agency_id'], division_id=competitor['division_id'], branch_id=competitor['branch_id'], category=competitor['unspsc'], created=datetime.now())
+			db.session.add(query)
+			db.session.commit()
+		else:
+			#if (row['score']!=0) and (row['score']>-0.95):
+			query.score=competitor['score']
+			db.session.commit()
+
+
+	if loop==1:
+		return str(link)
+	else:
+		return jsonify(comp_score)
+	
+
+
+
+
+# Generate the JSON for the AMChart Heatmap
 def supplier_activity_json(target_supplier, fy_filter, yLevel, xLevel, yAgencyId, yDivisionId, xSegment, xFamily, xClass, competitor):
 
 	fy_start, fy_end, fy = functions.fy(fy_filter)
@@ -465,9 +536,8 @@ def supplier_activity_json(target_supplier, fy_filter, yLevel, xLevel, yAgencyId
 	data = json.loads(data)
 	supplier_name = data['display_name']
 
-	heatMapData = {"activity_index": {}, "yLevel": yLevel, "xLevel": xLevel, "yAgencyId":yAgencyId, "yDivisionId":yDivisionId, "xSegment":xSegment, "xFamily": xFamily, "xClass":xClass,"all":[],"winning":[],"losing":[],"unconstested":[], "not_playing":[], "baseline":1}	
+	heatMapData = {"activity_index": {}, "sum": 0, "yLevel": yLevel, "xLevel": xLevel, "yAgencyId":yAgencyId, "yDivisionId":yDivisionId, "xSegment":xSegment, "xFamily": xFamily, "xClass":xClass,"all":[],"winning":[],"losing":[],"unconstested":[], "not_playing":[], "baseline":1}	
 	
-
 	# Check is the yAxis has children
 	if yLevel=="all":
 		y_base = json_['agencies']
@@ -552,7 +622,6 @@ def supplier_activity_json(target_supplier, fy_filter, yLevel, xLevel, yAgencyId
 						temp_dict['x_children'] = 1
 						break
 
-
 			# Filter by Segment, Family or Class if they are defined
 			append_activity = True
 			if int(xSegment)!=0:
@@ -568,6 +637,7 @@ def supplier_activity_json(target_supplier, fy_filter, yLevel, xLevel, yAgencyId
 							append_activity=False
 
 			if append_activity == True:
+				
 				heatMapData['all'].append(temp_dict)
 				
 				# Create an index of what is in the JSON, so we can compare it easily with a competitor without having to loop over everything
@@ -576,15 +646,13 @@ def supplier_activity_json(target_supplier, fy_filter, yLevel, xLevel, yAgencyId
 
 				i+=1
 			
-
 	return heatMapData
 	
 
 	
 
 
-
-# Loop over all supplier and generate tehir activity JSON
+# Loop over all supplier and create their activity JSON and save it to the DB
 @app.route("/s_activity_create/<target_supplier>", methods=['GET'])
 def s_activity_create(target_supplier):
 
@@ -631,10 +699,11 @@ def supplier_activity(target_supplier, fy_filter):
 	data = json.loads(data)
 
 	# Create the Supplier Activity JSON Object
-	activity = {"agencies":{}, "sum":0}
+	activity = {"agencies":{}, "sum":0, "comp_json":{"sum":0}}
 
 	for contract in data:
 
+		# format the contract value correctly and account for any errors in the data
 		try:
 			contract_value = float(contract['contract_value'])
 			contract_value = round(contract_value, 0)
@@ -644,16 +713,13 @@ def supplier_activity(target_supplier, fy_filter):
 			contract_value = float(contract_value)
 			contract_value = round(contract_value, 0)
 
-
-		#contract_value = 100
-
 		# Add the Agencies
 		if contract['agency']!=None:
+			y_deep_record = 'agency' # Figure out how deep the original record is agency/div/branch so we can mark it for competitor competitor comparrison later
 			agency_ = activity['agencies']
 			if contract['agency']['id'] in agency_:
 				agency_[contract['agency']['id']]['sum']+= contract_value
 			else:
-
 				agency_[contract['agency']['id']]={"sum": contract_value, "title": agency_name(contract['agency']['id'])}
 				agency_[contract['agency']['id']]['divisions'] = {}
 				agency_[contract['agency']['id']]['segments'] = {}
@@ -663,6 +729,7 @@ def supplier_activity(target_supplier, fy_filter):
 
 		# Add the divisions
 		if contract['division']!=None:
+			y_deep_record = 'division'
 			division_ = activity['agencies'][contract['agency']['id']]['divisions']
 			if contract['division']['id'] in division_:
 		 		division_[contract['division']['id']]['sum']+= contract_value
@@ -676,6 +743,7 @@ def supplier_activity(target_supplier, fy_filter):
 
 			# Add the branches
 			if contract['branch']!=None:
+				y_deep_record = 'branch'
 				branch_ = activity['agencies'][contract['agency']['id']]['divisions'][contract['division']['id']]['branches']
 				if contract['branch']['id'] in branch_:
 					branch_[contract['branch']['id']]['sum'] += contract_value
@@ -691,7 +759,17 @@ def supplier_activity(target_supplier, fy_filter):
 		if contract['unspsc']!=None:
 			contract_unspsc = contract['unspsc']['unspsc']
 			contract_unspsc_level  = int(contract['unspsc']['level_int'])
-			# loop though and generat the UNSPSCs at all levels
+			# Find the deepest category for this contract so we can compare competitors later
+			if contract_unspsc_level==1:
+				x_deep_record = 'segments'
+			if contract_unspsc_level==2:
+				x_deep_record = 'families'
+			if contract_unspsc_level==3:
+				x_deep_record = 'classes'
+			if contract_unspsc_level==4:
+				x_deep_record = 'commodities'
+
+			# loop though and generate the UNSPSCs at all levels
 			for i in range(contract_unspsc_level):
 				sig_figures = (i+1)*2 # how many of the UNSPSC numbers we will use from the left
 				contract_unspsc_temp = str(contract_unspsc)
@@ -716,7 +794,24 @@ def supplier_activity(target_supplier, fy_filter):
 					agency_[contract['agency']['id']][add_level][contract_unspsc_temp]['sum'] += contract_value
 					agency_[contract['agency']['id']][add_level][contract_unspsc_temp]['count'] += 1
 				else:
-					agency_[contract['agency']['id']][add_level][contract_unspsc_temp] = {"sum":contract_value, "count":1, "title": unspsc_name(contract_unspsc_temp)}
+					agency_[contract['agency']['id']][add_level][contract_unspsc_temp] = {"sum":contract_value, "count":1, "title": unspsc_name(contract_unspsc_temp), "original":0} # Original: is 1 when the record is at the deepest agency and category possible.  So we can compare it only once with a competitor
+
+				try:
+					#Add the marker to the original record depth so we can compare competitors later
+					if (y_deep_record=='agency'):
+						agency_[contract['agency']['id']][x_deep_record][contract_unspsc_temp]['original']=1
+						# add the record to the comp_json, so we can easily compare competitors at the 'fill-depth' of the contract record
+						# [:6] limit the unspsc depth to classes
+						identifier = str(contract_unspsc_temp)[:6] + "_"+ str(contract['agency']['id']) + "_0_0"
+						comp_dict_temp = agency_[contract['agency']['id']][x_deep_record][contract_unspsc_temp]
+						comp_dict_temp['agency'] = contract['agency']['id']
+						comp_dict_temp['division'] = None
+						comp_dict_temp['branch'] = None
+						comp_dict_temp['unspsc'] = str(contract_unspsc_temp)[:6]+"00"
+						activity['comp_json'][identifier] = comp_dict_temp
+						activity['comp_json']['sum']+=comp_dict_temp['sum']
+				except:
+						pass
 
 
 				if contract['division']!=None:
@@ -724,16 +819,45 @@ def supplier_activity(target_supplier, fy_filter):
 						division_[contract['division']['id']][add_level][contract_unspsc_temp]['sum'] += contract_value
 						division_[contract['division']['id']][add_level][contract_unspsc_temp]['count'] += 1
 					else:
-						division_[contract['division']['id']][add_level][contract_unspsc_temp] = {"sum":contract_value, "count":1, "title": unspsc_name(contract_unspsc_temp)}
+						division_[contract['division']['id']][add_level][contract_unspsc_temp] = {"sum":contract_value, "count":1, "title": unspsc_name(contract_unspsc_temp), "original":0}
 
+					try:
+						if (y_deep_record=='division'):
+							division_[contract['division']['id']][x_deep_record][contract_unspsc_temp]['original']=1
+							# add the record to the comp_json, so we can easily compare competitors at the 'fill-depth' of the contract record
+							identifier = str(contract_unspsc_temp)[:6] + "_"+ str(contract['agency']['id']) + "_"+ str(contract['division']['id']) +"_0"
+							comp_dict_temp = division_[contract['division']['id']][x_deep_record][contract_unspsc_temp]
+							comp_dict_temp['agency'] = contract['agency']['id']
+							comp_dict_temp['division'] = contract['division']['id']
+							comp_dict_temp['branch'] = None
+							comp_dict_temp['unspsc'] = str(contract_unspsc_temp)[:6]+"00"
+							activity['comp_json'][identifier] = comp_dict_temp
+							activity['comp_json']['sum']+=comp_dict_temp['sum']
+					except:
+						pass
 
 					if contract['branch']!=None:
 						if contract_unspsc_temp in branch_[contract['branch']['id']][add_level]:
 							branch_[contract['branch']['id']][add_level][contract_unspsc_temp]['sum'] += contract_value
 							branch_[contract['branch']['id']][add_level][contract_unspsc_temp]['count'] += 1
 						else:
-							branch_[contract['branch']['id']][add_level][contract_unspsc_temp] = {"sum":contract_value, "count":1, "title": unspsc_name(contract_unspsc_temp)}
+							branch_[contract['branch']['id']][add_level][contract_unspsc_temp] = {"sum":contract_value, "count":1, "title": unspsc_name(contract_unspsc_temp), "original":0}
 
+						try:
+							if (y_deep_record=='branch'):
+								branch_[contract['branch']['id']][x_deep_record][contract_unspsc_temp]['original']=1
+								# add the record to the comp_json, so we can easily compare competitors at the 'fill-depth' of the contract record
+								identifier = str(contract_unspsc_temp)[:6] + "_"+ str(contract['agency']['id']) + "_"+ str(contract['division']['id']) +"_"+ str(contract['branch']['id'])
+								comp_dict_temp = branch_[contract['branch']['id']][x_deep_record][contract_unspsc_temp]
+								comp_dict_temp['agency'] = contract['agency']['id']
+								comp_dict_temp['division'] = contract['division']['id']
+								comp_dict_temp['branch'] = contract['branch']['id']
+								comp_dict_temp['unspsc'] = str(contract_unspsc_temp)[:6]+"00"
+								activity['comp_json'][identifier] = comp_dict_temp
+								activity['comp_json']['sum']+=comp_dict_temp['sum']
+
+						except:
+							pass
 				i+=1
 
 	activity_json = json.dumps(activity)
@@ -750,11 +874,10 @@ def supplier_activity(target_supplier, fy_filter):
 		obj.created = datetime.now()
 		db.session.commit()
 
-	#return jsonify(activity['agencies']) #[19]['segments']
 	return jsonify(activity)
 
 
-
+# DELETE THIS FUNCTION IT IS OLD ---------------------------
 @app.route("/matrix/<target_supplier>", methods=['GET'])
 def matrix(target_supplier):
 

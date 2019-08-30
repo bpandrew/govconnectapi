@@ -202,7 +202,15 @@ class Competitor(db.Model):
 	competitor_id = db.Column(db.Integer, db.ForeignKey("supplier.id"), nullable=True)
 	competitor = db.relationship("Supplier", foreign_keys=[competitor_id], backref="competitor")
 	agency_id = db.Column(db.Integer, db.ForeignKey("agency.id"), nullable=True) # When Agency ID = None, all agencies have been included in the analysis
-	agency = db.relationship("Agency", foreign_keys=[agency_id], backref="competitors")
+	agency = db.relationship("Agency", foreign_keys=[agency_id], backref="competitors_a")
+
+	division_id = db.Column(db.Integer, db.ForeignKey("division.id"), nullable=True) 
+	division = db.relationship("Division", foreign_keys=[division_id], backref="competitors_d")
+	branch_id = db.Column(db.Integer, db.ForeignKey("branch.id"), nullable=True) 
+	branch = db.relationship("Branch", foreign_keys=[branch_id], backref="competitors_b")
+	category = db.Column(db.String)
+
+
 
 class CompetitorSchema(ma.ModelSchema):
 	class Meta:
@@ -210,6 +218,8 @@ class CompetitorSchema(ma.ModelSchema):
 	supplier = ma.Nested(SupplierSchema, only=("id", "name", "abn", "country", "display_name"))
 	competitor = ma.Nested(SupplierSchema, only=("id", "name", "abn", "country", "display_name", "umbrella", "umbrella_id"))
 	agency = ma.Nested(AgencySchema, only=("id", "display_title"))
+	division = ma.Nested(DivisionSchema, only=("id", "display_title"))
+	branch = ma.Nested(BranchSchema, only=("id", "display_title"))
 
 
 
