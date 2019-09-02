@@ -32,7 +32,7 @@
 						<tbody style="font-size:small">
 							{% for competitor in data.competitors %}
 							<tr data-agency="{{competitor['agency']['display_title']}}">
-								<td><a href="javascript:;" onclick="updateHeatmap('{{ competitor['competitor']['id']}}', '{{ competitor['competitor']['display_name']}}');">{{ competitor['competitor']['display_name']}}</a></td>
+								<td><a href="javascript:;" onclick="updateHeatmap('{{ competitor['id']}}', '{{ competitor['display_name']}}');">{{ competitor['display_name']}}</a></td>
 								
 								{% if competitor['score']<=0 %}
 								<td><div class="badge badge-success">Under-Performing</div></td>
@@ -55,6 +55,8 @@
 					</table>
 				</div>
 			</div>
+
+			{{ data.competitors}}
 		</div>
 
 	<small><a href="javascript:;" onclick="reset()"><b>RESET HEATMAP AND COMPETITOR TABLE</b></a></small>

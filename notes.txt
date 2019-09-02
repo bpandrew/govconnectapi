@@ -7,8 +7,6 @@ export APP_SETTINGS="config.DevelopmentConfig"
 export DATABASE_URL="postgresql://localhost/governmentconnect"
 
 
-python manage.py db stamp head
-
 # Migrating databases
 python manage.py db migrate
 # Apply the migrations
@@ -18,6 +16,8 @@ python manage.py db upgrade
 python manage.py runserver
 
 
+
+python manage.py db stamp head
 
 
 # Run the database migrations in Heroku via the CLI

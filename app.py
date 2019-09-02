@@ -479,6 +479,15 @@ def s_competition(target_supplier, competitor_id, fy_filter):
 	except:
 		return str(link)
 
+	# Check if there is an umbrella company for the target supplier. ( so we can ignore the umbrella company as a competitor)
+	query = Supplier.query.filter_by(id=target_supplier).first()
+	data = SupplierSchema().dumps(query).data
+	data = json.loads(data)
+	supplier_umbrella = data['umbrella_id']
+	if supplier_umbrella==None:
+		supplier_umbrella = 0
+	#print(supplier_umbrella)
+
 	comp_score = []
 
 	for item in json_b:
@@ -500,10 +509,21 @@ def s_competition(target_supplier, competitor_id, fy_filter):
 		# Check the record does not exist
 		query = Competitor.query.filter_by(supplier_id=competitor['target_supplier']).filter_by(competitor_id=competitor['competitor_id']).filter_by(agency_id=competitor['agency_id']).filter_by(division_id=competitor['division_id']).filter_by(branch_id=competitor['branch_id']).filter_by(category=competitor['unspsc']).first() 
 		if (query==None):
-			# Add the record to the competitor table
-			query = Competitor(supplier_id=competitor['target_supplier'], competitor_id=competitor['competitor_id'], score=competitor['score'], agency_id=competitor['agency_id'], division_id=competitor['division_id'], branch_id=competitor['branch_id'], category=competitor['unspsc'], created=datetime.now())
-			db.session.add(query)
-			db.session.commit()
+			# Do not compare a supplier to itself. AND do not compare it to its umbrella company if it has one.
+			if (int(competitor['competitor_id'])!=int(competitor['target_supplier'])) and (int(supplier_umbrella)!=int(competitor['target_supplier']) ):
+				# Check if there is an umbrella company for the target supplier. ( so we can ignore the umbrella company as a competitor)
+				query = Supplier.query.filter_by(id=competitor['competitor_id']).first()
+				data = SupplierSchema().dumps(query).data
+				data = json.loads(data)
+				competitor_umbrella = data['umbrella_id']
+				if competitor_umbrella==None:
+					competitor_umbrella = 0
+				# Do not compare a supplier to any of its children
+				if int(competitor_umbrella)!=int(competitor['target_supplier']):					
+					# Add the record to the competitor table
+					query = Competitor(supplier_id=competitor['target_supplier'], competitor_id=competitor['competitor_id'], score=competitor['score'], agency_id=competitor['agency_id'], division_id=competitor['division_id'], branch_id=competitor['branch_id'], category=competitor['unspsc'], created=datetime.now())
+					db.session.add(query)
+					db.session.commit()
 		else:
 			#if (row['score']!=0) and (row['score']>-0.95):
 			query.score=competitor['score']
@@ -511,6 +531,7 @@ def s_competition(target_supplier, competitor_id, fy_filter):
 
 
 	if loop==1:
+		time.sleep(0.1)
 		return str(link)
 	else:
 		return jsonify(comp_score)
@@ -2540,7 +2561,7 @@ def playingfield():
 	data = {}
 
 	supplier_id = int(session['user_supplier_id'])
-	print(supplier_id)
+	#print(supplier_id)
 
 	# Get this from the Session.
 	data['supplier_id'] = supplier_id 
@@ -2549,7 +2570,20 @@ def playingfield():
 	# Get all of the suppiers competitors
 	query = Competitor.query.order_by(desc(Competitor.score)).filter_by(supplier_id=supplier_id).all()
 	result = CompetitorSchema(many=True).dump(query).data
-	data['competitors'] = result
+	print(query)
+	if len(query)>0:
+		data['competitors'] = result
+		
+		df = json_normalize(data['competitors'])
+		df = df.groupby(['competitor.id', 'competitor.display_name']).sum()  #, 'segment_unspsc_id', 'family_unspsc_id'
+		print(df)
+		print(df['score'])
+
+		data['competitors'] = []
+		for index, row in df.iterrows(): 
+			data['competitors'].append({"id": index[0], "agency":None, "display_name":index[1], "score":row['score']})
+	else:
+		data['competitors'] = []
 
 	data['heatmap'] = []
 
