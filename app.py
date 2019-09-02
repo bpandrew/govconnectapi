@@ -457,6 +457,11 @@ def s_competition(target_supplier, competitor_id, fy_filter):
 	loop = int(request.args.get('loop'))
 	link = "<script>window.location.href = '/s_competition/"+ str(target_supplier) +"/"+str(competitor_id+1)+"/"+str(fy_filter) +"?loop="+ str(loop) +"';</script>"
 
+	# If it is the first time through. Delete all of the entries for this supplier, so they can be replaced.
+	if int(competitor_id)==0:
+		query = Competitor.query.filter_by(supplier_id=target_supplier).delete()
+		db.session.commit()
+
 	time.sleep(0.05)
 	# returns a simplified JSON of all activity at the 'full depth' so it can be compared against another supplier
 	fy_start, fy_end, fy = functions.fy(fy_filter)
@@ -525,11 +530,11 @@ def s_competition(target_supplier, competitor_id, fy_filter):
 					db.session.add(query)
 					db.session.commit()
 		else:
-			#if (row['score']!=0) and (row['score']>-0.95):
+			# Update the score as it already exists in the db
 			query.score=competitor['score']
 			db.session.commit()
 
-
+	# Loop over all of the competitors for this supplier
 	if loop==1:
 		time.sleep(0.1)
 		return str(link)
