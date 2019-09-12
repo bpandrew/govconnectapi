@@ -11,53 +11,29 @@
         </ol>
     </div>
 
-	
 
 	<div class="card mb-4">
-			<div class="card-header with-elements pb-0">
-				<h6 class="card-header-title mb-0">Strategic Competitors / Partners</h6> 
-			</div>
-			<div class="card-body">
-				<p>These suppliers are providing similar services to the same customer base within agencies as {{ data['target_supplier']['display_name']}}.</p>
-				<div class="card-datatable table-responsive" style="margin-top: -25px">
-					<table id="myTable" class="table table-hover card-table">
-						<thead style="font-size:small">
-						<tr>
-							<th>Supplier</th>
-							<th>Comparative Performance</th> 
-							<th>Score</th>  
-							<th>Agency</th>                       
-						</tr>
-						</thead>
-						<tbody style="font-size:small">
-							{% for competitor in data.competitors %}
-							<tr data-agency="{{competitor['agency']['display_title']}}">
-								<td><a href="javascript:;" onclick="updateHeatmap('{{ competitor['id']}}', '{{ competitor['display_name']}}');">{{ competitor['display_name']}}</a></td>
-								
-								{% if competitor['score']<=0 %}
-								<td><div class="badge badge-success">Under-Performing</div></td>
-								{% endif %}
-								{% if competitor['score']>0 %}
-								<td><div class="badge badge-danger">Out-Performing</div></td>
-								{% endif %}
-
-								<td>{{competitor['score']|round(2)}}</td>
-
-								{% if competitor['agency']!=None %}
-								<td>{{competitor['agency']['display_title']}}</td>
-								{% else %}
-								<td>All</td>
-								{% endif %}
-							</tr>
-							{% endfor %}
-
-						</tbody>
-					</table>
-				</div>
-			</div>
-
-			{{ data.competitors}}
+		<div class="card-header with-elements pb-0">
+			<h6 class="card-header-title mb-0">Strategic Competitors / Partners</h6> 
 		</div>
+		<div class="card-body">
+			<p>These suppliers are providing similar services to the same customer base within agencies as {{ data['target_supplier']['display_name']}}.</p>
+			<div class="card-datatable table-responsive" style="margin-top: -25px">
+				<table id="ajaxTable" class="table table-hover card-table">
+					<thead style="font-size:small">
+					<tr>
+						<th>Supplier</th>
+						<th>Comparative Performance</th> 
+						<th>Score</th>                       
+					</tr>
+					</thead>
+				</table>
+			</div>
+		</div>
+	</div>
+
+
+
 
 	<small><a href="javascript:;" onclick="reset()"><b>RESET HEATMAP AND COMPETITOR TABLE</b></a></small>
 
@@ -120,14 +96,7 @@
 
 <script>
 	$(document).ready(function() {
-		table = $('#myTable').DataTable({
-			"order": [
-				[2, "desc"]
-			],
-		}, );
-
 		updateHeatmap('0', 'Baseline', 1);
-		update_table("");
 	});
 
 
@@ -145,23 +114,6 @@
 
 		updateHeatmap('0', 'Baseline', 1);
 	}
-
-	function update_table(agency_name) {
-		// updates the datatable with the broad category items
-		$.fn.dataTable.ext.search.pop();
-		$.fn.dataTable.ext.search.push(
-			function(settings, data, dataIndex) {
-				var temp_value = $(table.row(dataIndex).node()).attr('data-agency');
-				if (temp_value==agency_name){
-					return true
-				}
-				else {
-					return false;
-				}
-			}
-		);
-		table.draw();
-	};
 
 //am4core.ready(function() {
 
@@ -392,8 +344,8 @@ function updateHeatmap(competitor_id, display_name) {
 		$('#loading_icon_heatmap').hide();
 		$('#chartdiv').show();
 
-		// Update the table to show/hide relevant competitors
-		update_table(current_ylabel);
+		// Update the table to show/hide relevant competitors for the filters
+		updateCompetitors();
 
 		if (baseline==1){
 			title.text = "{{ data['target_supplier']['display_name']}} Activity";
@@ -405,6 +357,8 @@ function updateHeatmap(competitor_id, display_name) {
 
 		chart.validateData();
 	});
+
+	
 }
 
 $('input[type=radio][name=btn-radio]').change(function() {
@@ -625,9 +579,64 @@ function bcx_family(){
 	updateHeatmap(current_competitor, current_competitor_name, 0);	
 }
 
+// Create and populate the competitors table.
+myTable = $("#ajaxTable").DataTable({
+	"orderCellsTop": true,
+	"fixedHeader": true,
+	"paging": true,
+	"lengthChange": true,
+	"searching": true,
+	"ordering": true,
+	"info": true,
+	"order": [
+		[2, "dec"]
+	]
+});
 
+
+function updateCompetitors() {
+
+	//alert('/competitor_data_json?ylevel='+ylevel+'&xlevel='+xlevel+'&yagencyid='+yagencyid+'&ydivisionid='+ydivisionid+'&segment='+xsegment+'&family='+xfamily+'&class='+xclass);	
+
+	$.ajax({
+		type: "GET",
+		url: '/competitor_data_json?ylevel='+ylevel+'&xlevel='+xlevel+'&yagencyid='+yagencyid+'&ydivisionid='+ydivisionid+'&segment='+xsegment+'&family='+xfamily+'&class='+xclass,
+		contentType: "application/json; charset=utf-8",
+		dataType: "json",
+		success: function (response) {
+
+			myTable
+				.clear()
+				.draw();
+
+			console.log("Fetching competitor data");
+			var jsonObject = response.competitors;
+			//alert(jsonObject);
+			var result = jsonObject.map(function(item){
+				var result = [];
+				link_str = "<a href=\"javascript:;\" onclick=\"updateHeatmap(\'"+ String(item['id']) +"\', \'"+ item['display_name'] +"\');\">"+item['display_name']+"</a>";
+				result.push(link_str);
+
+				if (item['score']>1) {
+					result.push("<div class=\'badge badge-danger\'>Leading</div>")
+				} else {
+					result.push("<div class=\'badge badge-success\'>Lagging</div>")
+				}
+
+				result.push(item['score']);
+
+				return result;
+			});
+			
+			myTable.rows.add(result); // add row to the DataTable instance
+			myTable.draw(); // always redraw after an update
+		}
+	});
+
+}
+
+updateCompetitors();
 </script>
-
 
 
 

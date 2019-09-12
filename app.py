@@ -472,6 +472,7 @@ def s_competition(target_supplier, competitor_id, fy_filter):
 	data = json.loads(data)
 	json_ = json.loads(data['json'])
 	json_a = json_['comp_json']
+	#print(json_a)
 
 
 	# Retrieve the supplier competition activity json from the DB.
@@ -540,6 +541,7 @@ def s_competition(target_supplier, competitor_id, fy_filter):
 		return str(link)
 	else:
 		return jsonify(comp_score)
+		#return jsonify(json_a)
 	
 
 
@@ -562,7 +564,7 @@ def supplier_activity_json(target_supplier, fy_filter, yLevel, xLevel, yAgencyId
 	data = json.loads(data)
 	supplier_name = data['display_name']
 
-	heatMapData = {"activity_index": {}, "sum": 0, "yLevel": yLevel, "xLevel": xLevel, "yAgencyId":yAgencyId, "yDivisionId":yDivisionId, "xSegment":xSegment, "xFamily": xFamily, "xClass":xClass,"all":[],"winning":[],"losing":[],"unconstested":[], "not_playing":[], "baseline":1}	
+	heatMapData = {"activity_index": {}, "filtered_sum": 0, "yLevel": yLevel, "xLevel": xLevel, "yAgencyId":yAgencyId, "yDivisionId":yDivisionId, "xSegment":xSegment, "xFamily": xFamily, "xClass":xClass,"all":[],"winning":[],"losing":[],"unconstested":[], "not_playing":[], "baseline":1}	
 	
 	# Check is the yAxis has children
 	if yLevel=="all":
@@ -618,6 +620,7 @@ def supplier_activity_json(target_supplier, fy_filter, yLevel, xLevel, yAgencyId
 			temp_dict['xlabel'] = base_[xLevel][category]['title']
 			temp_dict['original_value'] = float(base_[xLevel][category]['sum'])
 			temp_dict['value'] = float(base_[xLevel][category]['sum'])
+
 			temp_dict['contractcount'] = base_[xLevel][category]['count']
 
 			try:
@@ -665,6 +668,7 @@ def supplier_activity_json(target_supplier, fy_filter, yLevel, xLevel, yAgencyId
 			if append_activity == True:
 				
 				heatMapData['all'].append(temp_dict)
+				heatMapData['filtered_sum']+= temp_dict['original_value']
 				
 				# Create an index of what is in the JSON, so we can compare it easily with a competitor without having to loop over everything
 				index_ = str(temp_dict['yid']) + "_" + str(temp_dict['xid'])
@@ -2560,10 +2564,19 @@ def playingfield_heatmap_data():
 
 
 # --- DASHBOARD PAGE ---
-@app.route("/playingfield")
-def playingfield():
-
+@app.route("/competitor_data_json")
+def competitor_data_json():
 	data = {}
+
+	yLevel = request.args.get('ylevel') # all, agency, division, branch
+	xLevel = request.args.get('xlevel') # segments, families, classes, commodities
+
+	yAgencyId = request.args.get('yagencyid')
+	yDivisionId = request.args.get('ydivisionid')
+
+	xSegment = request.args.get('segment')
+	xFamily = request.args.get('family')
+	xClass = request.args.get('class')
 
 	supplier_id = int(session['user_supplier_id'])
 	#print(supplier_id)
@@ -2580,15 +2593,59 @@ def playingfield():
 		data['competitors'] = result
 		
 		df = json_normalize(data['competitors'])
+# *** filter by agency/division/branch here
+# *** filter by segment/family/class/commodity here
+		if yLevel=='agency':
+			df=df[df['agency.id']==int(yAgencyId)]
+		if yLevel=='division':
+			df=df[df['division.id']==int(yDivisionId)]
+
+		if xLevel=='families':
+			df['xSegment'] = df['category'].str[:2]
+			df=df[df['xSegment']==xSegment[:2]]
+
+		if xLevel=='classes':
+			df['xFamily'] = df['category'].str[:4]
+			df=df[df['xFamily']==xFamily[:4]]
+
+		if xLevel=='commodities':
+			df['xClass'] = df['category'].str[:6]
+			df=df[df['xClass']==xClass[:6]]
+
+
+
 		df = df.groupby(['competitor.id', 'competitor.display_name']).sum()  #, 'segment_unspsc_id', 'family_unspsc_id'
+		
 		print(df)
 		print(df['score'])
+
+		# Recalculate the score for the current agency and category filters
+		# Score / (sum_of_SupplierA_current_filter / supplierA_sum)
+		# The sum for the current filters should be passed from the s_activity script, as heatmapdata['sum']
+		# The supplierA_sum should come from the supplier activity matrix['comp_json']['sum']
 
 		data['competitors'] = []
 		for index, row in df.iterrows(): 
 			data['competitors'].append({"id": index[0], "agency":None, "display_name":index[1], "score":row['score']})
 	else:
 		data['competitors'] = []
+
+	return jsonify(data)
+
+
+
+# --- DASHBOARD PAGE ---
+@app.route("/playingfield")
+def playingfield():
+
+	data = {}
+
+	# use the supplier id from the session
+	supplier_id = int(session['user_supplier_id'])
+
+	# Get this from the Session.
+	data['supplier_id'] = supplier_id 
+	financial_year = 2019
 
 	data['heatmap'] = []
 
