@@ -416,6 +416,8 @@ def s_activity(target_supplier, competitor):
 					activity_a['value'] = float(activity_a['value'])-float(activity_b['value']) # update the value a-b
 					activity_a['contested'] = 1 # mark it as having competition
 
+					activity_a['perc_change'] = float(activity_b['value'])/float(activity_a['value'])
+
 					if activity_a['value']>0:
 						activity_a['winning'] = 1
 
@@ -423,7 +425,7 @@ def s_activity(target_supplier, competitor):
 						activity_a['winning'] = -1
 
 					activity_a['description'] = ""
-					activity_a['description'] =  "In FY"+ str(int(fy)-1)[2:] +"/"+ str(fy)[2:] +", "+ supplier_name +" earned "+ functions.format_currency(activity_a['original_value']) +" via "+ str(activity_a['contractcount'])  +" contract(s).\n"+ competitor_name +" earned "+ functions.format_currency(activity_b['original_value']) +" via "+ str(activity_b['contractcount']) +" contract(s)"
+					activity_a['description'] = "In FY"+ str(int(fy)-1)[2:] +"/"+ str(fy)[2:] +", "+ supplier_name +" earned "+ functions.format_currency(activity_a['original_value']) +" via "+ str(activity_a['contractcount'])  +" contract(s).\n"+ competitor_name +" earned "+ functions.format_currency(activity_b['original_value']) +" via "+ str(activity_b['contractcount']) +" contract(s)"
 
 					if activity_a['winning'] == 1:
 						matrix_a['winning'].append(activity_a)
@@ -442,6 +444,41 @@ def s_activity(target_supplier, competitor):
 					matrix_a['baseline'] = 0
 
 	#return matrix_a
+	highest_val = 0
+	for item in matrix_a['all']:
+		if item['value']>highest_val:
+			highest_val=item['value']
+	for item in matrix_a['all']:
+		item['perc_change']=item['value']/highest_val
+
+
+	highest_val = 0
+	for item in matrix_a['not_playing']:
+		if item['value']<highest_val:
+			highest_val=item['value']
+	for item in matrix_a['not_playing']:
+		item['perc_change']=item['value']/highest_val
+
+
+	highest_val = 0
+	for item in matrix_a['winning']:
+		if item['perc_change']>highest_val:
+			highest_val=item['perc_change']
+	for item in matrix_a['winning']:
+		item['perc_change']=item['perc_change']/highest_val
+
+	highest_val = 0
+	for item in matrix_a['losing']:
+		if item['perc_change']<highest_val:
+			highest_val=item['perc_change']
+	for item in matrix_a['losing']:
+		item['perc_change']=item['perc_change']/highest_val
+
+
+
+	#print(matrix_a['losing'])
+
+
 
 	matrix_a['all'] = sorted(matrix_a['all'], key=lambda k: k['value'], reverse=True) 
 	return matrix_a
@@ -2316,7 +2353,6 @@ def playingfield_heatmap_data():
 	except:
 		baseline = 0
 
-
 	financial_year = 2019
 
 	# Get Matrix for the target supplier
@@ -2404,11 +2440,8 @@ def playingfield_heatmap_data():
 								else:
 									agency_name="Undisclosed Division"
 
-
 							chart_dict['division_id'] = division_id
 							
-
-
 
 						if ignore_record==False:
 							query = Unspsc.query.filter_by(id=item).first()
@@ -2521,10 +2554,14 @@ def playingfield_heatmap_data():
 							chart_dict['unspsc'] = unspsc_title
 							value = int(matrix_c[item][i])
 							chart_dict['value'] = value
-							#try:
-							#	chart_dict['perc_change'] = round(int((matrix_a[item][i]) / int(matrix_b[item][i])*100), 2)
-							#except:
-							#	chart_dict['perc_change'] = None
+
+							try:
+								chart_dict['perc_change'] = round(int((matrix_a[item][i]) / int(matrix_b[item][i])*100), 2)
+							except:
+								chart_dict['perc_change'] = None
+
+							print(chart_dict)
+
 							chart_dict['competition'] = competition
 							chart_dict['winning'] = winning
 							chart_dict['description'] = description
@@ -2594,12 +2631,14 @@ def competitor_data_json():
 		
 		df = json_normalize(data['competitors'])
 # *** filter by agency/division/branch here
-# *** filter by segment/family/class/commodity here
+
 		if yLevel=='agency':
 			df=df[df['agency.id']==int(yAgencyId)]
+
 		if yLevel=='division':
 			df=df[df['division.id']==int(yDivisionId)]
 
+# *** filter by segment/family/class/commodity here
 		if xLevel=='families':
 			df['xSegment'] = df['category'].str[:2]
 			df=df[df['xSegment']==xSegment[:2]]
@@ -2612,12 +2651,10 @@ def competitor_data_json():
 			df['xClass'] = df['category'].str[:6]
 			df=df[df['xClass']==xClass[:6]]
 
-
-
 		df = df.groupby(['competitor.id', 'competitor.display_name']).sum()  #, 'segment_unspsc_id', 'family_unspsc_id'
 		
-		print(df)
-		print(df['score'])
+		#print(df)
+		#print(df['score'])
 
 		# Recalculate the score for the current agency and category filters
 		# Score / (sum_of_SupplierA_current_filter / supplierA_sum)
@@ -2626,7 +2663,7 @@ def competitor_data_json():
 
 		data['competitors'] = []
 		for index, row in df.iterrows(): 
-			data['competitors'].append({"id": index[0], "agency":None, "display_name":index[1], "score":row['score']})
+			data['competitors'].append({"id": index[0], "agency":None, "display_name":index[1], "score":round(row['score'], 3)})
 	else:
 		data['competitors'] = []
 
