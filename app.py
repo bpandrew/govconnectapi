@@ -43,34 +43,34 @@ def update():
 
 	i=0
 	# *** UPDATE THE DISPLAY NAMES
-	#query = ContractCount.query.filter_by(id=1).first()
-	#query.scrape_date = datetime.now() #10733901  aps_notification
-	#db.session.commit()
+	query = ContractCount.query.filter_by(id=1).first()
+	query.scrape_date = datetime.now() #10733901  aps_notification
+	db.session.commit()
 
-	time.sleep(1)
-	count_ = int(request.args.get('count'))
-	if count_=="":
-		count_=0
+	#time.sleep(1)
+	#count_ = int(request.args.get('count'))
+	#if count_=="":
+	#	count_=0
 
 	# update Supplier
-	suppliers = Supplier.query.order_by(Supplier.id).filter(Supplier.id>count_).all()
+	#suppliers = Supplier.query.order_by(Supplier.id).filter(Supplier.id>count_).all()
 	#query = Supplier.query.filter_by(id>int(count_)).all()
-	response = SupplierSchema(many=True).dump(suppliers).data
+	#response = SupplierSchema(many=True).dump(suppliers).data
 
-	for item in response:
-		if i>150:
-			break
-		query = Supplier.query.filter_by(id=item['id']).first()
-		query.name = item['name'].lower()
-		db.session.commit()
-		i=i+1
-		count_=count_+1
+	#for item in response:
+	#	if i>150:
+	#		break
+	#	query = Supplier.query.filter_by(id=item['id']).first()
+	#	query.name = item['name'].lower()
+	#	db.session.commit()
+	#	i=i+1
+	#	count_=count_+1
 
-	link = "<a href='/update?count="+ str(count_) +"'>Next</a>"
-	link = "<script>window.location.href = '/update?count="+ str(count_) +"';</script>"
+	#link = "<a href='/update?count="+ str(count_) +"'>Next</a>"
+	#link = "<script>window.location.href = '/update?count="+ str(count_) +"';</script>"
 
-	return str(link)
-	return redirect(url_for('update_display_name')+"?count="+str(count_))
+	#return str(link)
+	#return redirect(url_for('update_display_name')+"?count="+str(count_))
 
 	# update agencies
 	#agency = Agency.query.filter_by(display_title=None).all()
@@ -128,7 +128,7 @@ def update():
 	#	i = i + 1
 
 
-	#return str("Done")
+	return str("Done")
 
 def all_agencies_segments():
 	# Get UNSPSC Segments
