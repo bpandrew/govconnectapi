@@ -1353,40 +1353,42 @@ def op_detail(op_id):
 
 @app.route("/op/add", methods=["POST"])
 def op_add():
-    try:
-        data = request.form.to_dict() # Transofrm the POST data into a dictionary
+    #try:
+	data = request.form.to_dict() # Transofrm the POST data into a dictionary
 
-        obj=Op.query.filter_by(atm_id=atm_id).first()
-        if obj==None:
-            db.create_all()
-            opportunity = Op(title=data['title'], atm_id=data['atm_id'], description=data['description'], atm_type=data['atm_type'], publish_date=data['publish_date'], close_date=data['close_date'], agency_id=data['agency_id'], conditions_for_participation=data['conditions_for_participation'], panel_arrangement=data['panel_arrangement'], timeframe_for_delivery=data['timeframe_for_delivery'], multi_stage=data['multi-stage'], multi_agency_access=data['multi_agency_access'], address_for_lodgement=data['address_for_lodgement'], document_link=data['document_link'])
-            category = Unspsc.query.filter_by(unspsc=data['unspsc']).first()
-            opportunity.categories.append(category)
+	print(data)
 
-            # Loop through and add all of the parent/child categories
-            unspsc_complete = False
-            while unspsc_complete==False:
-                if category.parent_id!=0:
-                    category = Unspsc.query.filter_by(id=category.parent_id).first()
-                    opportunity.categories.append(category)
-                    if category.parent_id==0:
-                        unspsc_complete=True
-                    db.session.add(opportunity)
-                    db.session.commit()
-                else:
-                    unspsc_complete=True
+	obj=Op.query.filter_by(atm_id=data['atm_id']).first()
+	if obj==None:
+		db.create_all()
+		opportunity = Op(title=data['title'], atm_id=data['atm_id'], description=data['description'], atm_type=data['atm_type'], publish_date=data['publish_date'], close_date=data['close_date'], agency_id=data['agency_id'], conditions_for_participation=data['conditions_for_participation'], panel_arrangement=data['panel_arrangement'], timeframe_for_delivery=data['timeframe_for_delivery'], multi_stage=data['multi-stage'], multi_agency_access=data['multi_agency_access'], address_for_lodgement=data['address_for_lodgement'], document_link=data['document_link'])
+		category = Unspsc.query.filter_by(unspsc=data['unspsc']).first()
+		opportunity.categories.append(category)
 
-            response = OpSchema().dump(opportunity).data
-            return functions.json_response('Success - Added Opportunity', response)
-        else:
-            response = OpSchema().dump(obj).data # get the existing op data
-            # Update any changes to the opportunity
-            obj.document_link = document_link
-            db.session.commit()
+		# Loop through and add all of the parent/child categories
+		unspsc_complete = False
+		while unspsc_complete==False:
+			if category.parent_id!=0:
+				category = Unspsc.query.filter_by(id=category.parent_id).first()
+				opportunity.categories.append(category)
+				if category.parent_id==0:
+					unspsc_complete=True
+				db.session.add(opportunity)
+				db.session.commit()
+			else:
+				unspsc_complete=True
 
-            return functions.json_response('Success - Opportunity Already Exists', response)
-    except Exception as e:
-	    return(str(e))
+		response = OpSchema().dump(opportunity).data
+		return functions.json_response('Success - Added Opportunity', response)
+	else:
+		response = OpSchema().dump(obj).data # get the existing op data
+		# Update any changes to the opportunity
+		obj.document_link = data['document_link']
+		db.session.commit()
+
+		return functions.json_response('Success - Opportunity Already Exists', response)
+    #except Exception as e:
+	#    return(str(e))
 
 
 
