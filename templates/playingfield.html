@@ -14,9 +14,10 @@
 
 	<div class="card mb-4">
 		<div class="card-header with-elements pb-0">
-			<h6 class="card-header-title mb-0">Strategic Competitors / Partners</h6> 
+			<h6 class="card-header-title mb-0">Competing Suppliers</h6> 
 		</div>
 		<div class="card-body">
+			
 			<p>These suppliers are providing similar services to the same customer base within agencies as {{ data['target_supplier']['display_name']}}.</p>
 			<div class="card-datatable table-responsive" style="margin-top: -25px">
 				<table id="ajaxTable" class="table table-hover card-table">
@@ -29,13 +30,10 @@
 					</thead>
 				</table>
 			</div>
+			<div id="loading_icon_competitors" style="text-align: center; margin-top: 10px;"><img src="https://loading.io/spinners/flickr/index.orbit-balls-loading-gif.svg"></div>
 		</div>
 	</div>
 
-
-
-
-	<small><a href="javascript:;" onclick="reset()"><b>RESET HEATMAP AND COMPETITOR TABLE</b></a></small>
 
 	<div class="row">
 		<div class="col-xl-12">
@@ -87,6 +85,30 @@
 			</div>
 		</div>
 	</div>
+
+
+	<div class="card-body">
+		<!-- Modal template -->
+		<div class="modal modal-slide fade" id="modals-top">
+			<div class="modal-dialog">
+				<form class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title">Competition Contracts
+							<br><small class="text-muted">Details on the contracts won by competitors.</small>
+						</h5>
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close">×</button>
+					</div>
+					<div class="modal-body">
+						<p>Table here</p>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
 
 </div>
 
@@ -214,6 +236,8 @@ columnTemplate.stroke = bgColor;
 columnTemplate.tooltipText = "{description}";
 columnTemplate.width = am4core.percent(100);
 columnTemplate.height = am4core.percent(100);
+
+
 
 var bullet2 = series.bullets.push(new am4charts.LabelBullet());
 bullet2.label.text = "${value}";
@@ -440,8 +464,6 @@ chart.events.on("datavalidated", function(ev) {
 		labelX.fill = am4core.color("#6B69BF");
 	}
 
-	//console.log(labelY)
-
 });
 
 
@@ -449,7 +471,8 @@ chart.events.on("datavalidated", function(ev) {
 // Register the click on the item
 // To be used as a redirect later to show the agency / division details.
 series.columns.template.events.on("hit", function(ev) {
-	console.log("clicked on ", ev.target.dataItem.value);
+	console.log("clicked on unspsc:", ev.target.dataItem.xid, " agency ID:", ev.target.dataItem.yid);
+	$('#modals-top').modal('show');
 }, this);
 
 
@@ -479,6 +502,11 @@ xAxis.renderer.labels.template.events.on("beforevalidated", function(event) {
 		null;
 	}
 })
+
+
+//series.columns.template.events.on("beforevalidated", function(event) {
+
+//series.columns.template.tooltipText = "{description}";
 
 
 
@@ -641,6 +669,8 @@ myTable = $("#ajaxTable").DataTable({
 
 function updateCompetitors() {
 
+	$('#loading_icon_competitors').show();
+
 	//alert('/competitor_data_json?ylevel='+ylevel+'&xlevel='+xlevel+'&yagencyid='+yagencyid+'&ydivisionid='+ydivisionid+'&segment='+xsegment+'&family='+xfamily+'&class='+xclass);	
 
 	$.ajax({
@@ -672,9 +702,11 @@ function updateCompetitors() {
 
 				return result;
 			});
-			
+			$('#loading_icon_competitors').hide();
 			myTable.rows.add(result); // add row to the DataTable instance
 			myTable.draw(); // always redraw after an update
+
+			
 		}
 	});
 

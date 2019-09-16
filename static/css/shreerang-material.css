@@ -5363,14 +5363,14 @@ fieldset[disabled] .switcher-input~.switcher-label {
 
 @media (min-width: 576px) {
     .modal-slide .modal-dialog {
-        width: 20rem;
+        width: 50rem;
     }
 }
 
 .modal-slide .modal-content {
     overflow: auto;
-    padding-top: 3.22127rem;
-    padding-bottom: 3.22127rem;
+    padding-top: 1.22127rem;
+    padding-bottom: 1.22127rem;
     height: 100%;
     border-radius: 0;
 }
