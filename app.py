@@ -1228,14 +1228,13 @@ def op():
 		op['title'] = op['title'].capitalize()
 		op['category_display'] = max(op['categories'], key=lambda x:x['level_int']) # Get the highest (most specific) category provided for the ATM
 		
-		for category in op['categories']:
-			if category['id'] in unspsc_filters:
-				hide_op = True
+		#for category in op['categories']:
+		#	if category['id'] in unspsc_filters:
+		#		hide_op = True
 
 		if hide_op==False:
 			output['results'].append(op)
 		
-        
 	return render_template('opportunities.html', data=output)
 
 
