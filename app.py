@@ -446,8 +446,12 @@ def s_activity(target_supplier, competitor):
 	#return matrix_a
 	highest_val = 0
 	for item in matrix_a['all']:
-		if item['value']>highest_val:
-			highest_val=item['value']
+		if abs(item['value'])>highest_val:
+			highest_val=abs(item['value'])
+		print("***")
+		print(item['value'])
+		print(highest_val)
+		print("***")
 	for item in matrix_a['all']:
 		item['perc_change']=abs((item['value']/highest_val)+0.3)
 
@@ -456,10 +460,10 @@ def s_activity(target_supplier, competitor):
 	for item in matrix_a['not_playing']:
 		if item['perc_change']>highest_val:
 			highest_val=item['value']
-		print("***")
-		print(item['perc_change'])
-		print(highest_val)
-		print("***")
+		#print("***")
+		#print(item['perc_change'])
+		#print(highest_val)
+		#print("***")
 	for item in matrix_a['not_playing']:
 		item['perc_change']=abs((item['value']/highest_val)+0.3)
 
@@ -473,14 +477,12 @@ def s_activity(target_supplier, competitor):
 
 	highest_val = 0
 	for item in matrix_a['losing']:
-		print(item['perc_change'])
+		#print(item['perc_change'])
 		if item['perc_change']>highest_val:
 			highest_val=item['perc_change']
 	for item in matrix_a['losing']:
 		#if highest_val!=0:
 		item['perc_change']=abs((item['value']/highest_val)+0.3)
-
-
 
 	#print(matrix_a['losing'])
 

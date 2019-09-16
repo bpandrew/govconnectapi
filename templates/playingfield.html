@@ -233,7 +233,7 @@ chart.exporting.menu.items = [{
 	{ "type": "jpg", "label": "JPG" },
   ]
 }];
-chart.exporting.filePrefix = "GovConnect - HeatMap";
+chart.exporting.filePrefix = "GovConnect - Playing Field";
 chart.exporting.title = "Chart Title Here";
 chart.exporting.useRetina = true;
 var options = chart.exporting.getFormatOptions("png");
@@ -378,6 +378,7 @@ $('input[type=radio][name=btn-radio]').change(function() {
 	if (this.value == 'uncontested') {
 		chart.data = data_uncontested;
 	}   
+	//resize();
 	chart.validateData();
 });
 
@@ -387,6 +388,7 @@ $('input[type=radio][name=btn-radio]').change(function() {
 var cellSize = 40;
 var cellWidth = 110;
 chart.events.on("datavalidated", function(ev) {
+//function resize() {
 
 	// Get objects of interest
 	var chart = ev.target;
@@ -396,8 +398,8 @@ chart.events.on("datavalidated", function(ev) {
 	var agencies = [];
 	var unspscs = [];
 	for (i = 0; i < chart.data.length; i++) { 
-		agencies.indexOf(chart.data[i]['ylabel']) === -1 ? agencies.push(chart.data[i]['ylabel']) : console.log("This item already exists");
-		unspscs.indexOf(chart.data[i]['xlabel']) === -1 ? unspscs.push(chart.data[i]['xlabel']) : console.log("This item already exists");
+		agencies.indexOf(chart.data[i]['ylabel']) === -1 ? agencies.push(chart.data[i]['ylabel']) : null;
+		unspscs.indexOf(chart.data[i]['xlabel']) === -1 ? unspscs.push(chart.data[i]['xlabel']) : null;
 	}
 
 	// Calculate how we need to adjust chart height
@@ -424,21 +426,66 @@ chart.events.on("datavalidated", function(ev) {
 	return opacity;
 	});
 
+	
+	// Turn the x and y axis labels black when we are at the maximum depth.
+	if (ylevel=='division'){
+		labelY.fill = am4core.color("#000000");
+	} else {
+		labelY.fill = am4core.color("#6B69BF");
+	}
+
+	if (xlevel=='commodities'){
+		labelX.fill = am4core.color("#000000");
+	} else {
+		labelX.fill = am4core.color("#6B69BF");
+	}
+
+	//console.log(labelY)
+
 });
+
+
 
 // Register the click on the item
 // To be used as a redirect later to show the agency / division details.
-//series.columns.template.events.on("hit", function(ev) {
-//	console.log("clicked on ", ev.target.dataItem.value);
-//}, this);
+series.columns.template.events.on("hit", function(ev) {
+	console.log("clicked on ", ev.target.dataItem.value);
+}, this);
+
+
+
+// Format the link labels. ie. make blue when there are children available.
+yAxis.renderer.labels.template.events.on("beforevalidated", function(event) {
+	try {
+		if (event.target.dataItem.dataContext.y_children==1){
+		event.target.fill = am4core.color("#6B69BF");
+		} else {
+			event.target.fill = am4core.color("#000000");
+		}
+	}
+	catch(err) {
+		null;
+	}
+})
+xAxis.renderer.labels.template.events.on("beforevalidated", function(event) {
+	try {
+		if (event.target.dataItem.dataContext.x_children==1){
+			event.target.fill = am4core.color("#6B69BF");
+		} else {
+			event.target.fill = am4core.color("#000000");
+		}
+	}
+	catch(err) {
+		null;
+	}
+})
+
+
 
 
 yAxis.renderer.labels.template.events.on("hit", function(event){
 
 	if (event.target.dataItem.dataContext.y_children==1){
-		if (ylevel=='division'){
-			labelY.fill = am4core.color("#000000");
-		}
 
 		if (ylevel=='agency'){
 			ydivisionid = event.target.dataItem.dataContext.yid
@@ -463,19 +510,14 @@ yAxis.renderer.labels.template.events.on("hit", function(event){
 			$('#bc').show();
 			updateHeatmap(current_competitor, current_competitor_name, 0);
 		}
-	} else {
-	event.target.fill = am4core.color("#000000");
-}
+	} 
 })
 
 
 xAxis.renderer.labels.template.events.on("hit", function(event){
 
 if (event.target.dataItem.dataContext.x_children==1){
-	
-	if (xlevel=='commodities'){
-		labelX.fill = am4core.color("#000000");
-	}
+
 
 	if (xlevel=='classes'){
 		xclass = event.target.dataItem.dataContext.xid
@@ -579,6 +621,8 @@ function bcx_family(){
 
 	updateHeatmap(current_competitor, current_competitor_name, 0);	
 }
+
+
 
 // Create and populate the competitors table.
 myTable = $("#ajaxTable").DataTable({
