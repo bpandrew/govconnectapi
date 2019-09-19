@@ -732,6 +732,7 @@ bubble = new Chart(document.getElementById("bubble-chart"), {
 			}
         }],
         xAxes: [{ 
+			type: 'logarithmic',
           scaleLabel: {
             display: true,
             labelString: "Competitivness"
@@ -840,7 +841,7 @@ function updateCompetitors() {
 				console.log(bubble.data.datasets[i]['data'][0]['x']);
 				if (bubble.data.datasets[i]['id']==current_competitor) {
 					//bubble.data.datasets[i]['data'][0]['r']=18;
-					bubble.data.datasets[i]['backgroundColor'] = "rgba(0,0,0,0.9)";
+					bubble.data.datasets[i]['backgroundColor'] = "rgba(0,0,0,0.6)";
 					bubble.data.datasets[i]['borderColor'] = "rgba(0,0,0,1)";
 				} 
 			}
