@@ -718,13 +718,14 @@ bubble = new Chart(document.getElementById("bubble-chart"), {
          }, 
 	  scales: {
         yAxes: [{ 
+			
           scaleLabel: {
             display: true,
             labelString: "Head-to-Head Performance"
 		  },
 		  ticks: {
-				suggestedMin: -1,    // minimum will be 0, unless there is a lower value.
-				suggestedMax: 1  
+				suggestedMin: 0,    // minimum will be 0, unless there is a lower value.
+				suggestedMax: 2  
 			}
         }],
         xAxes: [{ 
@@ -733,8 +734,8 @@ bubble = new Chart(document.getElementById("bubble-chart"), {
             labelString: "Competitivness"
 		  },
 		  ticks: {
-				suggestedMin: -1,    // minimum will be 0, unless there is a lower value.
-				suggestedMax: 1  
+				suggestedMin: 0,    // minimum will be 0, unless there is a lower value.
+				suggestedMax: 2  
 			}
         }]
 	  },
@@ -744,7 +745,7 @@ bubble = new Chart(document.getElementById("bubble-chart"), {
 			type: 'line',
 			mode: 'horizontal',
 			scaleID: 'y-axis-0',
-			value: 0,
+			value: 1,
 			borderColor: 'rgb(0, 0, 0, 0.5)',
 			borderWidth: 1,
 			label: {
@@ -755,7 +756,7 @@ bubble = new Chart(document.getElementById("bubble-chart"), {
 			type: 'line',
 			mode: 'vertical',
 			scaleID: 'x-axis-0',
-			value: 0,
+			value: 1,
 			borderColor: 'rgb(0, 0, 0, 0.5)',
 			borderWidth: 1,
 			label: {
