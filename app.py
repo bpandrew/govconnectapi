@@ -2679,8 +2679,10 @@ def competitor_data_json():
 		#print(df['score'])
 
 		data['competitors'] = []
+		data['bubble_competitors'] = []
 		for index, row in df.iterrows(): 
 			data['competitors'].append({"id": index[0], "agency":None, "display_name":index[1], "rank":row['rank'], "score":round(row['score'], 4), "score_overlap":round(row['score_overlap'], 4)})
+			data['bubble_competitors'].append({"label":[index[1]], "backgroundColor": "rgba(255,221,50,0.2)", "borderColor": "rgba(255,221,50,1)", "data":[{"x": round(row['score'], 4)-1,"y": round(row['score_overlap'], 4)-1,"r": 10}]})
 	else:
 		data['competitors'] = []
 
