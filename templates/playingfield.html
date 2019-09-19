@@ -710,12 +710,12 @@ function updateCompetitors() {
 				result.push(link_str);
 
 				if (item['score_overlap']>1) {
-					result.push("<div class=\'badge badge-danger\'>Leading "+ item['score_overlap'] +"</div>")
+					result.push("<div class=\'badge badge-danger\'>Out Performing ("+ item['score_overlap'] +")</div>")
 				} else {
-					result.push("<div class=\'badge badge-success\'>Lagging "+ item['score_overlap'] +"</div>")
+					result.push("<div class=\'badge badge-success\'>Under Performing ("+ item['score_overlap'] +")</div>")
 				}
 
-				result.push(item['rank'] +" ("+ item['score'] +")");
+				result.push(item['rank']);  // +" ("+ item['score'] +")"
 
 				return result;
 			});
