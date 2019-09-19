@@ -339,6 +339,7 @@ var ydivisionid = 0;
 var ydivisionname = 0;
 
 var supplierSum = 1;
+var overlapSum = 1;
 
 function updateHeatmap(competitor_id, display_name) {
 
@@ -371,8 +372,6 @@ function updateHeatmap(competitor_id, display_name) {
 		$('#loading_icon_heatmap').hide();
 		$('#chartdiv').show();
 
-		
-
 		if (baseline==1){
 			title.text = "{{ data['target_supplier']['display_name']}} Activity";
 			$("#heatMapTitle").text(title.text);
@@ -382,7 +381,10 @@ function updateHeatmap(competitor_id, display_name) {
 		}
 
 		supplierSum = 1
+		overlapSum = 1
 
+		// Get the sum of all of the activity displayed in the heatmap
+		// So we can pass it to the competitor script to re-evaluate each competitor in the current context
 		for (var i = 0; i < data_all.length; i++) {
 			console.log(data_all[i]);
 			if (data_all[i]['playing']==1) {
@@ -390,7 +392,7 @@ function updateHeatmap(competitor_id, display_name) {
 			}
 		}
 
-		console.log(supplierSum);
+		//console.log(supplierSum);
 
 		// Update the table to show/hide relevant competitors for the filters
 		updateCompetitors();
@@ -686,11 +688,11 @@ function updateCompetitors() {
 
 	$('#loading_icon_competitors').show();
 
-	//alert('/competitor_data_json?ylevel='+ylevel+'&xlevel='+xlevel+'&yagencyid='+yagencyid+'&ydivisionid='+ydivisionid+'&segment='+xsegment+'&family='+xfamily+'&class='+xclass +'&supplierSum='+supplierSum);	
+	//alert('/competitor_data_json?ylevel='+ylevel+'&xlevel='+xlevel+'&yagencyid='+yagencyid+'&ydivisionid='+ydivisionid+'&segment='+xsegment+'&family='+xfamily+'&class='+xclass +'&supplierSum='+supplierSum +'&overlapSum='+ overlapSum);	
 
 	$.ajax({
 		type: "GET",
-		url: '/competitor_data_json?ylevel='+ylevel+'&xlevel='+xlevel+'&yagencyid='+yagencyid+'&ydivisionid='+ydivisionid+'&segment='+xsegment+'&family='+xfamily+'&class='+xclass +'&supplierSum='+supplierSum,
+		url: '/competitor_data_json?ylevel='+ylevel+'&xlevel='+xlevel+'&yagencyid='+yagencyid+'&ydivisionid='+ydivisionid+'&segment='+xsegment+'&family='+xfamily+'&class='+xclass +'&supplierSum='+supplierSum +'&overlapSum='+ overlapSum,
 		contentType: "application/json; charset=utf-8",
 		dataType: "json",
 		success: function (response) {
@@ -707,10 +709,10 @@ function updateCompetitors() {
 				link_str = "<a href=\"javascript:;\" onclick=\"updateHeatmap(\'"+ String(item['id']) +"\', \'"+ item['display_name'] +"\');\">"+item['display_name']+"</a>";
 				result.push(link_str);
 
-				if (item['score']>1) {
-					result.push("<div class=\'badge badge-danger\'>Leading</div>")
+				if (item['score_overlap']>1) {
+					result.push("<div class=\'badge badge-danger\'>Leading "+ item['score_overlap'] +"</div>")
 				} else {
-					result.push("<div class=\'badge badge-success\'>Lagging</div>")
+					result.push("<div class=\'badge badge-success\'>Lagging "+ item['score_overlap'] +"</div>")
 				}
 
 				result.push(item['score']);

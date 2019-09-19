@@ -21,7 +21,7 @@ python manage.py db stamp head
 
 
 # Run the database migrations in Heroku via the CLI
-heroku run python manage.py db upgrade --app governmentconnectapi
+heroku run python manage.py db upgrade --app governmentconnect
 
 
 

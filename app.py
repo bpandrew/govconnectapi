@@ -2625,6 +2625,7 @@ def competitor_data_json():
 	xFamily = request.args.get('family')
 	xClass = request.args.get('class')
 
+	# This is the sum of all of the suppliers current activity, in context
 	supplierSum = request.args.get('supplierSum')
 
 	supplier_id = int(session['user_supplier_id'])
@@ -2663,26 +2664,24 @@ def competitor_data_json():
 			df['xClass'] = df['category'].str[:6]
 			df=df[df['xClass']==xClass[:6]]
 
-		# calculate the score here
-		
+		# calculate the score
+		# Generates a contextual score based on the filters applied in the heatmap/playingfield
 		df['score'] = (df['supplier_earnings']/float(supplierSum)) * (df['competitor_earnings']/df['supplier_earnings'])
 		
 		print(df)
-		# get the total for the target_supplier after these filters are in place
+
+
 
 		df = df.groupby(['competitor.id', 'competitor.display_name']).sum()  #, 'segment_unspsc_id', 'family_unspsc_id'
-		
+
+		df['score_overlap'] = (df['competitor_earnings']/df['supplier_earnings'])
+
 		#print(df)
 		#print(df['score'])
 
-		# Recalculate the score for the current agency and category filters
-		# Score / (sum_of_SupplierA_current_filter / supplierA_sum)
-		# The sum for the current filters should be passed from the s_activity script, as heatmapdata['sum']
-		# The supplierA_sum should come from the supplier activity matrix['comp_json']['sum']
-
 		data['competitors'] = []
 		for index, row in df.iterrows(): 
-			data['competitors'].append({"id": index[0], "agency":None, "display_name":index[1], "score":round(row['score'], 3)})
+			data['competitors'].append({"id": index[0], "agency":None, "display_name":index[1], "score":round(row['score'], 4), "score_overlap":round(row['score_overlap'], 4)})
 	else:
 		data['competitors'] = []
 
