@@ -50,7 +50,7 @@
 				</div>
 				<div class="card-body" style="overflow-x: scroll;">	
 					<p>This chart shows the relative positions of the competition.</p>
-					<canvas id="bubble-chart" ></canvas>
+					<canvas id="bubble-chart" class="chartjs-demo" style="display: block; width: 100%; height: 450px;"></canvas>
 				</div>
 			</div>
 		</div>
@@ -408,7 +408,7 @@ function updateHeatmap(competitor_id, display_name) {
 		// Get the sum of all of the activity displayed in the heatmap
 		// So we can pass it to the competitor script to re-evaluate each competitor in the current context
 		for (var i = 0; i < data_all.length; i++) {
-			console.log(data_all[i]);
+			//console.log(data_all[i]);
 			if (data_all[i]['playing']==1) {
 				supplierSum = supplierSum + data_all[i]['original_value'];
 			}
@@ -697,6 +697,18 @@ bubble = new Chart(document.getElementById("bubble-chart"), {
       datasets: []
     },
     options: {
+
+		onClick: function(e) {
+        var element = this.getElementAtEvent(e);
+
+        // Handle the click event for the bubble chart
+        if (element.length > 0) {
+			current_competitor = this.config.data.datasets[element[0]._datasetIndex].id;
+			current_competitor_name = this.config.data.datasets[element[0]._datasetIndex].label
+			updateHeatmap(current_competitor, current_competitor_name, 0);
+        }
+    	},
+
       title: {
         display: true,
         text: 'Contextual Competitor Quad Chart'
@@ -718,14 +730,40 @@ bubble = new Chart(document.getElementById("bubble-chart"), {
         xAxes: [{ 
           scaleLabel: {
             display: true,
-            labelString: "Competition Score"
+            labelString: "Competitivness"
 		  },
 		  ticks: {
 				suggestedMin: -1,    // minimum will be 0, unless there is a lower value.
 				suggestedMax: 1  
 			}
         }]
-      }
+	  },
+	  // Make the x:0 and y:0 lines bolder
+	  annotation: {
+		annotations: [{
+			type: 'line',
+			mode: 'horizontal',
+			scaleID: 'y-axis-0',
+			value: 0,
+			borderColor: 'rgb(0, 0, 0, 0.5)',
+			borderWidth: 1,
+			label: {
+			enabled: false,
+			}
+		},
+		{
+			type: 'line',
+			mode: 'vertical',
+			scaleID: 'x-axis-0',
+			value: 0,
+			borderColor: 'rgb(0, 0, 0, 0.5)',
+			borderWidth: 1,
+			label: {
+			enabled: false,
+			}
+		},
+	]
+	}
     }
 });
 
@@ -762,7 +800,7 @@ function updateCompetitors() {
 				.clear()
 				.draw();
 
-			console.log("Fetching competitor data");
+			//console.log("Fetching competitor data");
 			var jsonObject = response.competitors;
 			//alert(jsonObject);
 			var result = jsonObject.map(function(item){
@@ -788,9 +826,24 @@ function updateCompetitors() {
 			myTable.rows.add(result); // add row to the DataTable instance
 			myTable.draw(); // always redraw after an update
 
-			console.log(response.bubble_competitors);
+			//console.log(response.bubble_competitors);
+
 
 			bubble.data.datasets = response.bubble_competitors;
+
+			console.log(current_competitor);
+			for (var i = 0; i < bubble.data.datasets.length; i++) {
+				console.log(bubble.data.datasets[i]['data'][0]['x']);
+				if (bubble.data.datasets[i]['id']==current_competitor) {
+					bubble.data.datasets[i]['data'][0]['r']=18;
+					bubble.data.datasets[i]['backgroundColor'] = "rgba(0,0,0,0.7)";
+					bubble.data.datasets[i]['borderColor'] = "rgba(0,0,0,1)";
+				} else {
+					bubble.data.datasets[i]['data'][0]['r']=15;
+					bubble.data.datasets[i]['backgroundColor'] = "rgba(109,109,195,0.2)";
+					bubble.data.datasets[i]['borderColor'] = "rgba(109,109,195,1)";
+				}
+			}
 			bubble.update();
 			
 		}
