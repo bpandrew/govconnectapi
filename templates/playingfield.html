@@ -27,7 +27,7 @@
 						<th>Supplier</th>
 						<th>Competitor Score</th>  
 						<th>Head-to-head</th> 
-						<th>Competition Overlap</th>                     
+						<th>Service Category Overlap</th>                     
 					</tr>
 					</thead>
 				</table>
@@ -743,7 +743,7 @@ bubble = new Chart(document.getElementById("bubble-chart"), {
 			//type: 'logarithmic',
           scaleLabel: {
             display: true,
-            labelString: "Competitivness"
+            labelString: "Relative Competitiveness %"
 		  },
 		  ticks: {
 				suggestedMin: 0,    // minimum will be 0, unless there is a lower value.
@@ -768,7 +768,7 @@ bubble = new Chart(document.getElementById("bubble-chart"), {
 			type: 'line',
 			mode: 'vertical',
 			scaleID: 'x-axis-0',
-			value: 1,
+			value: 100,
 			borderColor: 'rgb(0, 0, 0, 0.5)',
 			borderWidth: 1,
 			label: {
