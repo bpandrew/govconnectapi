@@ -25,9 +25,9 @@
 					<tr>
 						<th>Rank</th> 
 						<th>Supplier</th>
+						<th>Competitor Score</th>  
 						<th>Head-to-head</th> 
-						<th>Head-to-head Score</th>
-						<th>Competitor Score</th>                     
+						<th>Competition Overlap</th>                     
 					</tr>
 					</thead>
 				</table>
@@ -732,7 +732,7 @@ bubble = new Chart(document.getElementById("bubble-chart"), {
 		  },
 		  ticks: {
 				suggestedMin: 1,    // minimum will be 0, unless there is a lower value.
-				suggestedMax: 2  
+				//suggestedMax: 2  
 			}
         }],
         xAxes: [{ 
@@ -747,7 +747,7 @@ bubble = new Chart(document.getElementById("bubble-chart"), {
 		  },
 		  ticks: {
 				suggestedMin: 0,    // minimum will be 0, unless there is a lower value.
-				suggestedMax: 1.1  
+				//suggestedMax: 1.1  
 			}
         }]
 	  },
@@ -823,15 +823,17 @@ function updateCompetitors() {
 				link_str = "<a href=\"javascript:;\" onclick=\"updateHeatmap(\'"+ String(item['id']) +"\', \'"+ item['display_name'] +"\');\">"+item['display_name']+"</a>";
 				result.push(link_str);
 
+				result.push(item['score']); 
+
 				if (item['score_overlap']>1) {
 					result.push("<div class=\'badge badge-danger\'>Out Performing</div>")
 				} else {
 					result.push("<div class=\'badge badge-success\'>Under Performing</div>")
 				}
 
-				result.push(item['score_overlap']);
+				//result.push(item['score_overlap']);
 
-				result.push(item['score']); 
+				result.push(item['count']); 
 
 				return result;
 			});
