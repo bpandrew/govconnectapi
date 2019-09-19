@@ -2628,6 +2628,8 @@ def competitor_data_json():
 	# This is the sum of all of the suppliers current activity, in context
 	supplierSum = request.args.get('supplierSum')
 
+	filter_lower = request.args.get('filter')
+
 	supplier_id = int(session['user_supplier_id'])
 	#print(supplier_id)
 
@@ -2678,19 +2680,22 @@ def competitor_data_json():
 		#print(df)
 		#print(df['score'])
 
+		filter_lower = -1
+
 		data['competitors'] = []
 		data['bubble_competitors'] = []
 		for index, row in df.iterrows(): 
-			data['competitors'].append({"id": index[0], "count":row['count'], "agency":None, "display_name":index[1], "rank":row['rank'], "score":round(row['score'], 4), "score_overlap":round(row['score_overlap'], 4)})
-			
-			if row['score_overlap']>1:
-				bg_color = "rgba(211,117,130,0.5)"
-				border_color = "rgba(211,117,130,1)"
-			else:
-				bg_color = "rgba(107,184,13,0.2)" #"rgba(109,109,195,0.2)"
-				border_color = "rgba(107,184,13,1)"
+			if row['score']>float(filter_lower):
+				data['competitors'].append({"id": index[0], "count":row['count'], "agency":None, "display_name":index[1], "rank":row['rank'], "score":round(row['score'], 4), "score_overlap":round(row['score_overlap'], 4)})
+				
+				if row['score_overlap']>1:
+					bg_color = "rgba(211,117,130,0.5)"
+					border_color = "rgba(211,117,130,1)"
+				else:
+					bg_color = "rgba(107,184,13,0.2)" #"rgba(109,109,195,0.2)"
+					border_color = "rgba(107,184,13,1)"
 
-			data['bubble_competitors'].append({"id": index[0], "label":[index[1]], "backgroundColor": bg_color, "borderColor": border_color, "data":[{"x": round(row['score']*100, 4),"y": row['score_overlap'],"r": (row['count']*4)+4 }]})
+				data['bubble_competitors'].append({"id": index[0], "label":[index[1]], "backgroundColor": bg_color, "borderColor": border_color, "data":[{"x": round(row['score']-1, 4),"y": row['score_overlap']-1,"r": (row['count']*4)+4 }]})
 	else:
 		data['competitors'] = []
 

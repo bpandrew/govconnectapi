@@ -731,8 +731,8 @@ bubble = new Chart(document.getElementById("bubble-chart"), {
             labelString: "Head-to-Head Performance"
 		  },
 		  ticks: {
-				suggestedMin: 1,    // minimum will be 0, unless there is a lower value.
-				//suggestedMax: 2  
+				suggestedMin: -0.2,    // minimum will be 0, unless there is a lower value.
+				suggestedMax: 0.2  
 			}
         }],
         xAxes: [{ 
@@ -746,8 +746,8 @@ bubble = new Chart(document.getElementById("bubble-chart"), {
             labelString: "Relative Competitiveness %"
 		  },
 		  ticks: {
-				suggestedMin: 0,    // minimum will be 0, unless there is a lower value.
-				//suggestedMax: 1.1  
+				suggestedMin: -0.2,    // minimum will be 0, unless there is a lower value.
+				suggestedMax: 0.2  
 			}
         }]
 	  },
@@ -757,9 +757,9 @@ bubble = new Chart(document.getElementById("bubble-chart"), {
 			type: 'line',
 			mode: 'horizontal',
 			scaleID: 'y-axis-0',
-			value: 1,
-			borderColor: 'rgb(0, 0, 0, 0.5)',
-			borderWidth: 1,
+			value: 0,
+			borderColor: 'rgb(0, 0, 0, 0.3)',
+			borderWidth: 1.5,
 			label: {
 			enabled: false,
 			}
@@ -768,9 +768,9 @@ bubble = new Chart(document.getElementById("bubble-chart"), {
 			type: 'line',
 			mode: 'vertical',
 			scaleID: 'x-axis-0',
-			value: 100,
-			borderColor: 'rgb(0, 0, 0, 0.5)',
-			borderWidth: 1,
+			value: 0,
+			borderColor: 'rgb(0, 0, 0, 0.3)',
+			borderWidth: 1.5,
 			label: {
 			enabled: false,
 			}
@@ -804,7 +804,7 @@ function updateCompetitors() {
 
 	$.ajax({
 		type: "GET",
-		url: '/competitor_data_json?ylevel='+ylevel+'&xlevel='+xlevel+'&yagencyid='+yagencyid+'&ydivisionid='+ydivisionid+'&segment='+xsegment+'&family='+xfamily+'&class='+xclass +'&supplierSum='+supplierSum +'&overlapSum='+ overlapSum,
+		url: '/competitor_data_json?ylevel='+ylevel+'&xlevel='+xlevel+'&yagencyid='+yagencyid+'&ydivisionid='+ydivisionid+'&segment='+xsegment+'&family='+xfamily+'&class='+xclass +'&supplierSum='+supplierSum +'&overlapSum='+ overlapSum +'&filter=0.05',
 		contentType: "application/json; charset=utf-8",
 		dataType: "json",
 		success: function (response) {
