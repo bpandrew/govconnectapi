@@ -721,7 +721,11 @@ bubble = new Chart(document.getElementById("bubble-chart"), {
          }, 
 	  scales: {
         yAxes: [{ 
-			type: 'logarithmic',
+			gridLines: {
+		display: true ,
+		color: 'rgb(0, 0, 0, 0.07)'
+		},
+			//type: 'logarithmic',
           scaleLabel: {
             display: true,
             labelString: "Head-to-Head Performance"
@@ -732,7 +736,11 @@ bubble = new Chart(document.getElementById("bubble-chart"), {
 			}
         }],
         xAxes: [{ 
-			type: 'logarithmic',
+			gridLines: {
+		display: true ,
+		color: 'rgb(0, 0, 0, 0.07)'
+		},
+			//type: 'logarithmic',
           scaleLabel: {
             display: true,
             labelString: "Competitivness"
