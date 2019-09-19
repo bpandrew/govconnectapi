@@ -530,7 +530,8 @@ def s_competition(target_supplier, competitor_id, fy_filter):
 	except:
 		return str(link)
 
-	# Check if there is an umbrella company for the target supplier. ( so we can ignore the umbrella company as a competitor)
+	# Check if there is an umbrella company for the target supplier.
+	# (so we can ignore the umbrella company as a competitor)
 	query = Supplier.query.filter_by(id=target_supplier).first()
 	data = SupplierSchema().dumps(query).data
 	data = json.loads(data)
@@ -547,11 +548,11 @@ def s_competition(target_supplier, competitor_id, fy_filter):
 			if item in json_a:
 				#print(json_b[item]['sum'])
 				#print(json_a[item]['sum'])
-				score = float(json_b[item]['sum']) / float(json_a[item]['sum'])
-				#print(json_a['sum'])
-				score = (json_b[item]['sum']/json_a['sum']) * score
-				score = round(score, 4)
-				comp_dict = {"score":score, "target_supplier":target_supplier, "competitor_id":competitor_id, "agency_id":json_a[item]['agency'], "division_id":json_a[item]['division'], "branch_id":json_a[item]['branch'], "unspsc":json_a[item]['unspsc']}
+				#score = float(json_b[item]['sum']) / float(json_a[item]['sum'])
+				#score = (json_a[item]['sum']/json_a['sum']) * score
+				#score = round(score, 5)
+				score = 0
+				comp_dict = {"competitor_earnings":json_b[item]['sum'], "supplier_earnings":json_a[item]['sum'],  "score":score, "target_supplier":target_supplier, "competitor_id":competitor_id, "agency_id":json_a[item]['agency'], "division_id":json_a[item]['division'], "branch_id":json_a[item]['branch'], "unspsc":json_a[item]['unspsc']}
 				print("yep")
 				comp_score.append(comp_dict)
 
@@ -572,7 +573,7 @@ def s_competition(target_supplier, competitor_id, fy_filter):
 				# Do not compare a supplier to any of its children
 				if int(competitor_umbrella)!=int(competitor['target_supplier']):					
 					# Add the record to the competitor table
-					query = Competitor(supplier_id=competitor['target_supplier'], competitor_id=competitor['competitor_id'], score=competitor['score'], agency_id=competitor['agency_id'], division_id=competitor['division_id'], branch_id=competitor['branch_id'], category=competitor['unspsc'], created=datetime.now())
+					query = Competitor(competitor_earnings=competitor['competitor_earnings'], supplier_earnings=competitor['supplier_earnings'], supplier_id=competitor['target_supplier'], competitor_id=competitor['competitor_id'], score=competitor['score'], agency_id=competitor['agency_id'], division_id=competitor['division_id'], branch_id=competitor['branch_id'], category=competitor['unspsc'], created=datetime.now())
 					db.session.add(query)
 					db.session.commit()
 		else:
@@ -582,7 +583,7 @@ def s_competition(target_supplier, competitor_id, fy_filter):
 
 	# Loop over all of the competitors for this supplier
 	if loop==1:
-		time.sleep(0.1)
+		time.sleep(0.05)
 		return str(link)
 	else:
 		return jsonify(comp_score)
@@ -2624,6 +2625,8 @@ def competitor_data_json():
 	xFamily = request.args.get('family')
 	xClass = request.args.get('class')
 
+	supplierSum = request.args.get('supplierSum')
+
 	supplier_id = int(session['user_supplier_id'])
 	#print(supplier_id)
 
@@ -2659,6 +2662,13 @@ def competitor_data_json():
 		if xLevel=='commodities':
 			df['xClass'] = df['category'].str[:6]
 			df=df[df['xClass']==xClass[:6]]
+
+		# calculate the score here
+		
+		df['score'] = (df['supplier_earnings']/float(supplierSum)) * (df['competitor_earnings']/df['supplier_earnings'])
+		
+		print(df)
+		# get the total for the target_supplier after these filters are in place
 
 		df = df.groupby(['competitor.id', 'competitor.display_name']).sum()  #, 'segment_unspsc_id', 'family_unspsc_id'
 		

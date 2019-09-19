@@ -197,6 +197,8 @@ class Competitor(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
 	created = db.Column(db.Date())
 	score = db.Column(db.Float)
+	competitor_earnings = db.Column(db.Float)
+	supplier_earnings = db.Column(db.Float)
 	supplier_id = db.Column(db.Integer, db.ForeignKey("supplier.id"), nullable=True)
 	supplier = db.relationship("Supplier", foreign_keys=[supplier_id], backref="target_supplier")
 	competitor_id = db.Column(db.Integer, db.ForeignKey("supplier.id"), nullable=True)

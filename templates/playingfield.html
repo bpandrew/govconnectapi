@@ -338,6 +338,8 @@ var yagencyname = 0;
 var ydivisionid = 0;
 var ydivisionname = 0;
 
+var supplierSum = 1;
+
 function updateHeatmap(competitor_id, display_name) {
 
 	$('#chartdiv').hide();
@@ -369,8 +371,7 @@ function updateHeatmap(competitor_id, display_name) {
 		$('#loading_icon_heatmap').hide();
 		$('#chartdiv').show();
 
-		// Update the table to show/hide relevant competitors for the filters
-		updateCompetitors();
+		
 
 		if (baseline==1){
 			title.text = "{{ data['target_supplier']['display_name']}} Activity";
@@ -379,6 +380,20 @@ function updateHeatmap(competitor_id, display_name) {
 			title.text = "{{ data['target_supplier']['display_name']}} vs "+display_name ;
 			$("#heatMapTitle").text(title.text);
 		}
+
+		supplierSum = 1
+
+		for (var i = 0; i < data_all.length; i++) {
+			console.log(data_all[i]);
+			if (data_all[i]['playing']==1) {
+				supplierSum = supplierSum + data_all[i]['original_value'];
+			}
+		}
+
+		console.log(supplierSum);
+
+		// Update the table to show/hide relevant competitors for the filters
+		updateCompetitors();
 
 		chart.validateData();
 	});
@@ -671,11 +686,11 @@ function updateCompetitors() {
 
 	$('#loading_icon_competitors').show();
 
-	//alert('/competitor_data_json?ylevel='+ylevel+'&xlevel='+xlevel+'&yagencyid='+yagencyid+'&ydivisionid='+ydivisionid+'&segment='+xsegment+'&family='+xfamily+'&class='+xclass);	
+	//alert('/competitor_data_json?ylevel='+ylevel+'&xlevel='+xlevel+'&yagencyid='+yagencyid+'&ydivisionid='+ydivisionid+'&segment='+xsegment+'&family='+xfamily+'&class='+xclass +'&supplierSum='+supplierSum);	
 
 	$.ajax({
 		type: "GET",
-		url: '/competitor_data_json?ylevel='+ylevel+'&xlevel='+xlevel+'&yagencyid='+yagencyid+'&ydivisionid='+ydivisionid+'&segment='+xsegment+'&family='+xfamily+'&class='+xclass,
+		url: '/competitor_data_json?ylevel='+ylevel+'&xlevel='+xlevel+'&yagencyid='+yagencyid+'&ydivisionid='+ydivisionid+'&segment='+xsegment+'&family='+xfamily+'&class='+xclass +'&supplierSum='+supplierSum,
 		contentType: "application/json; charset=utf-8",
 		dataType: "json",
 		success: function (response) {
@@ -712,7 +727,7 @@ function updateCompetitors() {
 
 }
 
-updateCompetitors();
+//updateCompetitors();
 </script>
 
 
