@@ -2667,7 +2667,7 @@ def competitor_data_json():
 		# calculate the score
 		# Generates a contextual score based on the filters applied in the heatmap/playingfield
 		df['score'] = (df['supplier_earnings']/float(supplierSum)) * (df['competitor_earnings']/df['supplier_earnings'])
-		
+		df['count'] = 1
 		df = df.groupby(['competitor.id', 'competitor.display_name']).sum()  #, 'segment_unspsc_id', 'family_unspsc_id'
 
 		df['score_overlap'] = (df['competitor_earnings']/df['supplier_earnings'])
@@ -2681,8 +2681,8 @@ def competitor_data_json():
 		data['competitors'] = []
 		data['bubble_competitors'] = []
 		for index, row in df.iterrows(): 
-			data['competitors'].append({"id": index[0], "agency":None, "display_name":index[1], "rank":row['rank'], "score":round(row['score'], 4), "score_overlap":round(row['score_overlap'], 4)})
-			data['bubble_competitors'].append({"id": index[0], "label":[index[1]], "backgroundColor": "rgba(109,109,195,0.2)", "borderColor": "rgba(109,109,195,1)", "data":[{"x": round(row['score'], 4),"y": round(row['score_overlap'], 4),"r": 10}]})
+			data['competitors'].append({"id": index[0], "count":row['count'], "agency":None, "display_name":index[1], "rank":row['rank'], "score":round(row['score'], 4), "score_overlap":round(row['score_overlap'], 4)})
+			data['bubble_competitors'].append({"id": index[0], "label":[index[1]], "backgroundColor": "rgba(109,109,195,0.2)", "borderColor": "rgba(109,109,195,1)", "data":[{"x": round(row['score'], 4),"r": (row['count']*3)+5,"y": round(row['score_overlap'], 4)}]})
 	else:
 		data['competitors'] = []
 
