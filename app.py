@@ -2682,7 +2682,15 @@ def competitor_data_json():
 		data['bubble_competitors'] = []
 		for index, row in df.iterrows(): 
 			data['competitors'].append({"id": index[0], "count":row['count'], "agency":None, "display_name":index[1], "rank":row['rank'], "score":round(row['score'], 4), "score_overlap":round(row['score_overlap'], 4)})
-			data['bubble_competitors'].append({"id": index[0], "label":[index[1]], "backgroundColor": "rgba(109,109,195,0.2)", "borderColor": "rgba(109,109,195,1)", "data":[{"x": round(row['score'], 4),"r": (row['count']*3)+5,"y": round(row['score_overlap'], 4)}]})
+			
+			if row['score_overlap']>1:
+				bg_color = "rgba(211,117,130,0.5)"
+				border_color = "rgba(211,117,130,1)"
+			else:
+				bg_color = "rgba(107,184,13,0.2)" #"rgba(109,109,195,0.2)"
+				border_color = "rgba(107,184,13,1)"
+
+			data['bubble_competitors'].append({"id": index[0], "label":[index[1]], "backgroundColor": bg_color, "borderColor": border_color, "data":[{"x": round(row['score'], 4),"y": row['count'],"r": 15 }]})
 	else:
 		data['competitors'] = []
 

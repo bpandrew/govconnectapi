@@ -139,6 +139,9 @@
 {% include "footer.html" %}
 
 <script>
+
+
+
 	$(document).ready(function() {
 		updateHeatmap('0', 'Baseline', 1);
 	});
@@ -724,8 +727,8 @@ bubble = new Chart(document.getElementById("bubble-chart"), {
             labelString: "Head-to-Head Performance"
 		  },
 		  ticks: {
-				suggestedMin: 0,    // minimum will be 0, unless there is a lower value.
-				suggestedMax: 1  
+				suggestedMin: 1,    // minimum will be 0, unless there is a lower value.
+				suggestedMax: 2  
 			}
         }],
         xAxes: [{ 
@@ -837,13 +840,9 @@ function updateCompetitors() {
 				console.log(bubble.data.datasets[i]['data'][0]['x']);
 				if (bubble.data.datasets[i]['id']==current_competitor) {
 					//bubble.data.datasets[i]['data'][0]['r']=18;
-					bubble.data.datasets[i]['backgroundColor'] = "rgba(0,0,0,0.7)";
+					bubble.data.datasets[i]['backgroundColor'] = "rgba(0,0,0,0.9)";
 					bubble.data.datasets[i]['borderColor'] = "rgba(0,0,0,1)";
-				} else {
-					//bubble.data.datasets[i]['data'][0]['r']=15;
-					bubble.data.datasets[i]['backgroundColor'] = "rgba(109,109,195,0.2)";
-					bubble.data.datasets[i]['borderColor'] = "rgba(109,109,195,1)";
-				}
+				} 
 			}
 			bubble.update();
 			
