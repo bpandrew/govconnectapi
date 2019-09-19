@@ -24,8 +24,8 @@
 					<thead style="font-size:small">
 					<tr>
 						<th>Supplier</th>
-						<th>Comparative Performance</th> 
-						<th>Score</th>                       
+						<th>Head-to-head</th> 
+						<th>Competitor Rank</th>                       
 					</tr>
 					</thead>
 				</table>
@@ -679,7 +679,7 @@ myTable = $("#ajaxTable").DataTable({
 	"ordering": true,
 	"info": true,
 	"order": [
-		[2, "dec"]
+		[2, "asc"]
 	]
 });
 
@@ -715,7 +715,7 @@ function updateCompetitors() {
 					result.push("<div class=\'badge badge-success\'>Lagging "+ item['score_overlap'] +"</div>")
 				}
 
-				result.push(item['score']);
+				result.push(item['rank'] +" ("+ item['score'] +")");
 
 				return result;
 			});
