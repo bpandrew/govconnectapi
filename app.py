@@ -2690,7 +2690,7 @@ def competitor_data_json():
 				bg_color = "rgba(107,184,13,0.2)" #"rgba(109,109,195,0.2)"
 				border_color = "rgba(107,184,13,1)"
 
-			data['bubble_competitors'].append({"id": index[0], "label":[index[1]], "backgroundColor": bg_color, "borderColor": border_color, "data":[{"x": round(row['score'], 4),"y": row['count'],"r": 15 }]})
+			data['bubble_competitors'].append({"id": index[0], "label":[index[1]], "backgroundColor": bg_color, "borderColor": border_color, "data":[{"x": round(row['score'], 4),"y": row['score_overlap'],"r": (row['count']*3)+5 }]})
 	else:
 		data['competitors'] = []
 
