@@ -711,7 +711,15 @@ bubble = new Chart(document.getElementById("bubble-chart"), {
       datasets: []
     },
     options: {
-
+		tooltips: {
+        callbacks: {
+				label: function(tooltipItem, data) {
+					//console.log(tooltipItem);
+					//console.log(data.datasets[tooltipItem.datasetIndex].label);
+					return data.datasets[tooltipItem.datasetIndex].label;
+				}
+			}
+		},
 		plugins: {
 			zoom: {
 				pan: {
