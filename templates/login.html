@@ -2,22 +2,23 @@
 
 <!-- [ content ] Start -->
 <div class="authentication-wrapper authentication-1 px-4">
-    <div class="authentication-inner py-5">
+    <div class="authentication-inner py-5"  >
 
         <!-- [ Logo ] Start -->
         <div class="d-flex justify-content-center align-items-center">
-            <div class="ui-w-120">
-                <div class="w-120 position-relative">
+            <div style="width: 500px">
+                <div class="d-flex justify-content-center align-items-center" style="width: 120px">
                     <img src="{{ url_for('static',filename='img/logo-dark.png') }}" alt="Brand Logo" class="img-fluid">
-                </div>
-            </div>
-        </div>
+				</div>
+
+
+
         <!-- [ Logo ] End -->
 
         <!-- [ Form ] Start -->
 
         <!-- [ Form ] Start -->
-
+			
         <form action="" method="post" novalidate class="my-5" id="form1">
             {{ form.hidden_tag() }} {% if data.error!=None %}
             <span class="error_text">Incorrect login details</span> {% endif %}

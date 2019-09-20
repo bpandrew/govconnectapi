@@ -701,6 +701,24 @@ bubble = new Chart(document.getElementById("bubble-chart"), {
     },
     options: {
 
+		plugins: {
+			zoom: {
+				pan: {
+					enabled: true,
+					mode: 'x',
+					onPan: function () { console.log('I was panned!!!'); }
+				},
+				zoom: {
+					enabled: true,
+					mode: 'x',
+					onZoom: function () { console.log('I was zoomed!!!'); }
+				}
+			}
+		},
+		
+        responsive: true,
+
+
 		onClick: function(e) {
         var element = this.getElementAtEvent(e);
 
