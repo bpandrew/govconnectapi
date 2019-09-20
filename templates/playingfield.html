@@ -13,8 +13,8 @@
 
 
 	<div class="card mb-4">
-		<div class="card-header with-elements pb-0">
-			<h6 class="card-header-title mb-0">Competing Suppliers</h6> 
+		<div class="card-header with-elements pb-10">
+			<h5 class="card-header-title mb-0">Competing Suppliers</h5> 
 		</div>
 		<div class="card-body">
 			
@@ -42,15 +42,15 @@
 	<div class="row">
 		<div class="col-xl-12">
 			<div class="card mb-4">
-				<div class="card-header with-elements pb-0">
-					<h4><div id="" class="card-header-title mb-0">Competitor Quad Chart</div></h4>
-					<div class="card-header-elements ml-auto">
-
-					</div>
+				<div class="card-header with-elements pb-10">
+					<h5 class="m-0 mr-2">Contextual Competitor Quad Chart </h5>
+					<div class="card-header-elements ml-md-auto">
+							<a href="javascript:;" onclick="toggle_labels();"><button type="button" class="btn btn-xs btn-outline-primary">Toggle Labels</button></a>
+						</div>
 				</div>
 				<div class="card-body" style="overflow-x: scroll;">	
 					<p>This chart shows the relative positions of the competition.</p>
-					<canvas id="bubble-chart" class="chartjs-demo" style="display: block; width: 100%; height: 450px;"></canvas>
+					<canvas id="bubble-chart" class="chartjs-demo" style="display: block; width: 100%; height: 500px;"></canvas>
 				</div>
 			</div>
 		</div>
@@ -60,13 +60,13 @@
 	<div class="row">
 		<div class="col-xl-12">
 			<div class="card mb-4">
-				<div class="card-header with-elements pb-0">
-					<h4><div id="heatMapTitle" class="card-header-title mb-0">Baseline Activity</div></h4>
+				<div class="card-header with-elements pb-10">
+						<h5 id="heatMapTitle" class="m-0 mr-2">Contextual Competitor Quad Chart </h5>
+
 					<div class="card-header-elements ml-auto">
 						<label class="text m-0">
 								<div class="btn-group btn-group-toggle" data-toggle="buttons" id="filter_radio">
 									<label class="btn btn-primary waves-effect active">
-											
 										<input type="radio" name="btn-radio" checked="" value="all"> All
 									</label>
 									<label class="btn btn-success waves-effect">
@@ -692,7 +692,18 @@ function bcx_family(){
 	updateHeatmap(current_competitor, current_competitor_name, 0);	
 }
 
+var showLabels = false;
 
+function toggle_labels() {
+
+	if (showLabels==false){
+		showLabels=true;
+	} else {
+		showLabels=false;
+	}
+
+	bubble.update();
+};
 
 bubble = new Chart(document.getElementById("bubble-chart"), {
     type: 'bubble',
@@ -713,12 +724,38 @@ bubble = new Chart(document.getElementById("bubble-chart"), {
 					mode: 'xy',
 					onZoom: function () { console.log('I was zoomed!!!'); }
 				}
+			},
+			datalabels: {
+				color: 'black',
+				anchor: function(context) {
+					var value = context.dataset.data[context.dataIndex];
+					return value.x < 50 ? 'end' : 'center';
+				},
+				align: function(context) {
+					var value = context.dataset.data[context.dataIndex];
+					return value.x < 50 ? 'end' : 'center';
+				},
+				color: function(context) {
+					var value = context.dataset.data[context.dataIndex];
+					return value.x < 50 ? context.dataset.backgroundColor : 'white';
+				},
+				font: {
+					weight: 'bold',
+					
+				},
+				formatter: function(value) {
+					//console.log(value);
+					if (showLabels==true){
+						return value.label;
+					} else {
+						return null;
+					}
+				},
+				offset: 2,
+				padding: 0
 			}
 		},
-		
         responsive: true,
-
-
 		onClick: function(e) {
         var element = this.getElementAtEvent(e);
 
@@ -822,7 +859,7 @@ function updateCompetitors() {
 
 	$.ajax({
 		type: "GET",
-		url: '/competitor_data_json?ylevel='+ylevel+'&xlevel='+xlevel+'&yagencyid='+yagencyid+'&ydivisionid='+ydivisionid+'&segment='+xsegment+'&family='+xfamily+'&class='+xclass +'&supplierSum='+supplierSum +'&overlapSum='+ overlapSum +'&filter=0.05',
+		url: '/competitor_data_json?ylevel='+ylevel+'&xlevel='+xlevel+'&yagencyid='+yagencyid+'&ydivisionid='+ydivisionid+'&segment='+xsegment+'&family='+xfamily+'&class='+xclass +'&supplierSum='+supplierSum +'&overlapSum='+ overlapSum +'&filter=0.0',
 		contentType: "application/json; charset=utf-8",
 		dataType: "json",
 		success: function (response) {
@@ -860,7 +897,6 @@ function updateCompetitors() {
 			myTable.draw(); // always redraw after an update
 
 			//console.log(response.bubble_competitors);
-
 
 			bubble.data.datasets = response.bubble_competitors;
 

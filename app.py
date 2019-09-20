@@ -2689,13 +2689,13 @@ def competitor_data_json():
 				data['competitors'].append({"id": index[0], "count":row['count'], "agency":None, "display_name":index[1], "rank":row['rank'], "score":round(row['score'], 4), "score_overlap":round(row['score_overlap'], 4)})
 				
 				if row['score_overlap']>1:
-					bg_color = "rgba(211,117,130,0.5)"
+					bg_color = "rgba(211,117,130,0.6)"
 					border_color = "rgba(211,117,130,1)"
 				else:
-					bg_color = "rgba(107,184,13,0.2)" #"rgba(109,109,195,0.2)"
+					bg_color = "rgba(107,184,13,0.6)" #"rgba(109,109,195,0.2)"
 					border_color = "rgba(107,184,13,1)"
 
-				data['bubble_competitors'].append({"id": index[0], "label":[index[1]], "backgroundColor": bg_color, "borderColor": border_color, "data":[{"x": round(row['score']-1, 4),"y": row['score_overlap']-1,"r": (row['count']*4)+4 }]})
+				data['bubble_competitors'].append({"id": index[0], "label":index[1], "backgroundColor": bg_color, "borderColor": border_color, "data":[{"x": round(row['score']-1, 4),"y": row['score_overlap']-1,"r": (row['count']*4)+4, "label":index[1] }]})
 	else:
 		data['competitors'] = []
 
