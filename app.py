@@ -628,8 +628,12 @@ def supplier_activity_json(target_supplier, fy_filter, yLevel, xLevel, yAgencyId
 			return heatMapData
 			if yDivisionId not in json_['agencies'][yAgencyId]['divisions']:
 				return heatMapData
-		y_base = json_['agencies'][yAgencyId]['divisions'][yDivisionId]['branches']
-		y_child = 0
+		try:
+			y_base = json_['agencies'][yAgencyId]['divisions'][yDivisionId]['branches']
+			y_child = 0
+		except:
+			return heatMapData
+
 
 
 	i=0
