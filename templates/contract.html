@@ -55,7 +55,7 @@
                         %}, {{data.branch['title']}} {% endif%}</b> for '{{ data.description }}'. </p>
                     <p>This contract {{ data.contract_closing }}.</p>
                     <p>
-                        <h5>Earnings</h5>{{ data.supplier.display_name }} earned {{data.insights['sum_contracts_prev_fy']}} from the {{ data.agency.title }} last financial year. {{data.insights['sum_contracts_current_fy']}} has been earned to date this financial
+                        <h5>Earnings</h5>{{ data.supplier.display_name }} earned {{data.insights['sum_contracts_in_agency_prev_fy']}} from the {{ data.agency.title }} last financial year. {{data.insights['sum_contracts_in_agency_current_fy']}} has been earned to date this financial
                         year.
                     </p>
                 </div>
@@ -148,7 +148,7 @@
         </div>
     </div>
 
-	{{ data }}
+	
 
 </div>
 

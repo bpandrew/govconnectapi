@@ -1558,8 +1558,10 @@ def contract_detail(contract_id):
 	data['contract_value'] = functions.format_currency(data['contract_value'])
 	
 	# Sum the total earned in the Contracted Agency
-	insights['sum_contracts_in_agency_prev_fy'] = humanize.apnumber(lfy['contract_value'][lfy['agency.id'] == data['agency']['id']].sum())
-	insights['sum_contracts_in_agency_current_fy'] = humanize.apnumber(cfy['contract_value'][cfy['agency.id'] == data['agency']['id']].sum())
+	lfy['contract_value'] = lfy['contract_value'].astype(float)
+	cfy['contract_value'] = cfy['contract_value'].astype(float)
+	insights['sum_contracts_in_agency_prev_fy'] = functions.format_currency(lfy['contract_value'][lfy['agency.id'] == data['agency']['id']].sum())
+	insights['sum_contracts_in_agency_current_fy'] = functions.format_currency(cfy['contract_value'][cfy['agency.id'] == data['agency']['id']].sum())
 	
 	# Find the highest revenue agencies for this and last year
 	df_temp = cfy.groupby(['agency.title']).sum().reset_index()
