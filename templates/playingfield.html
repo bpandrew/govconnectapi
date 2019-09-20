@@ -717,12 +717,28 @@ bubble = new Chart(document.getElementById("bubble-chart"), {
 				pan: {
 					enabled: true,
 					mode: 'xy',
-					onPan: function () { console.log('I was panned!!!'); }
+					onPan: function () { console.log('I was panned!!!'); },
+					rangeMin: {
+                      			x: -1,
+                      			y: -1
+                       },
+					   rangeMax: {
+                      			x: 15,
+                      			y: 100
+                       }
 				},
 				zoom: {
 					enabled: true,
 					mode: 'xy',
-					onZoom: function () { console.log('I was zoomed!!!'); }
+					onZoom: function () { console.log('I was zoomed!!!'); },
+					rangeMin: {
+                      			x: -1,
+                      			y: -1
+					   },
+					   rangeMax: {
+                      			x: 15,
+                      			y: 100
+                       }
 				}
 			},
 			datalabels: {
