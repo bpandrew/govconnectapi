@@ -1217,28 +1217,26 @@ def stripe_checkout_completed():
 	webhook_secret = "whsec_23aeH60Crd4Kbf1JnC95RyeMJBhq2HyN"
 
 	payload = request.data.decode("utf-8")
-    received_sig = request.headers.get("Stripe-Signature", None)
+	received_sig = request.headers.get("Stripe-Signature", None)
 
-    try:
-        event = stripe.Webhook.construct_event(
-            payload, received_sig, webhook_secret
-        )
-    except ValueError:
-        print("Error while decoding event!")
-        return "Bad payload", 400
-    except stripe.error.SignatureVerificationError:
-        print("Invalid signature!")
-        return "Bad signature", 400
+	try:
+		event = stripe.Webhook.construct_event(payload, received_sig, webhook_secret)
+	except ValueError:
+		print("Error while decoding event!")
+		return "Bad payload", 400
+	except stripe.error.SignatureVerificationError:
+		print("Invalid signature!")
+		return "Bad signature", 400
 
-    print(
-        "Received event: id={id}, type={type}".format(
-            id=event.id, type=event.type
-        )
-    )
+	print(
+		"Received event: id={id}, type={type}".format(
+			id=event.id, type=event.type
+		)
+	)
 
 	print(event)
 
-    return "", 200
+	return "", 200
 	
 
 
