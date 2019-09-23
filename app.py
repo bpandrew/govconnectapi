@@ -1212,7 +1212,7 @@ def stripe_payment():
 
 
 @app.route('/stripe/checkout_completed', methods=['POST'])
-def stripe/checkout_completed():
+def stripe_checkout_completed():
 
 	webhook_secret = "whsec_23aeH60Crd4Kbf1JnC95RyeMJBhq2HyN"
 
