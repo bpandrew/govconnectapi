@@ -1236,7 +1236,8 @@ def stripe_checkout_completed():
 
 	print(event)
 
-	return "", 200
+	#return "", 200
+	return Response("{'a':'b'}", status=200, mimetype='application/json')
 	
 
 
