@@ -17,6 +17,8 @@ import functions, insight_functions # import all of the custom written functions
 import charts
 from werkzeug.utils import secure_filename
 
+import stripe
+
 
 app = Flask(__name__)
 cors = CORS(app)
@@ -26,6 +28,12 @@ app.config.from_object(os.environ['APP_SETTINGS'])
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+
+stripe_keys = {
+  'secret_key': os.environ['STRIPE_SECRET_KEY'],
+  'publishable_key': os.environ['STRIPE_PUBLISHABLE_KEY']
+}
+stripe.api_key = stripe_keys['secret_key']
 
 
 db = SQLAlchemy(app)
@@ -1186,11 +1194,52 @@ def user_add():
             session['first_name'] = result['first_name']
             session['user_id'] = result['id']
             session['user_token'] = result['token']
-            return redirect(url_for('op'))
+            return redirect(url_for('stripe_payment'))
 
     return render_template('register.html', form=form, data=data)
 
 
+@app.route('/stripe/payment', methods=['GET', 'POST'])
+def stripe_payment():
+
+	product = {
+		"id":1,
+		"description": "monthly subscription",
+		"amount": 220
+	}
+
+	return render_template('stripe_payment.html', key=stripe_keys['publishable_key'], product=product)
+
+
+@app.route('/stripe/checkout_completed', methods=['POST'])
+def stripe/checkout_completed():
+
+	webhook_secret = "whsec_23aeH60Crd4Kbf1JnC95RyeMJBhq2HyN"
+
+	payload = request.data.decode("utf-8")
+    received_sig = request.headers.get("Stripe-Signature", None)
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, received_sig, webhook_secret
+        )
+    except ValueError:
+        print("Error while decoding event!")
+        return "Bad payload", 400
+    except stripe.error.SignatureVerificationError:
+        print("Invalid signature!")
+        return "Bad signature", 400
+
+    print(
+        "Received event: id={id}, type={type}".format(
+            id=event.id, type=event.type
+        )
+    )
+
+	print(event)
+
+    return "", 200
+	
 
 
 # ------------------------------------- OPPORTUNITIES ------------------------------------
@@ -1213,7 +1262,7 @@ def op():
 	unspsc_filters_result = json.loads(unspsc_filters_result)
 	for item in unspsc_filters_result:
 		unspsc_filters.append( item['unspsc']['id'] ) 
-	print(unspsc_filters)
+	#print(unspsc_filters)
 
 	opportunities = Op.query
 	opportunities = opportunities.filter( getattr(Op,'close_date')>=datetime.now()-timedelta(days=1) ) # Only show the open opportunities
@@ -1233,9 +1282,12 @@ def op():
 		op['title'] = op['title'].capitalize()
 		op['category_display'] = max(op['categories'], key=lambda x:x['level_int']) # Get the highest (most specific) category provided for the ATM
 		
-		#for category in op['categories']:
-		#	if category['id'] in unspsc_filters:
-		#		hide_op = True
+		if filter_results==1:
+			for category in op['categories']:
+				if category['id'] in unspsc_filters:
+					hide_op = True
+
+		output['filter_results'] = filter_results
 
 		if hide_op==False:
 			output['results'].append(op)

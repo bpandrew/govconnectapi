@@ -18,13 +18,13 @@
 			<div class="card-header-elements ml-auto p-0">
 				<ul class="nav nav-tabs">
 					<li class="nav-item">
-						<a class="nav-link show active" data-toggle="tab" href="#inc-cr">Filtered</a>
+						<a class="nav-link show {% if data['filter_results']==1 %}active{% endif %}" href="/op?filter=1">Filtered</a>
 					</li>
 					<li class="nav-item">
-						<a class="nav-link show" data-toggle="tab" href="#inc-pr1">All</a>
+						<a class="nav-link show {% if data['filter_results']==0 %}active{% endif %}" href="/op?filter=0">All</a>
 					</li>
 					<li class="nav-item">
-						<a class="nav-link show" data-toggle="tab" href="#inc-pr2">Archive</a>
+						<a class="nav-link show" href="#inc-pr2">Archive</a>
 					</li>
 				</ul>
 			</div>
@@ -71,13 +71,12 @@
 						<h5 class="modal-title">Filter
 							<span class="font-weight-light">Creation</span>
 							<br>
-							<small class="text-muted">Create a personal filter for which Opportunities are dispalyed by default.</small>
+							<small class="text-muted">Create a personal filter for which Opportunities are shown by default. <br> These filters can be changed later via the 'My Profile' link.</small>
 						</h5>
 						<button type="button" class="close" data-dismiss="modal" aria-label="Close">×</button>
 					</div>
 					<div class="modal-body">
-						<p><a href="" id="modal_category_link">Don't show me opportunities in the <b><span id="modal_category">Something</span></b> category anymore.</a></p>
-						<p><a href="">Don't show me opportunities from the <span id="modal_agency">Agency</span> anymore.</a></p>
+						<p><a href="" id="modal_category_link">Don't show me opportunities in the <b><span id="modal_category">...</span></b> category anymore.</a></p>
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>

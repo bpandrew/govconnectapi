@@ -1,0 +1,73 @@
+{% include "header_simple.html" %}
+
+
+<!-- Load Stripe.js on your website. -->
+<script src="https://js.stripe.com/v3"></script>
+
+<!-- [ content ] Start -->
+<div class="authentication-wrapper authentication-1 px-4">
+    <div class="authentication-inner py-5">
+
+        <!-- [ Logo ] Start -->
+        <div class="d-flex justify-content-center align-items-center">
+            
+			<div style="width: 500px">
+				<div class="d-flex justify-content-center align-items-center" style="width: 120px; margin-bottom: 30px;">
+				<img src="{{ url_for('static',filename='img/logo-dark.png') }}" alt="Brand Logo" class="img-fluid">
+			</div>
+
+			<p>Gain access for $AUD $220+ per month.</p>
+			<!-- Create a button that your customers click to complete their purchase. Customize the styling to suit your branding. -->
+			<button class="btn btn-primary"
+			
+			id="checkout-button-plan_FrSNmhbgeV6EKA"
+			role="link"
+			>
+			Checkout
+			</button>
+
+			<div id="error-message"></div>
+        
+        </div>
+
+    </div>
+</div>
+<!-- [ content ] End -->
+
+{% include "footer_simple.html" %}
+
+
+<script>
+(function() {
+  var stripe = Stripe('pk_test_6j727GELgjqUawmvop4k9o3W00qh8lCu4U');
+
+  var checkoutButton = document.getElementById('checkout-button-plan_FrSNmhbgeV6EKA');
+  checkoutButton.addEventListener('click', function () {
+    // When the customer clicks on the button, redirect
+    // them to Checkout.
+    stripe.redirectToCheckout({
+      items: [{plan: 'plan_FrSNmhbgeV6EKA', quantity: 1}],
+
+      // Do not rely on the redirect to the successUrl for fulfilling
+      // purchases, customers may not always reach the success_url after
+      // a successful payment.
+      // Instead use one of the strategies described in
+      // https://stripe.com/docs/payments/checkout/fulfillment
+      successUrl: window.location.protocol + '//govcon.com.au/stripe/success',
+	  cancelUrl: window.location.protocol + '//govcon.com.au/stripe/canceled',
+	  customerEmail: 'some@something.com',
+	  client_reference_id: 12,
+
+
+    })
+    .then(function (result) {
+      if (result.error) {
+        // If `redirectToCheckout` fails due to a browser or network
+        // error, display the localized error message to your customer.
+        var displayError = document.getElementById('error-message');
+        displayError.textContent = result.error.message;
+      }
+    });
+  });
+})();
+</script>
