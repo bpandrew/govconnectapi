@@ -1222,19 +1222,25 @@ def stripe_checkout_completed():
 	try:
 		event = stripe.Webhook.construct_event(payload, received_sig, webhook_secret)
 	except ValueError:
-		print("Error while decoding event!")
+		#print("Error while decoding event!")
 		return "Bad payload", 400
 	except stripe.error.SignatureVerificationError:
-		print("Invalid signature!")
+		#print("Invalid signature!")
 		return "Bad signature", 400
 
-	print(
-		"Received event: id={id}, type={type}".format(
-			id=event.id, type=event.type
-		)
-	)
+	#print(
+	#	"Received event: id={id}, type={type}".format(
+	#		id=event.id, type=event.type
+	#	)
+	#)
 
-	print(event)
+	#print(event)
+
+	print("PAYMEWNT SUCCESSFULL")
+	print(event.client_reference_id)
+	print("****")
+
+	# Update the user id here..  event.client_reference_id
 
 	#return "", 200
 	return Response("{'a':'b'}", status=200, mimetype='application/json')
