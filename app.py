@@ -2723,6 +2723,8 @@ def contracts_filtered():
 	lfy = contracts[contracts['contract_start']>=lfy_start]
 	lfy = lfy[lfy['contract_start']<=lfy_end]
 
+	contracts = lfy
+
 	# filter for the agency here
 	if ylevel=='all':
 		contracts = contracts[contracts['agency.id']==int(agency_id)]
@@ -2749,10 +2751,8 @@ def contracts_filtered():
 			contracts.at[index,'commodity_id'] = 0
 
 		
-
-
-	for col in contracts.columns: 
-		print(col)
+	#for col in contracts.columns: 
+	#	print(col)
 
 	if xlevel=='segments':
 		contracts = contracts[contracts['segment_id']==int(unspsc[:2])]
@@ -2761,7 +2761,7 @@ def contracts_filtered():
 	if xlevel=='classes':
 		contracts = contracts[contracts['class_id']==int(unspsc[:6])]
 	if xlevel=='commodities':
-		contracts = contracts[contracts['clacommodity_idss_id']==int(unspsc[:8])]
+		contracts = contracts[contracts['commodity_id']==int(unspsc[:8])]
 
 
 	for index, row in contracts.iterrows(): 
@@ -2776,7 +2776,7 @@ def contracts_filtered():
 		elif y>datetime.now():
 			status_ = "ongoing"
 
-		temp_dict = {"contract_end": y, "agency_id": row['agency.id'], "title": row['title'], "supplier": row['supplier.display_name'], "value": row['contract_value'], "status":status_}
+		temp_dict = {"contract_end": y, "agency_id": row['agency.id'], "title": row['title'], "supplier": row['supplier.display_name'], "value": functions.format_currency(row['contract_value']), "status":status_}
 
 		output_data['contracts'].append(temp_dict)
 
