@@ -2731,6 +2731,8 @@ def contracts_filtered():
 	if ylevel=='division':
 		contracts = contracts[contracts['branch.id']==int(agency_id)]
 
+	contracts['unspsc.unspsc'] = contracts['unspsc.unspsc'].astype(str)
+
 
 	for index, row in contracts.iterrows(): 
 		print(row['unspsc.unspsc'])

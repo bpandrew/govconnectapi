@@ -974,6 +974,8 @@ tableContracts = $("#ajaxTableContracts").DataTable({
 function updateTableContracts(unspsc, agency_id, supplier_id, current_competitor, xlevel, ylevel) {
 
 	$('#loading_icon_contracts').show();
+	tableContracts.clear();
+	tableContracts.draw();
 
 	$.ajax({
 		type: "GET",
@@ -982,9 +984,7 @@ function updateTableContracts(unspsc, agency_id, supplier_id, current_competitor
 		dataType: "json",
 		success: function (response) {
 
-			tableContracts
-				.clear()
-				.draw();
+			
 
 
 			//console.log("Fetching competitor data");
