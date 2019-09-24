@@ -2733,11 +2733,20 @@ def contracts_filtered():
 
 
 	for index, row in contracts.iterrows(): 
+		print(row['unspsc.unspsc'])
 		# ADD IN THE CATEGORY FILTER HERE!!!!! *********************
-		contracts.at[index,'segment_id'] = int(str(row['unspsc.unspsc'][:2]))
-		contracts.at[index,'family_id'] = int(str(row['unspsc.unspsc'][:4]))
-		contracts.at[index,'class_id'] = int(str(row['unspsc.unspsc'][:6]))
-		contracts.at[index,'commodity_id'] = int(str(row['unspsc.unspsc'][:8]))
+		try:
+			contracts.at[index,'segment_id'] = int(row['unspsc.unspsc'][:2])
+			contracts.at[index,'family_id'] = int(row['unspsc.unspsc'][:4])
+			contracts.at[index,'class_id'] = int(row['unspsc.unspsc'][:6])
+			contracts.at[index,'commodity_id'] = int(row['unspsc.unspsc'][:8])
+		except:
+			contracts.at[index,'segment_id'] = 0
+			contracts.at[index,'family_id'] = 0
+			contracts.at[index,'class_id'] = 0
+			contracts.at[index,'commodity_id'] = 0
+
+		
 
 
 	for col in contracts.columns: 
