@@ -51,6 +51,9 @@
 				<div class="card-body" style="overflow-x: scroll;">	
 					<p><small>Y Axis: Relative performance of suppliers when compared head-to-head<br>X Axis: Aggregated competetive 'threat' from a supplier.<br>Bubble Diameter: Relative size of competetive overlap.</small></p>
 					<canvas id="bubble-chart" class="chartjs-demo" style="display: block; width: 100%; height: 500px;"></canvas>
+					<p>
+						<div id="average" class="small"></div>
+					</p>
 				</div>
 			</div>
 		</div>
@@ -901,6 +904,8 @@ function updateCompetitors() {
 		dataType: "json",
 		success: function (response) {
 
+			$('#average').text(response.market_position.txt_);
+
 			myTable
 				.clear()
 				.draw();
@@ -985,8 +990,6 @@ function updateTableContracts(unspsc, agency_id, supplier_id, current_competitor
 		success: function (response) {
 
 			
-
-
 			//console.log("Fetching competitor data");
 			var jsonObject = response.contracts;
 			//alert(jsonObject);

@@ -2821,7 +2821,7 @@ def competitor_data_json():
 		data['competitors'] = result
 		
 		df = json_normalize(data['competitors'])
-# *** filter by agency/division/branch here
+		# *** filter by agency/division/branch here
 
 		if yLevel=='agency':
 			df=df[df['agency.id']==int(yAgencyId)]
@@ -2829,7 +2829,7 @@ def competitor_data_json():
 		if yLevel=='division':
 			df=df[df['division.id']==int(yDivisionId)]
 
-# *** filter by segment/family/class/commodity here
+		# *** filter by segment/family/class/commodity here
 		if xLevel=='families':
 			df['xSegment'] = df['category'].str[:2]
 			df=df[df['xSegment']==xSegment[:2]]
@@ -2853,6 +2853,8 @@ def competitor_data_json():
 		df["rank"] = df["score"].rank(ascending=False).astype(int)
 		print(df)
 
+
+
 		#print(df)
 		#print(df['score'])
 
@@ -2860,6 +2862,7 @@ def competitor_data_json():
 
 		data['competitors'] = []
 		data['bubble_competitors'] = []
+		market_posn_array = []
 		for index, row in df.iterrows(): 
 			if row['score']>float(filter_lower):
 				data['competitors'].append({"id": index[0], "count":row['count'], "agency":None, "display_name":index[1], "rank":row['rank'], "score":round(row['score'], 4), "score_overlap":round(row['score_overlap'], 4)})
@@ -2872,6 +2875,27 @@ def competitor_data_json():
 					border_color = "rgba(107,184,13,1)"
 
 				data['bubble_competitors'].append({"id": index[0], "label":index[1], "backgroundColor": bg_color, "borderColor": border_color, "data":[{"x": round(row['score']-1, 4),"y": row['score_overlap']-1,"r": (row['count']*4)+4, "label":index[1] }]})
+				market_posn_array.append(round(row['score']-1, 4))
+
+		try:
+			market_posn_array.append(0)
+			min_ = min(market_posn_array)
+			max_ = max(market_posn_array)
+			normalised_list = []
+			for item in market_posn_array:
+				normalised_list.append((item-min_)/(max_-min_))
+			mean_ = sum(normalised_list) / len(normalised_list)
+			position_ = (0-min_)/(max_-min_)
+			if mean_>position_:
+				txt_ = "Aggregated performance in this category is below average. ("+ str(round(position_, 2)) +" vs "+ str(round(mean_, 2)) +")"
+			else:
+				txt_ = "Aggregated performance in this category is above average. ("+ str(round(position_, 2)) +" vs "+ str(round(mean_, 2)) +")"
+
+		except:
+			txt_ = ""
+
+		data['market_position'] = {"txt_":txt_ }
+		print(data['market_position'])
 	else:
 		data['competitors'] = []
 
