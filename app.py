@@ -2682,6 +2682,8 @@ def contracts_filtered():
 	agency_id = request.args.get('agency_id')
 	supplier_id = request.args.get('supplier_id')
 	current_competitor = request.args.get('current_competitor')
+	xlevel = request.args.get('xlevel')
+	ylevel = request.args.get('ylevel')
 
 
 	search_suppliers = [int(supplier_id), int(current_competitor)]
@@ -2713,6 +2715,7 @@ def contracts_filtered():
 	contracts = json_normalize(data)
 	
 	#print(contracts)
+	
 
 	cfy_start, cfy_end, lfy_start, lfy_end, now_string = functions.financial_years()
 	cfy = contracts[contracts['contract_start']>=cfy_start]
@@ -2721,7 +2724,34 @@ def contracts_filtered():
 	lfy = lfy[lfy['contract_start']<=lfy_end]
 
 	# filter for the agency here
-	contracts = contracts[contracts['agency.id']==int(agency_id)]
+	if ylevel=='all':
+		contracts = contracts[contracts['agency.id']==int(agency_id)]
+	if ylevel=='agency':
+		contracts = contracts[contracts['division.id']==int(agency_id)]
+	if ylevel=='division':
+		contracts = contracts[contracts['branch.id']==int(agency_id)]
+
+
+	for index, row in contracts.iterrows(): 
+		# ADD IN THE CATEGORY FILTER HERE!!!!! *********************
+		contracts.at[index,'segment_id'] = int(row['unspsc.unspsc'][:2])
+		contracts.at[index,'family_id'] = int(row['unspsc.unspsc'][:4])
+		contracts.at[index,'class_id'] = int(row['unspsc.unspsc'][:6])
+		contracts.at[index,'commodity_id'] = int(row['unspsc.unspsc'][:8])
+
+
+	for col in contracts.columns: 
+		print(col)
+
+	if xlevel=='segments':
+		contracts = contracts[contracts['segment_id']==int(unspsc[:2])]
+	if xlevel=='families':
+		contracts = contracts[contracts['family_id']==int(unspsc[:4])]
+	if xlevel=='classes':
+		contracts = contracts[contracts['class_id']==int(unspsc[:6])]
+	if xlevel=='commodities':
+		contracts = contracts[contracts['clacommodity_idss_id']==int(unspsc[:8])]
+
 
 	for index, row in contracts.iterrows(): 
 		#print(item['contract_start'])
@@ -2734,11 +2764,6 @@ def contracts_filtered():
 			status_ = "ending soon"
 		elif y>datetime.now():
 			status_ = "ongoing"
-
-		#if row['contract_end']>datetime.now():
-		#	status_ = "ongoing"
-		#else:
-		#	status_ = "complete"
 
 		temp_dict = {"contract_end": y, "agency_id": row['agency.id'], "title": row['title'], "supplier": row['supplier.display_name'], "value": row['contract_value'], "status":status_}
 

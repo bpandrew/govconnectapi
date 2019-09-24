@@ -524,9 +524,9 @@ chart.events.on("datavalidated", function(ev) {
 // Register the click on the item
 // To be used as a redirect later to show the agency / division details.
 series.columns.template.events.on("hit", function(ev) {
-	console.log("clicked on unspsc:", ev.target.dataItem.xid, " agency ID:", ev.target.dataItem.yid, " Supplier:", {{data['supplier_id']}}, " Competitor:", current_competitor);
+	console.log("clicked on unspsc:", ev.target.dataItem.xid, " agency ID:", ev.target.dataItem.yid, " Supplier:", {{data['supplier_id']}}, " Competitor:", current_competitor,  "xlevel:", xlevel, "ylevel:", ylevel);
 	$('#modals-top').modal('show');
-	updateTableContracts(ev.target.dataItem.xid, ev.target.dataItem.yid, {{data['supplier_id']}}, current_competitor);
+	updateTableContracts(ev.target.dataItem.xid, ev.target.dataItem.yid, {{data['supplier_id']}}, current_competitor, xlevel, ylevel);
 	
 }, this);
 
@@ -971,13 +971,13 @@ tableContracts = $("#ajaxTableContracts").DataTable({
 });
 
 
-function updateTableContracts(unspsc, agency_id, supplier_id, current_competitor) {
+function updateTableContracts(unspsc, agency_id, supplier_id, current_competitor, xlevel, ylevel) {
 
 	$('#loading_icon_contracts').show();
 
 	$.ajax({
 		type: "GET",
-		url: '/contracts/filtered?unspsc='+ String(unspsc) +'&agency_id='+ String(agency_id) +'&supplier_id='+ String(supplier_id) +'&current_competitor='+ String(current_competitor),
+		url: '/contracts/filtered?unspsc='+ String(unspsc) +'&agency_id='+ String(agency_id) +'&supplier_id='+ String(supplier_id) +'&current_competitor='+ String(current_competitor) +'&xlevel='+ String(xlevel) +'&ylevel='+ String(ylevel),
 		contentType: "application/json; charset=utf-8",
 		dataType: "json",
 		success: function (response) {
