@@ -1,8 +1,7 @@
 {% include "header_simple.html" %}
 
 
-<!-- Load Stripe.js on your website. -->
-<script src="https://js.stripe.com/v3"></script>
+
 
 <!-- [ content ] Start -->
 <div class="authentication-wrapper authentication-1 px-4">
@@ -18,11 +17,7 @@
 
 			<p>Gain access for $AUD $220+ per month.</p>
 			<!-- Create a button that your customers click to complete their purchase. Customize the styling to suit your branding. -->
-			<button class="btn btn-primary"
-			
-			id="checkout-button-plan_FrSNmhbgeV6EKA"
-			role="link"
-			>
+			<button class="btn btn-primary" id="checkout-button-plan_FrSNmhbgeV6EKA" role="link">
 			Checkout
 			</button>
 
@@ -36,37 +31,34 @@
 
 {% include "footer_simple.html" %}
 
-
+<!-- Load Stripe.js on your website. -->
+<script src="https://js.stripe.com/v3"></script>
 <script>
 (function() {
   var stripe = Stripe('pk_test_6j727GELgjqUawmvop4k9o3W00qh8lCu4U');
 
-  var checkoutButton = document.getElementById('checkout-button-plan_FrSNmhbgeV6EKA');
-  checkoutButton.addEventListener('click', function () {
-    // When the customer clicks on the button, redirect
-    // them to Checkout.
-    stripe.redirectToCheckout({
-      items: [{plan: 'plan_FrSNmhbgeV6EKA', quantity: 1}],
+  //var checkoutButton = document.getElementById('checkout-button-plan_FrSNmhbgeV6EKA');
+  //checkoutButton.addEventListener('click', function () {
 
-      // Do not rely on the redirect to the successUrl for fulfilling
-      // purchases, customers may not always reach the success_url after
-      // a successful payment.
-      // Instead use one of the strategies described in
-      // https://stripe.com/docs/payments/checkout/fulfillment
-      successUrl: window.location.protocol + '//govcon.com.au/stripe/success',
-	  cancelUrl: window.location.protocol + '//govcon.com.au/stripe/canceled',
-	  customerEmail: 'some@something.com',
-	  clientReferenceId: "12",
+	$(document).ready(function() {
+		// When the customer clicks on the button, redirect
+		// them to Checkout.
+		stripe.redirectToCheckout({
+		items: [{plan: 'plan_FrSNmhbgeV6EKA', quantity: 1}],
 
-    })
-    .then(function (result) {
-      if (result.error) {
-        // If `redirectToCheckout` fails due to a browser or network
-        // error, display the localized error message to your customer.
-        var displayError = document.getElementById('error-message');
-        displayError.textContent = result.error.message;
-      }
-    });
-  });
+		successUrl: window.location.protocol + '//govcon.com.au/stripe/success',
+		cancelUrl: window.location.protocol + '//govcon.com.au/stripe/canceled',
+		customerEmail: 'some@something.com',
+		clientReferenceId: "12",
+		})
+		.then(function (result) {
+			if (result.error) {
+				// If `redirectToCheckout` fails due to a browser or network
+				// error, display the localized error message to your customer.
+				var displayError = document.getElementById('error-message');
+				displayError.textContent = result.error.message;
+			}
+		});
+  	});
 })();
 </script>

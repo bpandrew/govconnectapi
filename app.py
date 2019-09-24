@@ -1083,7 +1083,8 @@ def matrix(target_supplier):
 # --- LANDING PAGE ---
 @app.route("/")
 def landing():
-    return render_template('index.html')
+	return redirect(url_for('login'))
+    #return render_template('index.html')
 
 
 # --- DASHBOARD PAGE ---
@@ -2673,7 +2674,83 @@ def playingfield_heatmap_data():
 	return "done"
 
 
-# --- DASHBOARD PAGE ---
+@app.route("/contracts/filtered")
+def contracts_filtered():
+	output_data = {"contracts":[]}
+
+	unspsc = request.args.get('unspsc')
+	agency_id = request.args.get('agency_id')
+	supplier_id = request.args.get('supplier_id')
+	current_competitor = request.args.get('current_competitor')
+
+
+	search_suppliers = [int(supplier_id), int(current_competitor)]
+
+	# Find all of the children of the supplier if it is an umbrella
+	query = Supplier.query.filter_by(umbrella_id=int(supplier_id)).all()
+	data = SupplierSchema(many=True).dumps(query).data
+	data = json.loads(data)
+	for item in data:
+		# Add the IDs of the children to the search
+		if item['id'] not in search_suppliers:
+			search_suppliers.append(item['id'])
+
+	# Find all of the children of the competitor if it is an umbrella
+	query = Supplier.query.filter_by(umbrella_id=int(current_competitor)).all()
+	data = SupplierSchema(many=True).dumps(query).data
+	data = json.loads(data)
+	for item in data:
+		# Add the IDs of the children to the search
+		if item['id'] not in search_suppliers:
+			search_suppliers.append(item['id'])
+
+	
+	# NEED TO ADD IN A DATE FILTER HERE !!!!!!  SO WE ARE NOT PROCESSING SUCH MASSIVE DATA SETS
+	query = Contract.query.filter(Contract.supplier_id.in_(search_suppliers)).all()
+	data = ContractSchema(many=True).dumps(query).data
+	data = json.loads(data)
+
+	contracts = json_normalize(data)
+	
+	#print(contracts)
+
+	cfy_start, cfy_end, lfy_start, lfy_end, now_string = functions.financial_years()
+	cfy = contracts[contracts['contract_start']>=cfy_start]
+	cfy = cfy[cfy['contract_start']<=cfy_end]
+	lfy = contracts[contracts['contract_start']>=lfy_start]
+	lfy = lfy[lfy['contract_start']<=lfy_end]
+
+	# filter for the agency here
+	contracts = contracts[contracts['agency.id']==int(agency_id)]
+
+	for index, row in contracts.iterrows(): 
+		#print(item['contract_start'])
+		x = datetime.strptime(row['contract_start'], '%Y-%m-%d')
+		start_year = x.strftime("%Y")
+		y = datetime.strptime(row['contract_end'], '%Y-%m-%d')
+		end_year = y.strftime("%Y")
+		status_ = "completed"
+		if (y<datetime.now()+timedelta(days=30)) and (y>datetime.now()):
+			status_ = "ending soon"
+		elif y>datetime.now():
+			status_ = "ongoing"
+
+		#if row['contract_end']>datetime.now():
+		#	status_ = "ongoing"
+		#else:
+		#	status_ = "complete"
+
+		temp_dict = {"contract_end": y, "agency_id": row['agency.id'], "title": row['title'], "supplier": row['supplier.display_name'], "value": row['contract_value'], "status":status_}
+
+		output_data['contracts'].append(temp_dict)
+
+	return jsonify(output_data)
+
+
+
+
+
+# --- Shows the data for the competitors on the Playing Field Page ---
 @app.route("/competitor_data_json")
 def competitor_data_json():
 	data = {}

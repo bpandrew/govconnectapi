@@ -115,13 +115,26 @@
 			<div class="modal-dialog">
 				<form class="modal-content">
 					<div class="modal-header">
-						<h5 class="modal-title">Competition Contracts
-							<br><small class="text-muted">Details on the contracts won by competitors.</small>
+						<h5 class="modal-title">Filtered Contracts
+							<br><small class="text-muted">Details on the contracts awarded to {{ data['target_supplier']['display_name']}} and competitors.</small>
 						</h5>
 						<button type="button" class="close" data-dismiss="modal" aria-label="Close">×</button>
 					</div>
 					<div class="modal-body">
-						<p>Table here</p>
+						<div class="card-datatable table-responsive" style="margin-top: -25px">
+							<table id="ajaxTableContracts" class="table table-hover card-table">
+								<thead style="font-size:small">
+								<tr>
+									<th>Title</th> 
+									<th>Supplier</th>
+									<th>Value</th>  
+									<th>Contract Status</th>                  
+								</tr>
+								</thead>
+							</table>
+						</div>
+						<div id="loading_icon_contracts" style="text-align: center; margin-top: 10px;"><img src="https://loading.io/spinners/flickr/index.orbit-balls-loading-gif.svg"></div>
+			
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -139,8 +152,6 @@
 {% include "footer.html" %}
 
 <script>
-
-
 
 	$(document).ready(function() {
 		updateHeatmap('0', 'Baseline', 1);
@@ -513,8 +524,10 @@ chart.events.on("datavalidated", function(ev) {
 // Register the click on the item
 // To be used as a redirect later to show the agency / division details.
 series.columns.template.events.on("hit", function(ev) {
-	console.log("clicked on unspsc:", ev.target.dataItem.xid, " agency ID:", ev.target.dataItem.yid);
+	console.log("clicked on unspsc:", ev.target.dataItem.xid, " agency ID:", ev.target.dataItem.yid, " Supplier:", {{data['supplier_id']}}, " Competitor:", current_competitor);
 	$('#modals-top').modal('show');
+	updateTableContracts(ev.target.dataItem.xid, ev.target.dataItem.yid, {{data['supplier_id']}}, current_competitor);
+	
 }, this);
 
 
@@ -940,6 +953,71 @@ function updateCompetitors() {
 
 }
 
+
+// Create the table showing the contract details, in the Modal
+
+// Create and populate the competitors table.
+tableContracts = $("#ajaxTableContracts").DataTable({
+	"orderCellsTop": true,
+	"fixedHeader": true,
+	"paging": true,
+	"lengthChange": false,
+	"searching": false,
+	"ordering": true,
+	"info": true,
+	"order": [
+		[1, "asc"]
+	]
+});
+
+
+function updateTableContracts(unspsc, agency_id, supplier_id, current_competitor) {
+
+	$('#loading_icon_contracts').show();
+
+	$.ajax({
+		type: "GET",
+		url: '/contracts/filtered?unspsc='+ String(unspsc) +'&agency_id='+ String(agency_id) +'&supplier_id='+ String(supplier_id) +'&current_competitor='+ String(current_competitor),
+		contentType: "application/json; charset=utf-8",
+		dataType: "json",
+		success: function (response) {
+
+			tableContracts
+				.clear()
+				.draw();
+
+
+			//console.log("Fetching competitor data");
+			var jsonObject = response.contracts;
+			//alert(jsonObject);
+			var result = jsonObject.map(function(item){
+				var result = [];
+				result.push(item['title']); 
+
+				result.push(item['supplier']);
+
+				result.push(item['value']); 
+
+				if (item['status']=='completed') {
+					result.push("<div class=\'badge badge-danger\'>Completed</div>")
+				}
+				if (item['status']=='ongoing') {
+					result.push("<div class=\'badge badge-success\'>Ongoing</div>")
+				}
+				if (item['status']=='ending soon') {
+					result.push("<div class=\'badge badge-info\'>Ending Soon</div>")
+				}
+
+				return result;
+			});
+
+			$('#loading_icon_contracts').hide();
+			tableContracts.rows.add(result); // add row to the DataTable instance
+			tableContracts.draw(); // always redraw after an update
+
+		}
+	});
+}
 
 </script>
 

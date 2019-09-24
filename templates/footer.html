@@ -1,3 +1,7 @@
+
+
+
+
 <div class="container-fluid flex-grow-1 container-p-y">
     <small>Data provided under <a href="http://creativecommons.org/licenses/by-nd/3.0/au/" target="blank" class="card-link">Creative Commons Attribution 3.0 Australia</a> (CC BY 3.0 AU)<br>Data sources provided under (CC BY 3.0 AU) include; AusTender, Public Services Gazette, Hansard Papers. <br>Data is presented without remix or transformation, and does not represent a derivative.</small>
 </div>
@@ -47,7 +51,7 @@
 <script src="{{ url_for('static',filename='libs/chart-am4/animated.js') }}"></script>
 <script src="{{ url_for('static',filename='libs/bootstrap-select/bootstrap-select.js') }}"></script>
 
-
+ 
 <!-- Demo -->
 <script src="{{ url_for('static',filename='js/demo.js') }}"></script>
 <script src="{{ url_for('static',filename='js/analytics.js') }}"></script>
@@ -64,12 +68,16 @@
 
 <script>
     $(document).ready(function() {
+
         $(".showload").on('click', function(event) {
             $("div#loading_container").hide(); // hide the main content div
             $("div#loading_icon").show(); // hide the main content div
 		})
 	});
 </script>
+
+
+
 
 </body>
 
